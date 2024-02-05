@@ -1,7 +1,7 @@
 #Use  Custom Keycloak Docker Image and Deploying it on K8S
 
 - Pull the docker Image 
-`$ docker pull ghcr.io/armandmeppa/kcoid4vci:sha-c0271d6`
+`$ docker pull ghcr.io/adorsys/kcoid4vci:sha-e08e548`
 
 - We create the file **"Keycloack.yaml"** and **"keycloak-ingress.yaml"** 
 
