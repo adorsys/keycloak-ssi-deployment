@@ -30,3 +30,6 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          build-args:
+            USERNAME: ${{ github.repository_owner }}
+            PAT: ${{ secrets.GITHUB_TOKEN }}
