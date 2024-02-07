@@ -9,7 +9,9 @@ RUN apt-get update && \
     apt-get install -y git
 
 # Clone the Keycloak repository
-RUN git clone https://github.com/adorsys/kc-oid4vci-deployment.git
+ARG USERNAME
+ARG PAT
+RUN git clone https://${USERNAME}:${PAT}@github.com/adorsys/kc-oid4vci-deployment.git
 
 # Move the cloned repository to the working directory
 RUN mv kc-oid4vci-deployment/* /app
