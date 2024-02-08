@@ -52,5 +52,5 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
-            USERNAME: ${{ github.actor }}
-            PAT: ${{ secrets.GITHUB_TOKEN }}
+            USERNAME=${{ github.actor }}
+            PAT=${{ secrets.GITHUB_TOKEN }}
