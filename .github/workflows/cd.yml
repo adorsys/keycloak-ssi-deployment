@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - cd
+  repository_dispatch:
+    types: [start-build]
       
 env:
   REGISTRY: ghcr.io
@@ -33,17 +35,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Print USERNAME
-        run: echo "USERNAME is ${{ github.actor }}"
-        
-      - name: Check PAT
-        run: |
-          if [[ -z "${{ secrets.GITHUB_TOKEN }}" ]]; then
-            echo "PAT is not set."
-          else
-            echo "PAT is set."
-          fi
 
       - name: Build container
         uses: docker/build-push-action@v5
