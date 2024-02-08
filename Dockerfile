@@ -14,7 +14,7 @@ RUN apt-get update && \
 # RUN mkdir -p /app
 RUN git clone https://ArmandMeppa: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@github.com/adorsys/kc-oid4vci-deployment.git
 RUN cd kc-oid4vci-deployment
-RUN ls ./
+RUN git -C /app/kc-oid4vci-deployment/ checkout issue-25638
 
 # Stage 2: Build the project
 FROM openjdk:17-jdk-slim AS build
