@@ -18,7 +18,7 @@ RUN echo "USERNAME: $USERNAME"
 RUN if [ -z "$PAT" ]; then echo "PAT is not set"; else echo "PAT is set"; fi
 
 
-RUN git clone "https://${USERNAME}:${PAT}@github.com/adorsys/kc-oid4vci-deployment.git /app/kc-oid4vci-deployment" && \
+RUN git clone "https://${USERNAME}:${PAT}@github.com/adorsys/kc-oid4vci-deployment.git" /app/kc-oid4vci-deployment && \
     git -C /app/kc-oid4vci-deployment checkout issue-25638
 
 # Stage 2: Build the project
