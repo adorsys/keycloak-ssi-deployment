@@ -11,8 +11,11 @@ RUN apt-get update && \
 # ARG GIT_URL=https://ArmandMeppa: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@github.com/adorsys/kc-oid4vci-deployment.git
 # ARG GIT_BRANCH=issue-25638  # Optional branch to clone, defaults to main
 
+ARG USERNAME
+ARG PAT
+
 # RUN mkdir -p /app
-RUN git clone https://ArmandMeppa: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@github.com/adorsys/kc-oid4vci-deployment.git
+RUN git clone https://$USERNAME:$PAT@github.com/adorsys/kc-oid4vci-deployment.git
 RUN cd kc-oid4vci-deployment
 RUN git -C /app/kc-oid4vci-deployment/ checkout issue-25638
 
