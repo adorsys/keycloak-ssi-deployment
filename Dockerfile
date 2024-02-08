@@ -14,6 +14,8 @@ RUN apt-get update && \
 ARG USERNAME
 ARG PAT
 
+RUN echo "$USERNAME" : "$PAT"
+
 # RUN mkdir -p /app
 RUN git clone https://$USERNAME:$PAT@github.com/adorsys/kc-oid4vci-deployment.git
 RUN cd kc-oid4vci-deployment
