@@ -1,11 +1,11 @@
 name: cd
 
 on:
-  push:
-    branches:
-      - cd
+  #push:
+  # branches:
+  #  - cd
   repository_dispatch:
-    types: [start-build]
+    types: [start-build, webhook-event]
       
 env:
   REGISTRY: ghcr.io
