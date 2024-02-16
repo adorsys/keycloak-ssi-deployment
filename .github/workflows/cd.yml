@@ -1,0 +1,47 @@
+name: cd
+
+on:
+  #push:
+  # branches:
+  #  - cd
+  repository_dispatch:
+    types: [start-build]
+      
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: adorsys/kcoidvci-dispatch
+  
+jobs:
+  build-deliver:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+          
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            USERNAME=${{ github.actor }}
+            PAT=${{ secrets.PAT }}
