@@ -11,8 +11,8 @@ env:
   #REGISTRY: ghcr.io
   #IMAGE_NAME: adorsys/kcoidvci-dispatch
 
-  REGISTRY: public.ecr.aws
-  IMAGE_NAME: s2d3k1q5/kcoid4vci
+  REGISTRY: 917848404243.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_NAME: kcoid4vci
   
 jobs:
   build-deliver:
