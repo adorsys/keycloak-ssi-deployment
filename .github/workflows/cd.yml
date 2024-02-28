@@ -71,16 +71,3 @@ jobs:
           build-args: |
             USERNAME=${{ github.actor }}
             PAT=${{ secrets.PAT }}
-
-      #- name: Build, tag, and push image to Amazon ECR
-      #  env:
-      #    ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      #    ECR_REPOSITORY: ${{ env.REGISTRY }}
-      #    IMAGE_TAG: ${{ github.sha }}
-      #  with:
-      #    context: .
-      #    push: true
-      #    tags: ${{ steps.meta.outputs.tags }}
-      #    build-args: |
-      #      USERNAME=${{ github.actor }}
-      #      PAT=${{ secrets.PAT }}
