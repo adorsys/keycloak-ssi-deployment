@@ -8,8 +8,11 @@ on:
     types: [start-build]
       
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: adorsys/kcoidvci-dispatch
+  #REGISTRY: ghcr.io
+  #IMAGE_NAME: adorsys/kcoidvci-dispatch
+
+  REGISTRY: public.ecr.aws
+  IMAGE_NAME: s2d3k1q5/kcoid4vci
   
 jobs:
   build-deliver:
@@ -23,12 +26,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
           
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      #- name: Log in to GitHub Container Registry
+      #  uses: docker/login-action@v3
+      #  with:
+      #    registry: ${{ env.REGISTRY }}
+      #    username: ${{ github.repository_owner }}
+      #    password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials 
+        # Programmatic authentication to aws
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          aws-access-key-id: $
+          aws-secret-access-key: $
+          aws-region: $
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Docker meta
         id: meta
@@ -45,3 +60,4 @@ jobs:
           build-args: |
             USERNAME=${{ github.actor }}
             PAT=${{ secrets.PAT }}
+            
