@@ -61,14 +61,14 @@ jobs:
       #    tags: ${{ steps.meta.outputs.tags }}
       #    build-args: |
       #      USERNAME=${{ github.actor }}
-      #      PAT=${{ secrets.PAT }}
-
-      - name: Build, tag, and push image to Amazon ECR
-        uses: docker/build-push-action@v2
+      #      PAT=${{ secrets.PAT }
+      - name: upload image to ECR
+        uses: appleboy/docker-ecr-action@master
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          repo: ${{ env.IMAGE_NAME }}
+          registry: ${{ env.REGISTRY }}
           build-args: |
             USERNAME=${{ github.actor }}
             PAT=${{ secrets.PAT }}
