@@ -45,11 +45,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      #- name: Docker meta
-      #  id: meta
-      #  uses: docker/metadata-action@v5
-      #  with:
-      #    images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
+
 
       #- name: Build container
       #  uses: docker/build-push-action@v5
@@ -62,10 +64,7 @@ jobs:
       #      PAT=${{ secrets.PAT }}
 
       - name: Build, tag, and push image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.REGISTRY }}
-          IMAGE_TAG: ${{ github.sha }}
+        uses: docker/build-push-action@v2
         with:
           context: .
           push: true
@@ -73,3 +72,4 @@ jobs:
           build-args: |
             USERNAME=${{ github.actor }}
             PAT=${{ secrets.PAT }}
+
