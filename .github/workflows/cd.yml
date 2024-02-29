@@ -13,6 +13,10 @@ env:
 
   REGISTRY: 917848404243.dkr.ecr.eu-central-1.amazonaws.com
   IMAGE_NAME: kcoid4vci
+  ECS_SERVICE: kcoid4vci                     # name of the service
+  ECS_CLUSTER: kcoid4vci                     # name of the cluster
+  ECS_TASK_DEFINITION: .aws/task-definition.json # path of the JSON task definition
+  CONTAINER_NAME: "app"                          # name of the container name in the task definition
   
 jobs:
   build-deliver:
@@ -62,4 +66,20 @@ jobs:
           repo: ${{ env.IMAGE_NAME }}
           registry: ${{ env.REGISTRY }}
           region: ${{ secrets.AWS_REGION }}
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
 
