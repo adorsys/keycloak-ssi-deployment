@@ -1,58 +1,62 @@
 name: cd
 
 on:
+  #push:
+  # branches:
+  #  - cd
   repository_dispatch:
     types: [start-build]
-
+      
 env:
+  #REGISTRY: ghcr.io
+  #IMAGE_NAME: adorsys/kcoidvci-dispatch
   REGISTRY: 917848404243.dkr.ecr.eu-central-1.amazonaws.com
   IMAGE_NAME: kcoid4vci
-  ECS_SERVICE: kcoid4vci
-  ECS_CLUSTER: kcoid4vci
-  ECS_TASK_DEFINITION: .aws/task-definition.json
-  CONTAINER_NAME: "app"
-
+  ECS_SERVICE: kcoid4vci                     
+  ECS_CLUSTER: kcoid4vci                     
+  ECS_TASK_DEFINITION: .aws/task-definition.json 
+  CONTAINER_NAME: "app"                          
+  
 jobs:
-  code-checkout-and-aws-setup:
+  build-deliver:
     runs-on: ubuntu-latest
+
     permissions:
       packages: write
       contents: read
+  
     steps:
-      - name: Code Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: KCOID4VCI Repo Checkout
+      - name: Checkout from kc-oid4vci-deployment
         uses: actions/checkout@v4
         with:
           repository: adorsys/kc-oid4vci-deployment
+          #ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           token: ${{ secrets.PAT }} 
           path: deployment
           ref: issue-25638
 
-      - name: AWS Credentials Configuration
+      - name: Configure AWS credentials 
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-  ecr-login-and-image-upload:
-    needs: code-checkout-and-aws-setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: ECR Login
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Docker Metadata Setup
+      - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
           images: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
-
-      - name: ECR Image Upload
+        
+      - name: upload image to ECR
         uses: appleboy/docker-ecr-action@master
         with:
           access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -61,11 +65,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
           region: ${{ secrets.AWS_REGION }}
 
-  task-definition-update-and-deployment:
-    needs: ecr-login-and-image-upload
-    runs-on: ubuntu-latest
-    steps:
-      - name: Task Definition Update
+      - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
         with:
@@ -73,7 +73,7 @@ jobs:
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
 
-      - name: ECS Task Deployment
+      - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
