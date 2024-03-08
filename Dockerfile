@@ -15,6 +15,7 @@ WORKDIR /app
 COPY --from=build /app/quarkus/server/target/lib/ /app/
 
 ENV KEYCLOAK_ADMIN=admin \
-    KEYCLOAK_ADMIN_PASSWORD=admin
+    KEYCLOAK_ADMIN_PASSWORD=admin \
+    HTTPS_ENABLED=false
 
 CMD ["java", "-jar", "quarkus-run.jar", "start-dev"]
