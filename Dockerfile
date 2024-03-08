@@ -18,4 +18,4 @@ ENV KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin \
     HTTPS_ENABLED=false
 
-CMD ["java", "-jar", "quarkus-run.jar", "start-dev"]
+CMD ["java", "-Dquarkus.keycloak.ssl-required=NONE", "-jar", "quarkus-run.jar", "start-dev"]
