@@ -16,10 +16,8 @@ COPY --from=build /app/quarkus/server/target/lib/ /app/
 
 ENV KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin \
-    export KC_HOSTNAME_STRICT="false"
-export KC_HOSTNAME_STRICT_HTTPS="false"
-export KC_HTTP_ENABLED="true"
-
-
+    KC_HOSTNAME_STRICT=false \
+    KC_HOSTNAME_STRICT_HTTPS=false \
+    KC_HTTP_ENABLED=true
 
 CMD ["java", "-jar", "quarkus-run.jar", "start-dev"]
