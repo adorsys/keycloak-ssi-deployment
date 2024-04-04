@@ -1,23 +1,36 @@
-# Stage 1: Build the project
-FROM openjdk:17-jdk-slim AS build
+# Use a base image with Java 17 and Maven installed
+FROM maven:3.8.4-openjdk-17-slim AS builder
 
-WORKDIR /app
+# Install Git, apt-utils and other dependencies
+RUN apt-get update && apt-get install -y git apt-utils
 
-COPY ./deployment .
+# Configure Git for large HTTP requests
+RUN git config --global http.postBuffer 524288000
 
-RUN ./mvnw clean install -DskipTests
+# Clone the repository
+RUN git clone --depth 1 https://github.com/keycloak/keycloak.git /tmp/keycloak
+WORKDIR /tmp/keycloak
 
-# Stage 2: Run the application
-FROM eclipse-temurin:17.0.9_9-jre
+# Fetch and checkout the pull request branch
+RUN git fetch origin pull/27931/head:pr/wistefan/27931 && \
+    git checkout pr/wistefan/27931
 
-WORKDIR /app
+# Build Keycloak without running tests
+RUN mvn clean install -DskipTests
 
-COPY --from=build /app/quarkus/server/target/lib/ /app/
+# Unpack the distribution
+RUN tar xzf ./quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz -C /opt
+WORKDIR /opt/keycloak-999.0.0-SNAPSHOT
 
-ENV KEYCLOAK_ADMIN=admin \
-    KEYCLOAK_ADMIN_PASSWORD=admin \
-    KC_HOSTNAME_STRICT=false \
-    KC_HOSTNAME_STRICT_HTTPS=false \
-    KC_HTTP_ENABLED=true
 
-CMD ["java", "-jar", "quarkus-run.jar", "start-dev"]
+
+# Environment variables
+ENV KEYCLOAK_ADMIN=admin
+ENV KEYCLOAK_ADMIN_PASSWORD=admin
+ENV KC_HOSTNAME_STRICT=false
+
+# Build Keycloak with the oid4vc-vci feature
+RUN bin/kc.sh build --features="oid4vc-vci"
+
+# Entry point
+ENTRYPOINT ["bin/kc.sh", "start-dev", "--features=oid4vc-vci"]
