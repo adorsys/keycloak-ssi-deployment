@@ -1,0 +1,57 @@
+{
+  "id": "oid4vci-client",
+  "clientId": "oid4vci-client",
+  "name": "OID4VC-VCI Client",
+  "protocol": "oid4vc",
+  "enabled": true,
+  "publicClient": true,
+  "attributes": {
+    "vc.test-credential.expiry_in_s": 100,
+    "vc.test-credential.format": "sd-jwt_vc",
+    "vc.test-credential.scope": "VerifiableCredential"
+  },
+  "protocolMappers": [
+    {
+      "id": "role-mapper-001",
+      "name": "role-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-target-role-mapper",
+      "config": {
+        "subjectProperty": "roles",
+        "clientId": "oid4vci-client",
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    },
+    {
+      "id": "email-mapper-001",
+      "name": "email-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "subjectProperty": "email",
+        "userAttribute": "email",
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    },
+    {
+      "id": "id-mapper-001",
+      "name": "id-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-subject-id-mapper",
+      "config": {
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    },
+    {
+      "id": "static-mapper-001",
+      "name": "static-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-static-claim-mapper",
+      "config": {
+        "subjectProperty": "static",
+        "subjectValue": "Value",
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    }
+  ]
+}
