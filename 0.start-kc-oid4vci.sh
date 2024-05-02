@@ -4,6 +4,23 @@
 export DEV_DIR=~/dev
 export TOOLS_DIR=~/tools
 
+# Check and create directories
+if [ ! -d "$DEV_DIR" ]; then
+    echo "Directory $DEV_DIR does not exist, creating..."
+    mkdir -p "$DEV_DIR"
+    echo "Directory $DEV_DIR created."
+else
+    echo "Directory $DEV_DIR already exists."
+fi
+
+if [ ! -d "$TOOLS_DIR" ]; then
+    echo "Directory $TOOLS_DIR does not exist, creating..."
+    mkdir -p "$TOOLS_DIR"
+    echo "Directory $TOOLS_DIR created."
+else
+    echo "Directory $TOOLS_DIR already exists."
+fi
+
 # change to you DEV_DIR and checkout keycloak
 # checkout keycloak
 cd $DEV_DIR && git clone https://github.com/keycloak/keycloak.git
