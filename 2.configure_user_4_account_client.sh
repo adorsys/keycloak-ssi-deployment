@@ -5,6 +5,7 @@
 # export KC_CLIENT_TOOLS=$DEV_DIR/keycloak/quarkus/dist/target/keycloak-client-tools
 ####
 # If you unpacked kc
+export TOOLS_DIR=~/tools
 export KC_CLIENT_TOOLS=$TOOLS_DIR/keycloak-999.0.0-SNAPSHOT
 
 # Get admin token
