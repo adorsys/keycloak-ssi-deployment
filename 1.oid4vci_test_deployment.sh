@@ -6,9 +6,9 @@
 export DEV_DIR=~/dev
 export TOOLS_DIR=~/tools
 
-
 # Checkout this project
 cd $TOOLS_DIR && git clone https://github.com/adorsys/keycloak-ssi-deployment.git
+cd $TOOLS_DIR/keycloak-ssi-deployment &&  git checkout oid4vci-bare-metal
 
 # Navigate to the keycloak client tools directory
 #### If you are running from you ide
@@ -16,7 +16,6 @@ cd $TOOLS_DIR && git clone https://github.com/adorsys/keycloak-ssi-deployment.gi
 ####
 # If you unpacked kc
 export KC_CLIENT_TOOLS=$TOOLS_DIR/keycloak-999.0.0-SNAPSHOT
-
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
@@ -40,11 +39,12 @@ echo "ES256 Key ID: $ES256_KID"
 
 # Write keyid into a copy of the signing_service.json
 echo "Configuring signing service with Key ID..."
-jq --arg kid "$ES256_KID" '.config.keyId[] = $kid' $TOOLS_DIR/keycloak-ssi-deployment/signing_service.json > signing_service.json
+jq --arg kid "$ES256_KID" '.config.keyId = [$kid]' $TOOLS_DIR/keycloak-ssi-deployment/signing_service.json > modified_signing_service.json
+mv modified_signing_service.json signing_service.json
 
 # Create the signing service component
 echo "Creating signing service component..."
-$TOOLS_DIR/bin/kcadm.sh create components -r master -o -f - < signing_service.json
+$KC_CLIENT_TOOLS/bin/kcadm.sh create components -r master -o -f - < signing_service.json
 
 # Useful link to check the configuration
 echo "Navigate to the following URL to verify the OIDC credential issuer setup:"
@@ -56,6 +56,6 @@ echo "http://localhost:8080/realms/master/.well-known/openid-credential-issuer"
 
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
-$TOOLS_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=did:web:adorsys.org
+$KC_CLIENT_TOOLS/bin/kcadm.sh update realms/master -s attributes.issuerDid=did:web:adorsys.org
 
 echo "Deployment script completed."
