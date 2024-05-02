@@ -28,6 +28,7 @@ $KC_CLIENT_TOOLS/bin/kcadm.sh config credentials --server http://localhost:8080 
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
 $KC_CLIENT_TOOLS/bin/kcadm.sh create clients -o -f - < $TOOLS_DIR/keycloak-ssi-deployment/client-oid4vc.json
+$KC_CLIENT_TOOLS/bin/kcadm.sh create clients -o -f - < $TOOLS_DIR/keycloak-ssi-deployment/client-oid4vc.json || { echo 'Client creation failed' ; exit 1; }
 
 # Manually copy the content of your PEM file into issuer-key.json if you generate a new PEM file
 # Register the EC-key with Keycloak
