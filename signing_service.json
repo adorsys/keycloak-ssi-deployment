@@ -8,7 +8,6 @@
     "algorithmType": ["ES256"],
     "hashAlgorithm": ["sha256"],
     "tokenType": ["JWT"],
-    "decoys": [2],
-    "issuerDid": ["did:web:adorsys.org"]
+    "decoys": [2]
   }
 }
