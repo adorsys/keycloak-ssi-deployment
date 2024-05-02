@@ -23,7 +23,7 @@ fi
 
 # change to you DEV_DIR and checkout keycloak
 # checkout keycloak
-cd $DEV_DIR && git clone https://github.com/keycloak/keycloak.git
+cd $DEV_DIR && git clone --depth 1 https://github.com/keycloak/keycloak.git
 
 # change into keycloak directory
 cd $DEV_DIR/keycloak && $DEV_DIR/keycloak/mvnw clean install -DskipTests
