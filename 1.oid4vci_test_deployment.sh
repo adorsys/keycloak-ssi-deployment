@@ -18,14 +18,37 @@ fi
 echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
-# Create client for oid4vci
-echo "Creating OID4VCI client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'Client creation failed' ; exit 1; }
+# Generate a keypairs into a PKCS12 keystore using java. We prefer an external file, as content will be shared among servers.
+keytool \
+  -genkeypair \
+  -keyalg EC \
+  -keysize 256 \
+  -keystore $KEYCLOAK_KEYSTORE_FILE \
+  -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
+  -alias $KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS \
+  -keypass $KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD \
+  -storetype $KEYCLOAK_KEYSTORE_TYPE \
+  -dname "CN=OIC4VCI Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
 
-# Manually copy the content of your PEM file into issuer-key.json if you generate a new PEM file
+# Add concret info and passwords to key provider
+echo "Configuring ecdsa key provider..."
+less $WORK_DIR/issuer_key_ecdsa.json | \
+  jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
+  --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
+  --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
+  --arg keyAlias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" \
+  --arg keyPassword "$KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD" \
+  '.config.keystore = [$keystore] | 
+   .config.keystorePassword = [$keystorePassword] |
+   .config.keystoreType = [$keystoreType] | 
+   .config.keyAlias = [$keyAlias] | 
+   .config.keyPassword = [$keyPassword]' \
+  > $TARGET_DIR/issuer_key_ecdsa-tmp.json 
+
+
 # Register the EC-key with Keycloak
 echo "Registering issuer key..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/issuer_key.json || { echo 'Key registration failed' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh -x create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'Key registration failed' ; exit 1; }
 
 # Export keyid into an environment variable
 export ES256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(ES256)' | jq -r '.active.ES256')
@@ -33,11 +56,18 @@ echo "ES256 Key ID: $ES256_KID"
 
 # Write keyid into a copy of the signing_service.json
 echo "Configuring signing service with Key ID..."
-less $WORK_DIR/signing_service.json | jq --arg kid "$ES256_KID" '.config.keyId = [$kid]'  > $TARGET_DIR/signing_service-tmp.json
+less "$WORK_DIR/signing_service.json" | \
+  jq --arg kid "$ES256_KID" \
+     '.config.keyId = [$kid]' \
+  > "$TARGET_DIR/signing_service-tmp.json"
 
 # Create the signing service component
 echo "Creating signing service component..."
 $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/signing_service-tmp.json  || { echo 'Could not create signing service' ; exit 1; }
+
+# Create client for oid4vci
+echo "Creating OID4VCI client..."
+$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'Client creation failed' ; exit 1; }
 
 # Useful link to check the configuration
 # Ensure keycloak with oid4vc-vci profile is running
