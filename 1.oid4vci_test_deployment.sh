@@ -71,7 +71,14 @@ $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.js
 
 # Useful link to check the configuration
 # Ensure keycloak with oid4vc-vci profile is running
-keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    keycloak_pid=$(ps aux | grep -i 'quarkus' | awk '{print $2}')
+else
+    # Linux/Unix
+    keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
+fi
+
 if [ ! -n "$keycloak_pid" ]; then
     echo "Keycloak not running. Start keycloak using 0.start-kc-oid4vci first..."
     exit 1  # Exit with an error code
