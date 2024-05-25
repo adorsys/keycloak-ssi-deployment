@@ -7,7 +7,7 @@
   "publicClient": true,
   "attributes": {
     "vc.test-credential.expiry_in_s": 100,
-    "vc.test-credential.format": "sd-jwt_vc",
+    "vc.test-credential.format": "vc+sd-jwt",
     "vc.test-credential.scope": "VerifiableCredential"
   },
   "protocolMappers": [

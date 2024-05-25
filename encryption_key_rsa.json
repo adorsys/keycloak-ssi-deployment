@@ -1,6 +1,6 @@
 {
-  "id": "ecdsa-issuer-key",
-  "name": "ecdsa-issuer-key",
+  "id": "rsa-encryption-key",
+  "name": "rsa-encryption-key",
   "providerId": "java-keystore",
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
@@ -14,7 +14,7 @@
       "$KEYCLOAK_KEYSTORE_PASSWORD"
     ],
     "keyAlias":[
-      "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS"
+      "$KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS"
     ],
     "keyPassword": [
       "$KEYCLOAK_KEYSTORE_PASSWORD"
@@ -22,6 +22,7 @@
     "active": ["true"],
     "priority": ["0"],
     "enabled": ["true"],
-    "algorithm": ["ES256"]
+    "algorithm": ["RSA-OAEP"],
+    "keyUse": ["enc"]
   }
 }

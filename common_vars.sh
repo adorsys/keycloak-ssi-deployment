@@ -14,13 +14,15 @@ KC_OID4VCI=keycloak-oid4vci
 KEYCLOAK_ADMIN=admin
 KEYCLOAK_ADMIN_PASSWORD=admin
 
-KEYCLOAK_KEYSTORE_FILE=$TARGET_DIR/oid4vci_signing_key.pkcs12
+KEYCLOAK_KEYSTORE_FILE=$TARGET_DIR/kc_keystore.pkcs12
 KEYCLOAK_KEYSTORE_TYPE=PKCS12
+KEYCLOAK_KEYSTORE_PASSWORD=store_key_password
+
 KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS=ecdsa_key
-# Waring for java implementation of pkcs12, keystore password and key password must be the same.
-# https://support.oracle.com/knowledge/Middleware/2364856_1.html
-KEYCLOAK_KEYSTORE_PASSWORD=ecdsa_key_password
-KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD=ecdsa_key_password
+KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS=rsa_sig_key
+KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS=rsa_enc_key
+KEYCLOAK_KEYSTORE_HMAC_SIG_KEY_ALIAS=hmac_sig_key
+KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS=aes_enc_key
 
 # Navigate to the keycloak client tools directory
 #### If you are running from you ide
