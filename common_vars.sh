@@ -8,7 +8,8 @@ TARGET_DIR=$WORK_DIR/target
 TOOLS_DIR=$TARGET_DIR/tools
 
 # Dev dir where to clone keycloak
-KC_OID4VCI=keycloak-oid4vci
+KC_TARGET_BRANCH=target-20240525-0
+KC_OID4VCI=$KC_TARGET_BRANCH
 
 # Ensure all sensitive data like passwords and keys are passed through environment variables or secure stores.
 KEYCLOAK_ADMIN=admin

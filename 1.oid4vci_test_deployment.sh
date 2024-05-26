@@ -10,10 +10,6 @@ if [ ! -n "$keycloak_pid" ]; then
     exit 1
 fi
 
-
-# Checkout this project. Shall have been done, we wouldn't see this file
-# cd $TOOLS_DIR && git clone https://github.com/adorsys/keycloak-ssi-deployment.git
-
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
@@ -34,6 +30,14 @@ echo "Generated RS256 key will be disbled... KID=$RS256_KID PROV_ID=$RS256_PROV_
 # AES_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(AES)' | jq -r '.active.AES')
 # AES_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
 # echo "Generated AES key will be disbled... KID=$AES_KID PROV_ID=$AES_PROV_ID"
+
+# Delete keystore if one exists
+# change into keycloak directory & build keycloak
+if [ -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
+    echo "File $KEYCLOAK_KEYSTORE_FILE exists, will be deleted..."
+    rm "$KEYCLOAK_KEYSTORE_FILE"
+fi
+
 
 # Generate a keypairs into a PKCS12 keystore using java. We prefer an external file, as content will be shared among servers.
 keytool \
