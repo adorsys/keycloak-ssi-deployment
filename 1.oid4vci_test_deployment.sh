@@ -14,6 +14,8 @@ fi
 echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
+<<<<<<< HEAD
+=======
 # Collect the 4 active keys to be disabled.
 RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
 RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
@@ -39,6 +41,7 @@ if [ -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
 fi
 
 
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 # Generate a keypairs into a PKCS12 keystore using java. We prefer an external file, as content will be shared among servers.
 keytool \
   -genkeypair \
@@ -47,6 +50,11 @@ keytool \
   -keystore $KEYCLOAK_KEYSTORE_FILE \
   -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
   -alias $KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS \
+<<<<<<< HEAD
+  -keypass $KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD \
+  -storetype $KEYCLOAK_KEYSTORE_TYPE \
+  -dname "CN=OIC4VCI Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
+=======
   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
   -storetype $KEYCLOAK_KEYSTORE_TYPE \
   -dname "CN=ECDSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
@@ -92,6 +100,7 @@ keytool \
 #   -alias $KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS \
 #   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
 #   -storetype $KEYCLOAK_KEYSTORE_TYPE 
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 
 # Add concret info and passwords to key provider
 echo "Configuring ecdsa key provider..."
@@ -100,7 +109,11 @@ less $WORK_DIR/issuer_key_ecdsa.json | \
   --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
   --arg keyAlias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" \
+<<<<<<< HEAD
+  --arg keyPassword "$KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD" \
+=======
   --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
   '.config.keystore = [$keystore] | 
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] | 
@@ -108,6 +121,12 @@ less $WORK_DIR/issuer_key_ecdsa.json | \
    .config.keyPassword = [$keyPassword]' \
   > $TARGET_DIR/issuer_key_ecdsa-tmp.json 
 
+<<<<<<< HEAD
+
+# Register the EC-key with Keycloak
+echo "Registering issuer key..."
+$KC_INSTALL_DIR/bin/kcadm.sh -x create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'Key registration failed' ; exit 1; }
+=======
 echo "Configuring rsa signing key provider..."
 less $WORK_DIR/issuer_key_rsa.json | \
   jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
@@ -199,6 +218,7 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | sel
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 
 # Export keyid into an environment variable
 ES256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(ES256)' | jq -r '.active.ES256') || { echo 'ES256 keyId failed' ; exit 1; }
@@ -221,11 +241,26 @@ $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.js
 
 # Useful link to check the configuration
 # Ensure keycloak with oid4vc-vci profile is running
+<<<<<<< HEAD
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    keycloak_pid=$(ps aux | grep -i 'quarkus' | awk '{print $2}')
+else
+    # Linux/Unix
+    keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
+fi
+
+if [ ! -n "$keycloak_pid" ]; then
+    echo "Keycloak not running. Start keycloak using 0.start-kc-oid4vci first..."
+    exit 1  # Exit with an error code
+fi
+=======
 # keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
 # if [ ! -n "$keycloak_pid" ]; then
 #     echo "Keycloak not running. Start keycloak using 0.start-kc-oid4vci first..."
 #     exit 1  # Exit with an error code
 # fi
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 
 # Read all realm attributes
 # echo "Reading all realm attributes..."
