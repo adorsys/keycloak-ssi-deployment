@@ -84,7 +84,7 @@ CREDENTIAL=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credent
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
-    -d '{"format": "sd-jwt_vc", "credential_identifier": "test-credential"}')
+    -d '{"format": "vc+sd-jwt", "credential_identifier": "test-credential"}')
 
 
 # Stop if CREDENTIAL is not retrieved

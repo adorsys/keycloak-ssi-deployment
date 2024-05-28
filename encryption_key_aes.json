@@ -1,11 +1,6 @@
 {
-<<<<<<< HEAD
-  "id": "a4589e8f-7f82-4345-b2ea-ccc9d4366600",
-  "name": "oid4vci-issuer-key",
-=======
-  "id": "ecdsa-issuer-key",
-  "name": "ecdsa-issuer-key",
->>>>>>> a4f24ce741d2918569052ec776df5eb506618573
+  "id": "aes-encryption-key",
+  "name": "aes-encryption-key",
   "providerId": "java-keystore",
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
@@ -19,18 +14,15 @@
       "$KEYCLOAK_KEYSTORE_PASSWORD"
     ],
     "keyAlias":[
-      "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS"
+      "$KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS"
     ],
     "keyPassword": [
-<<<<<<< HEAD
-      "$KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD"
-=======
       "$KEYCLOAK_KEYSTORE_PASSWORD"
->>>>>>> a4f24ce741d2918569052ec776df5eb506618573
     ],
     "active": ["true"],
     "priority": ["0"],
     "enabled": ["true"],
-    "algorithm": ["ES256"]
+    "algorithm": ["AES"],
+    "kid": ["UUID-HERE"]    
   }
 }

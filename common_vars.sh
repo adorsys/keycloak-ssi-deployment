@@ -8,12 +8,15 @@ TARGET_DIR=$WORK_DIR/target
 TOOLS_DIR=$TARGET_DIR/tools
 
 # Dev dir where to clone keycloak
-KC_OID4VCI=keycloak-oid4vci
+# KC_TARGET_BRANCH=main
+KC_TARGET_BRANCH=target-20240525-0
+KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH
 
 # Ensure all sensitive data like passwords and keys are passed through environment variables or secure stores.
 KEYCLOAK_ADMIN=admin
 KEYCLOAK_ADMIN_PASSWORD=admin
 
+<<<<<<< HEAD
 KEYCLOAK_KEYSTORE_FILE=$TARGET_DIR/oid4vci_signing_key.pkcs12
 KEYCLOAK_KEYSTORE_TYPE=PKCS12
 KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS=ecdsa_key
@@ -21,6 +24,17 @@ KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS=ecdsa_key
 # https://support.oracle.com/knowledge/Middleware/2364856_1.html
 KEYCLOAK_KEYSTORE_PASSWORD=ecdsa_key_password
 KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD=ecdsa_key_password
+=======
+KEYCLOAK_KEYSTORE_FILE=$TARGET_DIR/kc_keystore.pkcs12
+KEYCLOAK_KEYSTORE_TYPE=PKCS12
+KEYCLOAK_KEYSTORE_PASSWORD=store_key_password
+
+KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS=ecdsa_key
+KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS=rsa_sig_key
+KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS=rsa_enc_key
+KEYCLOAK_KEYSTORE_HMAC_SIG_KEY_ALIAS=hmac_sig_key
+KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS=aes_enc_key
+>>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 
 # Navigate to the keycloak client tools directory
 #### If you are running from you ide
