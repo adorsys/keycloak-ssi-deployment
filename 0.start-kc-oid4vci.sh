@@ -24,12 +24,11 @@ fi
 # checkout keycloak
 if [ ! -d "$TARGET_DIR/$KC_OID4VCI" ]; then
     echo "Directory $TARGET_DIR/$KC_OID4VCI does not exist, cloning repo..."
-    cd $TARGET_DIR && git clone --depth 1 https://github.com/keycloak/keycloak.git $TARGET_DIR/$KC_OID4VCI
+    cd $TARGET_DIR && git clone --depth 1 --branch $KC_TARGET_BRANCH https://github.com/adorsys/keycloak-oid4vc.git $TARGET_DIR/$KC_OID4VCI
     echo "Keycloak cloned into $TARGET_DIR/$KC_OID4VCI."
 else
     echo "Directory $TARGET_DIR/$KC_OID4VCI already exists."
 fi
-
 
 # change into keycloak directory & build keycloak
 if [ ! -f "$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz" ]; then

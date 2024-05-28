@@ -1,13 +1,13 @@
 {
   "id": "sd-jwt-signing",
   "name": "sd-jwt-signing-service",
-  "providerId": "sd-jwt_vc",
+  "providerId": "vc+sd-jwt",
   "providerType": "org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService",
   "config": {
     "keyId": ["key id from keycloak"],
     "algorithmType": ["ES256"],
     "hashAlgorithm": ["sha256"],
-    "tokenType": ["JWT"],
+    "tokenType": ["vc+sd-jwt"],
     "decoys": [2]
   }
 }
