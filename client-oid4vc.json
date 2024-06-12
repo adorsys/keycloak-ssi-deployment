@@ -34,6 +34,28 @@
       }
     },
     {
+      "id": "firstName-mapper-001",
+      "name": "firstName-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "subjectProperty": "firstName",
+        "userAttribute": "firstName",
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    },
+    {
+      "id": "lastName-mapper-001",
+      "name": "lastName-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "subjectProperty": "lastName",
+        "userAttribute": "lastName",
+        "supportedCredentialTypes": "VerifiableCredential"
+      }
+    },
+    {
       "id": "id-mapper-001",
       "name": "id-mapper",
       "protocol": "oid4vc",

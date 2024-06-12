@@ -235,6 +235,11 @@ $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.js
 echo "Updating realm attributes for issuerDid..."
 $KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=did:web:adorsys.org  || { echo 'Could not set issuer did' ; exit 1; }
 
+# Increase lifespan of preauth code
+echo "Updating realm attributes for preAuthorizedCodeLifespanS..."
+$KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.preAuthorizedCodeLifespanS=120  || { echo 'Could not set preAuthorizedCodeLifespanS' ; exit 1; }
+
+
 # Check server status and oid4vc-vci feature
 response=$(curl -s http://localhost:8080/realms/master/.well-known/openid-credential-issuer)
 
