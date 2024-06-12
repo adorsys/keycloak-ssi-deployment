@@ -6,7 +6,7 @@
   "config": {
     "keyId": ["key id from keycloak"],
     "algorithmType": ["ES256"],
-    "hashAlgorithm": ["sha256"],
+    "hashAlgorithm": ["sha-256"],
     "tokenType": ["vc+sd-jwt"],
     "decoys": [2]
   }
