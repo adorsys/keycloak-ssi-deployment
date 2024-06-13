@@ -233,7 +233,7 @@ $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.js
 
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=did:web:adorsys.org  || { echo 'Could not set issuer did' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
 
 # Increase lifespan of preauth code
 echo "Updating realm attributes for preAuthorizedCodeLifespanS..."

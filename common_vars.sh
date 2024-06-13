@@ -37,4 +37,6 @@ KC_INSTALL_DIR=$TOOLS_DIR/keycloak-999.0.0-SNAPSHOT
 USER_FRANCIS_NAME=francis
 USER_FRANCIS_PASSWORD=francis
 
+ISSUER_DID=https://keycloak.solutions.adorsys.com/realms/master
+
 
