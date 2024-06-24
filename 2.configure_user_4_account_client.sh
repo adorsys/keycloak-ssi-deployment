@@ -27,4 +27,10 @@ $KC_INSTALL_DIR/bin/kcadm.sh create users -r master -s username=francis -s first
 echo "Setting password for user Francis..."
 $KC_INSTALL_DIR/bin/kcadm.sh set-password -r master --username $USER_FRANCIS_NAME --new-password $USER_FRANCIS_PASSWORD
 
+# Prepare user key proof header if not existent
+if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
+  echo "Generating keypar for user ..."
+  . ./generate_user_key.sh
+fi
+
 echo "Script execution completed."

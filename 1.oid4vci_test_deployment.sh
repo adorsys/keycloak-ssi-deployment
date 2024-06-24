@@ -38,7 +38,6 @@ if [ -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
     rm "$KEYCLOAK_KEYSTORE_FILE"
 fi
 
-
 # Generate a keypairs into a PKCS12 keystore using java. We prefer an external file, as content will be shared among servers.
 keytool \
   -genkeypair \
@@ -199,37 +198,16 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | sel
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
+# Create the signing service component for test-credential
+echo "Creating signing service component for test-credential..."
+$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/signing_service-test-credential.json  || { echo 'Could not create signing service component for test-credential' ; exit 1; }
 
-# Export keyid into an environment variable
-ES256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(ES256)' | jq -r '.active.ES256') || { echo 'ES256 keyId failed' ; exit 1; }
-echo "ES256 Key ID: $ES256_KID"
-
-# Write keyid into a copy of the signing_service.json
-echo "Configuring signing service with Key ID..."
-less "$WORK_DIR/signing_service.json" | \
-  jq --arg kid "$ES256_KID" \
-     '.config.keyId = [$kid]' \
-  > "$TARGET_DIR/signing_service-tmp.json"
-
-# Create the signing service component
-echo "Creating signing service component..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/signing_service-tmp.json  || { echo 'Could not create signing service' ; exit 1; }
+echo "Creating signing service component for IdentityCredential..."
+$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/signing_service-IdentityCredential.json  || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
 
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'Client creation failed' ; exit 1; }
-
-# Useful link to check the configuration
-# Ensure keycloak with oid4vc-vci profile is running
-# keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
-# if [ ! -n "$keycloak_pid" ]; then
-#     echo "Keycloak not running. Start keycloak using 0.start-kc-oid4vci first..."
-#     exit 1  # Exit with an error code
-# fi
-
-# Read all realm attributes
-# echo "Reading all realm attributes..."
-# $TOOLS_DIR/bin/kcadm.sh get realms -r master --fields 'attributes(*)'
+$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
@@ -248,7 +226,12 @@ if ! jq -e '."credential_configurations_supported"."test-credential"' <<< "$resp
     exit 1  # Exit with an error code
 fi
 
+if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$response" > /dev/null; then
+    echo "Server started but error occurred. 'IdentityCredential' not found in OID4VCI configuration."
+    exit 1  # Exit with an error code
+fi
+
 # Server is up and OID4VCI feature with 'test-credential' seems installed
-echo "Keycloak server is running with OID4VCI feature and 'test-credential' configured."
+echo "Keycloak server is running with OID4VCI feature and credentials 'test-credential, IdentityCredential' configured."
 
 echo "Deployment script completed."
