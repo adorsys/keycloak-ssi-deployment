@@ -9,7 +9,7 @@ TOOLS_DIR=$TARGET_DIR/tools
 
 # Dev dir where to clone keycloak
 # KC_TARGET_BRANCH=main
-KC_TARGET_BRANCH=target-20240525-0
+KC_TARGET_BRANCH=issue-30525
 KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH
 
 # Ensure all sensitive data like passwords and keys are passed through environment variables or secure stores.
@@ -36,5 +36,13 @@ KC_INSTALL_DIR=$TOOLS_DIR/keycloak-999.0.0-SNAPSHOT
 # User credentials
 USER_FRANCIS_NAME=francis
 USER_FRANCIS_PASSWORD=francis
+
+# ISSUER_DID=https://keycloak.solutions.adorsys.com/realms/master
+ISSUER_DID=http://localhost:8080/realms/master
+
+FRANCIS_KEYSTORE_FILE=$TARGET_DIR/francis_kc_keystore.pkcs12
+FRANCIS_KEYSTORE_PASSWORD=francis_store_key_password
+FRANCIS_KEYSTORE_TYPE=PKCS12
+FRANCIS_KEYSTORE_ECDSA_KEY_ALIAS=ecdsa_key
 
 

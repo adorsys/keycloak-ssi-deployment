@@ -4,7 +4,7 @@
 . ./common_vars.sh
 
 # Retrieve the bearer token
-response=$(curl -s -o response.json -w "%{http_code}" -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+response=$(curl -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
     -d "client_id=account-console" \
     -d "username=$USER_FRANCIS_NAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
@@ -18,12 +18,12 @@ if [ "$http_code" -ne 200 ]; then
     exit 1
 fi
 
-USER_ACCESS_TOKEN=$(jq -r '.access_token' < response.json )
+USER_ACCESS_TOKEN=$(jq -r '.access_token' < $TARGET_DIR/response.json )
 
 echo -e "Bearer Token: $USER_ACCESS_TOKEN \n"
 
 # Retrieve link to the credential offer
-CREDENTIAL_OFFER_LINK=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
+CREDENTIAL_OFFER_LINK=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN" | jq -r '"\(.issuer)\(.nonce)"')
@@ -83,12 +83,19 @@ fi
 
 echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 
+. ./generate_key_proof.sh
+
+# Prepare request payload
+REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_identifier "IdentityCredential" --arg proof_jwt "$USER_KEY_PROOF" '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt')
+
+echo "REQ_BODY: " $REQ_BODY
+
 # Obtain the credential
 CREDENTIAL=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
-    -d '{"format": "vc+sd-jwt", "credential_identifier": "test-credential"}')
+    -d "$REQ_BODY")
 
 
 # Stop if CREDENTIAL is not retrieved
