@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
 # Read the direct access property of the account console
 echo "Reading direct access property of the account-console client..."

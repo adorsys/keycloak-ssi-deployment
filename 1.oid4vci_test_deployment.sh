@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Ensure keycloak with oid4vc-vci profile is running
 keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
@@ -12,7 +12,7 @@ fi
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
 # Collect the 4 active keys to be disabled.
 RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
@@ -219,7 +219,7 @@ $KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.preAuthorizedCod
 
 
 # Check server status and oid4vc-vci feature
-response=$(curl -s http://localhost:8080/realms/master/.well-known/openid-credential-issuer)
+response=$(curl -s $KEYCLOAK_ADMIN_ADDR/realms/master/.well-known/openid-credential-issuer)
 
 if ! jq -e '."credential_configurations_supported"."test-credential"' <<< "$response" > /dev/null; then
     echo "Server started but error occurred. 'test-credential' not found in OID4VCI configuration."

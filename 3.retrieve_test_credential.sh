@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Retrieve the bearer token
-response=$(curl -s -o response.json -w "%{http_code}" -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+response=$(curl -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/openid-connect/token \
     -d "client_id=account-console" \
     -d "username=$USER_FRANCIS_NAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
@@ -18,12 +18,12 @@ if [ "$http_code" -ne 200 ]; then
     exit 1
 fi
 
-USER_ACCESS_TOKEN=$(jq -r '.access_token' < response.json )
+USER_ACCESS_TOKEN=$(jq -r '.access_token' < $TARGET_DIR/response.json )
 
 echo -e "Bearer Token: $USER_ACCESS_TOKEN \n"
 
 # Retrieve link to the credential offer
-CREDENTIAL_OFFER_LINK=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
+CREDENTIAL_OFFER_LINK=$(curl -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN" | jq -r '"\(.issuer)\(.nonce)"')
@@ -58,7 +58,7 @@ echo -e "Pre-Authorized Code: $PRE_AUTHORIZED_CODE \n"
 
 # Obtain the credential
 # See: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-token-request
-CREDENTIAL_BEARER_TOKEN=$(curl -s http://localhost:8080/realms/master/protocol/openid-connect/token \
+CREDENTIAL_BEARER_TOKEN=$(curl -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
@@ -84,7 +84,7 @@ fi
 echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 
 # Obtain the credential
-CREDENTIAL=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential \
+CREDENTIAL=$(curl -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/oid4vc/credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
