@@ -30,6 +30,11 @@ else
     echo "Directory $TARGET_DIR/$KC_OID4VCI already exists."
 fi
 
+if [ ! -f "$KC_TRUST_STORE" ]; then
+    echo "Generating SSl keys..."
+    ./generate-kc-certs.sh
+fi
+
 # change into keycloak directory & build keycloak
 if [ ! -f "$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz" ]; then
     echo "File $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz does not exist, building keycloak..."

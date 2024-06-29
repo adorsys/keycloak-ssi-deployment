@@ -5,6 +5,7 @@
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
+$KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
 # Read the direct access property of the account console

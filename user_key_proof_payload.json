@@ -1,6 +1,6 @@
 {
   "iss": "oid4vci-client",
-  "aud": "http://localhost:8080/realms/master",
+  "aud": "",
   "iat": 1,
   "nonce": ""
 }

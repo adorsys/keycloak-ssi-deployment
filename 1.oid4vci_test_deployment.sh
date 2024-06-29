@@ -12,6 +12,7 @@ fi
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
+$KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
 # Collect the 4 active keys to be disabled.
@@ -219,7 +220,7 @@ $KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.preAuthorizedCod
 
 
 # Check server status and oid4vc-vci feature
-response=$(curl -s $KEYCLOAK_ADMIN_ADDR/realms/master/.well-known/openid-credential-issuer)
+response=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/master/.well-known/openid-credential-issuer)
 
 if ! jq -e '."credential_configurations_supported"."test-credential"' <<< "$response" > /dev/null; then
     echo "Server started but error occurred. 'test-credential' not found in OID4VCI configuration."
