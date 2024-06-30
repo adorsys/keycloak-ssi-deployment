@@ -4,7 +4,7 @@
 . .env
 
 # Retrieve the bearer token
-response=$(curl -k -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/openid-connect/token \
+response=$(curl -k -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -d "client_id=account-console" \
     -d "username=$USER_FRANCIS_NAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
@@ -23,7 +23,7 @@ USER_ACCESS_TOKEN=$(jq -r '.access_token' < $TARGET_DIR/response.json )
 echo -e "Bearer Token: $USER_ACCESS_TOKEN \n"
 
 # Retrieve link to the credential offer
-CREDENTIAL_OFFER_LINK=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential \
+CREDENTIAL_OFFER_LINK=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN" | jq -r '"\(.issuer)\(.nonce)"')
@@ -58,7 +58,7 @@ echo -e "Pre-Authorized Code: $PRE_AUTHORIZED_CODE \n"
 
 # Obtain the credential
 # See: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-token-request
-CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/openid-connect/token \
+CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
@@ -91,7 +91,7 @@ REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_iden
 echo "REQ_BODY: " $REQ_BODY
 
 # Obtain the credential
-CREDENTIAL=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/master/protocol/oid4vc/credential \
+CREDENTIAL=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
