@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Check and create directories
 if [ ! -d "$TARGET_DIR" ]; then
@@ -28,6 +28,11 @@ if [ ! -d "$TARGET_DIR/$KC_OID4VCI" ]; then
     echo "Keycloak cloned into $TARGET_DIR/$KC_OID4VCI."
 else
     echo "Directory $TARGET_DIR/$KC_OID4VCI already exists."
+fi
+
+if [ ! -f "$KC_TRUST_STORE" ]; then
+    echo "Generating SSl keys..."
+    ./generate-kc-certs.sh
 fi
 
 # change into keycloak directory & build keycloak
@@ -58,4 +63,4 @@ cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-99
 # Strart keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
-export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh start-dev --features=oid4vc-vci
+export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci

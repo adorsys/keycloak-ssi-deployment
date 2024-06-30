@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Stop if CREDENTIAL_ACCESS_TOKEN is not retrieved
 if [ -z "$CREDENTIAL_ACCESS_TOKEN" ]; then
@@ -13,8 +13,8 @@ fi
 iat=$(date +%s)
 # Compute the sha256 of the credential access token and use it as a c_nonce.
 nonce=$(echo -n "$CREDENTIAL_ACCESS_TOKEN" | openssl dgst -sha256 -binary | openssl base64 | tr -d '=' | tr '/+' '_-')
-
-less $WORK_DIR/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" '.iat = $iat | .nonce=$nonce' > $TARGET_DIR/user_key_proof_payload.json
+aud=$KEYCLOAK_EXTERNAL_ADDR/realms/master
+cat $WORK_DIR/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
 
 KEY_PROOF_HEADER_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_header.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 KEY_PROOF_PAYLOAD_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_payload.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
