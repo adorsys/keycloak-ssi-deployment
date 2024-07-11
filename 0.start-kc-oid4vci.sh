@@ -31,8 +31,8 @@ else
 fi
 
 if [ ! -f "$KC_TRUST_STORE" ]; then
-    echo "Generating SSl keys..."
-    ./generate-kc-certs.sh
+    echo "Generating SSl keys..." && \
+    source $WORK_DIR/generate-kc-certs.sh
 fi
 
 # change into keycloak directory & build keycloak
