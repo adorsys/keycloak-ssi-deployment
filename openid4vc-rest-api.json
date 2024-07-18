@@ -9,7 +9,7 @@
     "enabled": true,
     "alwaysDisplayInConsole": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "${{CLIENT_SECRET}}",
+    "secret": "${CLIENT_SECRET}",
     "redirectUris": [
       "http://localhost:8080/*",
       "https://kc-issuer.solutions.adorsys.com/*",
