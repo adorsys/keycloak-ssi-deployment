@@ -217,6 +217,8 @@ CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET' $WOR
 echo "Creating OPENID4VC-REST-API client..."
 echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
 
+# Clear the CONFIG variable
+unset CONFIG
 
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
