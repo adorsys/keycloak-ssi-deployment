@@ -210,12 +210,12 @@ $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/sig
 echo "Creating OID4VCI client..."
 $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
-# Replace placeholder {{CLIENT_SECRET}} in JSON file with actual secret
-sed -i "s/{{CLIENT_SECRET}}/$CLIENT_SECRET/g" $WORK_DIR/openid4vc-rest-api.json 
+# Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
+CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET' $WORK_DIR/openid4vc-rest-api.json)
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/openid4vc-rest-api.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
+echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
 
 
 # Add realm attribute issuerDid
