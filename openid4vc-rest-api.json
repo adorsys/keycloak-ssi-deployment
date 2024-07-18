@@ -15,7 +15,6 @@
       "https://kc-issuer.solutions.adorsys.com/*",
       "http://kc-issuer.solutions.adorsys.com/*",
       "http://localhost:8080",
-      "http://192.168.0.129:8080/*",
       "http://back.localhost.com/*"
     ],
     "webOrigins": [
