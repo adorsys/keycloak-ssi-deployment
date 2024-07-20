@@ -90,6 +90,26 @@
       }
     },
     {
+      "name": "iat-oid4vc-issued-at-time-claim-mapper-test-credential",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+      "config": {
+        "truncateToTimeUnit": "HOURS",
+        "valueSource": "COMPUTE",
+        "supportedCredentialTypes": "test-credential"
+      }
+    },
+    {
+      "name": "nbf-oid4vc-issued-at-time-claim-mapper-test-credential",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+      "config": {
+        "subjectProperty": "nbf",
+        "valueSource": "COMPUTE",
+        "supportedCredentialTypes": "test-credential"
+      }
+    },
+    {
       "id": "given_name-mapper-001",
       "name": "given_name-mapper",
       "protocol": "oid4vc",
@@ -108,6 +128,16 @@
       "config": {
         "subjectProperty": "family_name",
         "userAttribute": "lastName",
+        "supportedCredentialTypes": "identity_credential"
+      }
+    },
+    {
+      "name": "iat-oid4vc-issued-at-time-claim-mapper-identity_credential",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+      "config": {
+        "truncateToTimeUnit": "HOURS",
+        "valueSource": "COMPUTE",
         "supportedCredentialTypes": "identity_credential"
       }
     }
