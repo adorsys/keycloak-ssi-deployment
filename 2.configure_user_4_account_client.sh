@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
 # Read the direct access property of the account console
 echo "Reading direct access property of the account-console client..."
@@ -26,5 +27,11 @@ $KC_INSTALL_DIR/bin/kcadm.sh create users -r master -s username=francis -s first
 # Set password for Francis
 echo "Setting password for user Francis..."
 $KC_INSTALL_DIR/bin/kcadm.sh set-password -r master --username $USER_FRANCIS_NAME --new-password $USER_FRANCIS_PASSWORD
+
+# Prepare user key proof header if not existent
+if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
+  echo "Generating keypar for user ..."
+  . ./generate_user_key.sh
+fi
 
 echo "Script execution completed."

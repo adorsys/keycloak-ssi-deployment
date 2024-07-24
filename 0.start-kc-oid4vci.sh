@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Check and create directories
 if [ ! -d "$TARGET_DIR" ]; then
@@ -30,6 +30,11 @@ else
     echo "Directory $TARGET_DIR/$KC_OID4VCI already exists."
 fi
 
+if [ ! -f "$KC_TRUST_STORE" ]; then
+    echo "Generating SSl keys..." && \
+    source $WORK_DIR/generate-kc-certs.sh
+fi
+
 # change into keycloak directory & build keycloak
 if [ ! -f "$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz" ]; then
     echo "File $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz does not exist, building keycloak..."
@@ -39,12 +44,21 @@ else
     echo "Keycloak already installed, will skip build."
 fi
 
-# Shutdown keycloak if any
-keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
-if [ -n "$keycloak_pid" ]; then
-    echo "A Keycloak instance is already running (PID: $keycloak_pid). Shutting it down..."
-    kill $keycloak_pid 
-fi
+# Determine OS platform and shutdown Keycloak if running
+OS=$(uname -s)
+case "$OS" in
+    Linux*|Darwin*)
+        keycloak_pid=$(pgrep -f keycloak)
+        if [ -n "$keycloak_pid" ]; then
+            echo "Keycloak instance found (PID: $keycloak_pid) on $OS. Shutting it down..."
+            kill $keycloak_pid
+        fi
+        ;;
+    *)
+        echo "This script supports only Linux or macOS."
+        ;;
+esac
+
 
 # Change to the tools directory and unpack keycloak
 if [ -d "$KC_INSTALL_DIR" ]; then
@@ -58,4 +72,4 @@ cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-99
 # Strart keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
-export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh start-dev --features=oid4vc-vci
+export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci &

@@ -1,26 +1,29 @@
 #!/bin/bash
 
 # Source common env variables
-. ./common_vars.sh
+. .env
 
 # Retrieve the bearer token
-USER_ACCESS_TOKEN=$(curl -s -X POST http://localhost:8080/realms/master/protocol/openid-connect/token \
+response=$(curl -k -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -d "client_id=account-console" \
     -d "username=$USER_FRANCIS_NAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
     -d "grant_type=password" \
-    -d "scope=openid" | jq -r '.access_token')
+    -d "scope=openid")
 
-# Stop if USER_ACCESS_TOKEN is not retrieved
-if [ -z "$USER_ACCESS_TOKEN" ]; then
-    echo "Failed to retrieve USER_ACCESS_TOKEN"
+http_code=$(tail -n 1 <<< "$response")
+
+if [ "$http_code" -ne 200 ]; then
+    echo "Error: Server returned status code $http_code"
     exit 1
 fi
+
+USER_ACCESS_TOKEN=$(jq -r '.access_token' < $TARGET_DIR/response.json )
 
 echo -e "Bearer Token: $USER_ACCESS_TOKEN \n"
 
 # Retrieve link to the credential offer
-CREDENTIAL_OFFER_LINK=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
+CREDENTIAL_OFFER_LINK=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN" | jq -r '"\(.issuer)\(.nonce)"')
@@ -34,7 +37,7 @@ fi
 echo -e "Credential Offer Link: $CREDENTIAL_OFFER_LINK \n"
 
 # Retrieve the credential offer
-CREDENTIAL_OFFER=$(curl -s $CREDENTIAL_OFFER_LINK \
+CREDENTIAL_OFFER=$(curl -k -s $CREDENTIAL_OFFER_LINK \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN")
@@ -54,11 +57,12 @@ fi
 echo -e "Pre-Authorized Code: $PRE_AUTHORIZED_CODE \n"
 
 # Obtain the credential
-CREDENTIAL_BEARER_TOKEN=$(curl -s http://localhost:8080/realms/master/protocol/openid-connect/token \
+# See: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-token-request
+CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
-    -d "code=$PRE_AUTHORIZED_CODE" \
+    -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
     -d "client_id=oid4vci-client")
 
 # Stop if CREDENTIAL_BEARER_TOKEN is not retrieved
@@ -80,7 +84,7 @@ fi
 echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 
 # Obtain the credential
-CREDENTIAL=$(curl -s http://localhost:8080/realms/master/protocol/oid4vc/credential \
+CREDENTIAL=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
