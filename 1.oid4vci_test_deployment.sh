@@ -211,7 +211,7 @@ echo "Creating OID4VCI client..."
 $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
-CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET' $WORK_DIR/openid4vc-rest-api.json)
+CONFIG=$(cat $WORK_DIR/openid4vc-rest-api.json | jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET')
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
