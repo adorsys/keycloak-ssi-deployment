@@ -5,7 +5,8 @@
 
 # Retrieve the bearer token
 response=$(curl -k -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \
-    -d "client_id=account-console" \
+    -d "client_id=openid4vc-rest-api" \
+    -d "client_secret=$CLIENT_SECRET" \
     -d "username=$USER_FRANCIS_NAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
     -d "grant_type=password" \
@@ -63,7 +64,8 @@ CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/proto
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
     -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
-    -d "client_id=oid4vci-client")
+    -d "client_id=penid4vc-rest-api" \
+    -d "client_secret=$CLIENT_SECRET")
 
 # Stop if CREDENTIAL_BEARER_TOKEN is not retrieved
 if [ -z "$CREDENTIAL_BEARER_TOKEN" ]; then
