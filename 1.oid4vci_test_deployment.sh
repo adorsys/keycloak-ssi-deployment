@@ -95,7 +95,7 @@ keytool \
 
 # Add concret info and passwords to key provider
 echo "Configuring ecdsa key provider..."
-less $WORK_DIR/issuer_key_ecdsa.json | \
+ECDSA_KEY_PROVIDER=$(cat $WORK_DIR/issuer_key_ecdsa.json | \
   jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
   --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
@@ -105,11 +105,10 @@ less $WORK_DIR/issuer_key_ecdsa.json | \
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] | 
    .config.keyAlias = [$keyAlias] | 
-   .config.keyPassword = [$keyPassword]' \
-  > $TARGET_DIR/issuer_key_ecdsa-tmp.json 
+   .config.keyPassword = [$keyPassword]')
 
 echo "Configuring rsa signing key provider..."
-less $WORK_DIR/issuer_key_rsa.json | \
+RSA_KEY_PROVIDER=$(cat $WORK_DIR/issuer_key_rsa.json | \
   jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
   --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
@@ -119,11 +118,10 @@ less $WORK_DIR/issuer_key_rsa.json | \
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] | 
    .config.keyAlias = [$keyAlias] | 
-   .config.keyPassword = [$keyPassword]' \
-  > $TARGET_DIR/issuer_key_rsa-tmp.json 
+   .config.keyPassword = [$keyPassword]')
 
 echo "Configuring rsa enc key provider..."
-less $WORK_DIR/encryption_key_rsa.json | \
+RSA_ENC_KEY_PROVIDER=$(cat $WORK_DIR/encryption_key_rsa.json | \
   jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
   --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
@@ -133,8 +131,7 @@ less $WORK_DIR/encryption_key_rsa.json | \
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] | 
    .config.keyAlias = [$keyAlias] | 
-   .config.keyPassword = [$keyPassword]' \
-  > $TARGET_DIR/encryption_key_rsa-tmp.json 
+   .config.keyPassword = [$keyPassword]')
 
 # echo "Configuring hmac signature key provider..."
 # HMAC_SIG_KEY_ID=$(uuidgen)
@@ -172,11 +169,14 @@ less $WORK_DIR/encryption_key_rsa.json | \
 
 # Register the EC-key with Keycloak
 echo "Registering issuer key ecdsa..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
+echo "$ECDSA_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
+
 echo "Registering issuer key rsa..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/issuer_key_rsa-tmp.json || { echo 'RSA Issuer Key registration failed' ; exit 1; }
+echo "$RSA_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'RSA Issuer Key registration failed' ; exit 1; }
+
 echo "Registering encryption key rsa..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/encryption_key_rsa-tmp.json || { echo 'RSA Encryption Key registration failed' ; exit 1; }
+echo "$RSA_ENC_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'RSA Encryption Key registration failed' ; exit 1; }
+
 # echo "Registering signature key hmac..."
 # $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/signature_key_hmac-tmp.json || { echo 'Hmac Signature Key registration failed' ; exit 1; }
 # echo "Registering issuer key ecdsa..."
@@ -201,14 +201,17 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | sel
 
 # Create the signing service component for test-credential
 echo "Creating signing service component for test-credential..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/signing_service-test-credential.json  || { echo 'Could not create signing service component for test-credential' ; exit 1; }
+SIGNING_SERVICE_TEST_CRED=$(cat $WORK_DIR/signing_service-test-credential.json)
+echo "$SIGNING_SERVICE_TEST_CRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'Could not create signing service component for test-credential' ; exit 1; }
 
 echo "Creating signing service component for IdentityCredential..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $WORK_DIR/signing_service-IdentityCredential.json  || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
+SIGNING_SERVICE_IDENTITYCRED=$(cat $WORK_DIR/signing_service-IdentityCredential.json)
+echo "$SIGNING_SERVICE_IDENTITYCRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
 
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
+OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
+echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 CONFIG=$(cat $WORK_DIR/openid4vc-rest-api.json | jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET')
