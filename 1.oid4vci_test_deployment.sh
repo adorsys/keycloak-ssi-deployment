@@ -4,11 +4,28 @@
 . .env
 
 # Ensure keycloak with oid4vc-vci profile is running
-keycloak_pid=$(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
-if [ ! -n "$keycloak_pid" ]; then
-    echo "Keycloak not running. Start keycloak using 0.start-kc-oid4vci first..."
+# Function to get the Keycloak PID based on the OS
+get_keycloak_pid() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    echo $(ps aux | grep -i '[q]uarkus' | awk '{print $2}')
+  else
+    # Linux
+    echo $(ps aux | grep -i '[k]eycloak' | awk '{print $2}')
+  fi
+}
+
+# Get the Keycloak PID
+keycloak_pid=$(get_keycloak_pid)
+
+# Check if Keycloak is running
+if [ -z "$keycloak_pid" ]; then
+    echo "Keycloak not running. Start Keycloak using 0.start-kc-oid4vci first..."
     exit 1
 fi
+
+echo "Keycloak is running with PID: $keycloak_pid"
+
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
