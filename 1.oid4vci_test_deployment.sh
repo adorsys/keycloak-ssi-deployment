@@ -15,8 +15,6 @@ echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
-<<<<<<< HEAD
-=======
 # Collect the 4 active keys to be disabled.
 RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
 RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
@@ -49,11 +47,6 @@ keytool \
   -keystore $KEYCLOAK_KEYSTORE_FILE \
   -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
   -alias $KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS \
-<<<<<<< HEAD
-  -keypass $KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD \
-  -storetype $KEYCLOAK_KEYSTORE_TYPE \
-  -dname "CN=OIC4VCI Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
-=======
   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
   -storetype $KEYCLOAK_KEYSTORE_TYPE \
   -dname "CN=ECDSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
@@ -99,7 +92,6 @@ keytool \
 #   -alias $KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS \
 #   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
 #   -storetype $KEYCLOAK_KEYSTORE_TYPE 
->>>>>>> a4f24ce741d2918569052ec776df5eb506618573
 
 # Add concret info and passwords to key provider
 echo "Configuring ecdsa key provider..."
@@ -108,11 +100,7 @@ less $WORK_DIR/issuer_key_ecdsa.json | \
   --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
   --arg keyAlias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" \
-<<<<<<< HEAD
-  --arg keyPassword "$KEYCLOAK_KEYSTORE_ECDSA_KEY_PASSWORD" \
-=======
   --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
->>>>>>> a4f24ce741d2918569052ec776df5eb506618573
   '.config.keystore = [$keystore] | 
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] | 
@@ -120,12 +108,6 @@ less $WORK_DIR/issuer_key_ecdsa.json | \
    .config.keyPassword = [$keyPassword]' \
   > $TARGET_DIR/issuer_key_ecdsa-tmp.json 
 
-<<<<<<< HEAD
-
-# Register the EC-key with Keycloak
-echo "Registering issuer key..."
-$KC_INSTALL_DIR/bin/kcadm.sh -x create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'Key registration failed' ; exit 1; }
-=======
 echo "Configuring rsa signing key provider..."
 less $WORK_DIR/issuer_key_rsa.json | \
   jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
@@ -229,7 +211,7 @@ echo "Creating OID4VCI client..."
 $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
-CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET' $WORK_DIR/openid4vc-rest-api.json)
+CONFIG=$(cat $WORK_DIR/openid4vc-rest-api.json | jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET')
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
