@@ -8,16 +8,16 @@ echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
 
-# Read the direct access property of the account console
-echo "Reading direct access property of the account-console client..."
-$KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=account-console --fields 'id,directAccessGrantsEnabled'
+# Read the direct access property of the openid4vc-rest-api client
+echo "Reading direct access property of the openid4vc-rest-api client..."
+$KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=openid4vc-rest-api --fields 'id,directAccessGrantsEnabled'
 
 # Store property ACC_CLIENT_ID in an environment variable
-export ACC_CLIENT_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=account-console --fields id | jq -r '.[0].id')
-echo "Stored Account Console Client ID: $ACC_CLIENT_ID"
+export ACC_CLIENT_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=openid4vc-rest-api --fields id | jq -r '.[0].id')
+echo "Stored openid4vc-rest-api Client ID: $ACC_CLIENT_ID"
 
-# Enable direct grant on the account-console client
-echo "Enabling direct grant on the account-console client..."
+# Enable direct grant on the openid4vc-rest-api client
+echo "Enabling direct grant on the openid4vc-rest-api client..."
 $KC_INSTALL_DIR/bin/kcadm.sh update clients/$ACC_CLIENT_ID -r master -s directAccessGrantsEnabled=true -o --fields 'id,directAccessGrantsEnabled'
 
 # Create a user named Francis
