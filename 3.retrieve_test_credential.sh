@@ -64,7 +64,7 @@ CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/proto
     -H 'Content-Type: application/x-www-form-urlencoded' \
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
     -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
-    -d "client_id=penid4vc-rest-api" \
+    -d "client_id=openid4vc-rest-api" \
     -d "client_secret=$CLIENT_SECRET")
 
 # Stop if CREDENTIAL_BEARER_TOKEN is not retrieved

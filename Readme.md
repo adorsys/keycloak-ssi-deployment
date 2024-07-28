@@ -436,5 +436,5 @@ Certain credential types require cryptographic binding to the user's identity. T
 For these examples, we will be using the **pre-authorized_code** flow.
 
 * The script `3.retrieve_test_credential.sh` will allow you to request and obtain a test_credential, without holder binding.
-* The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a kye proof and use it to request an IdentityCredential with key binding.
+* The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
 
