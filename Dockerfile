@@ -7,7 +7,7 @@ WORKDIR /app
 # Install Git, apt-utils and other dependencies
 RUN apt-get update && apt-get install -y git apt-utils
 
-# Copy the Keycloak deployment scripts
+# Copy the Keycloak start-up script and .env file
 COPY . .
 
 # Run the Keycloak start-up script
@@ -25,11 +25,11 @@ RUN apt-get update && apt-get install -y git apt-utils
 # Copy the built Keycloak deployment from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
 
-# Copy the Keycloak configuration scripts and dependencies
+# Copy the environment variable file from the build stage
 COPY --from=builder /app/.env /opt/keycloak/
 
 # Expose the Keycloak port
 EXPOSE 8443
 
 # Set the entry point
-ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci & tail -f /dev/null"]
+ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci"]
