@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Retrieve the bearer token
 response=$(curl -k -s -o $TARGET_DIR/response.json -w "%{http_code}" -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/openid-connect/token \

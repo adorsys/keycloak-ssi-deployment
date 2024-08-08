@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Check and create directories
 if [ ! -d "$TARGET_DIR" ]; then
@@ -68,10 +68,11 @@ fi
 
 echo "unpacking keycloak ..."
 cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $WORK_DIR # undo directory change
 
 # Start database container
 if [ -z "${KC_DB_OPTS}" ]; then
-    echo "Starting the database container"
+    echo "Starting database container... $KC_DB_EXPOSED_PORT $KC_DB_NAME"
     docker-compose up -d db || { echo 'Could not start database container' ; exit 1; }
     KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 fi

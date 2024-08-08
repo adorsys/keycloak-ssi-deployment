@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Ensure keycloak with oid4vc-vci profile is running
 # Function to get the Keycloak PID based on the OS

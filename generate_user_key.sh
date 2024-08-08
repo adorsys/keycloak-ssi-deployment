@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Check if keystore exists and delete if it does
 if [ ! -f "$FRANCIS_KEYSTORE_FILE" ]; then
