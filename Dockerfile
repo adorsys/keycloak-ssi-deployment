@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y git apt-utils
 COPY . .
 
 # Run the Keycloak start-up script
-RUN ./0.start-kc-oid4vci.sh
+RUN ./build-kc-oid4vci.sh
 
 # Base image for the runtime stage
 FROM openjdk:17-jdk-slim
@@ -19,17 +19,11 @@ FROM openjdk:17-jdk-slim
 # Set the working directory
 WORKDIR /opt/keycloak/
 
-# Install Git, apt-utils and other dependencies
-RUN apt-get update && apt-get install -y git apt-utils
-
 # Copy the built Keycloak deployment from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
 
 # Copy the environment variable file from the build stage
 COPY --from=builder /app/.env /opt/keycloak/
 
-# Expose the Keycloak port
-EXPOSE 8443
-
 # Set the entry point
-ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci"]
+ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && set +a && cd \"$KC_INSTALL_DIR\" && exec bin/kc.sh \"$KC_START\" --features=oid4vc-vci"]
