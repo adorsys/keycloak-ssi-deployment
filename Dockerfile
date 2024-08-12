@@ -26,4 +26,4 @@ COPY --from=builder /app/target /opt/keycloak/target
 COPY --from=builder /app/.env /opt/keycloak/
 
 # Set the entry point
-ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && set +a && $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci"]
+ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && set +a && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci"]
