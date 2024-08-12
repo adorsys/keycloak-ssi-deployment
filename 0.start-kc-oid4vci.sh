@@ -19,7 +19,7 @@ case "$OS" in
         ;;
 esac
 
-# Souce Build script
+# Source Build script
 . build-kc-oid4vci.sh
 
 # Strart keycloak with OID4VCI feature
