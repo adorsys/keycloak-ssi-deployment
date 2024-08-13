@@ -12,17 +12,16 @@ services:
       - "${KC_DB_EXPOSED_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-  # TODO: Test after stable dockerization
   app:
     build:
       context: .
     env_file: .env
     environment:
-      - KC_DB_OPTS="--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}"
+      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
     depends_on:
       - db
     ports:
-      - "${KC_DB_EXPOSED_PORT}:${KEYCLOAK_HTTPS_PORT}"
+      - "${KEYCLOAK_HTTPS_PORT}:${KEYCLOAK_HTTPS_PORT}"
 
 volumes:
   db_data:
