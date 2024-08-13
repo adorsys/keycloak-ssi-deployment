@@ -50,11 +50,10 @@ echo "Generated RS256 key will be disbled... KID=$RS256_KID PROV_ID=$RS256_PROV_
 # echo "Generated AES key will be disbled... KID=$AES_KID PROV_ID=$AES_PROV_ID"
 
 # Keystore must have been set up at build time.
-if [ ! -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
-    echo "File $KEYCLOAK_KEYSTORE_FILE not found..."
-    echo "Keystore could not be loaded"
-    exit 1
-fi
+# Find relative path for the following config to remain valid
+# should the database be reconnected to a dockerized Keycloak.
+cd $KC_INSTALL_DIR
+KEYCLOAK_KEYSTORE_FILE="../../$(basename $KEYCLOAK_KEYSTORE_FILE)"
 
 # Add concret info and passwords to key provider
 echo "Configuring ecdsa key provider..."

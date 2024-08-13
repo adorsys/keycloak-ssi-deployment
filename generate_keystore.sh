@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Source common env variables
+. load_env.sh
 
 # Generate a keypairs into a PKCS12 keystore using java. 
 # We prefer an external file, as content will be shared among servers.
