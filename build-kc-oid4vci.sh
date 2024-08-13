@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Check and create directories
 if [ ! -d "$TARGET_DIR" ]; then
@@ -52,3 +52,4 @@ fi
 
 echo "unpacking keycloak ..."
 cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $WORK_DIR # undo directory change
