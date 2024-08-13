@@ -49,65 +49,11 @@ echo "Generated RS256 key will be disbled... KID=$RS256_KID PROV_ID=$RS256_PROV_
 # AES_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
 # echo "Generated AES key will be disbled... KID=$AES_KID PROV_ID=$AES_PROV_ID"
 
-# Reuse keystore if one exists
-if [ -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
-    echo "File $KEYCLOAK_KEYSTORE_FILE exists, will be reused..."
-else
-    # Generate a keypairs into a PKCS12 keystore using java. We prefer an external file, as content will be shared among servers.
-    echo "Generating $KEYCLOAK_KEYSTORE_FILE..."
-    
-    keytool \
-      -genkeypair \
-      -keyalg EC \
-      -keysize 256 \
-      -keystore $KEYCLOAK_KEYSTORE_FILE \
-      -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -alias $KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS \
-      -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -storetype $KEYCLOAK_KEYSTORE_TYPE \
-      -dname "CN=ECDSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
-
-    keytool \
-      -genkeypair \
-      -keyalg RSA \
-      -keysize 3072 \
-      -keystore $KEYCLOAK_KEYSTORE_FILE \
-      -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -alias $KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS \
-      -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -storetype $KEYCLOAK_KEYSTORE_TYPE \
-      -dname "CN=RSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon" 
-
-    keytool \
-      -genkeypair \
-      -keyalg RSA \
-      -keysize 3072 \
-      -keystore $KEYCLOAK_KEYSTORE_FILE \
-      -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -alias $KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS \
-      -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
-      -storetype $KEYCLOAK_KEYSTORE_TYPE \
-      -dname "CN=RSA Encryption Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon" 
-
-    # keytool \
-    #   -genseckey \
-    #   -keyalg HmacSHA512 \
-    #   -keysize 512 \
-    #   -keystore $KEYCLOAK_KEYSTORE_FILE \
-    #   -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
-    #   -alias $KEYCLOAK_KEYSTORE_HMAC_SIG_KEY_ALIAS \
-    #   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
-    #   -storetype $KEYCLOAK_KEYSTORE_TYPE
-
-    # keytool \
-    #   -genseckey \
-    #   -keyalg AES \
-    #   -keysize 256 \
-    #   -keystore $KEYCLOAK_KEYSTORE_FILE \
-    #   -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
-    #   -alias $KEYCLOAK_KEYSTORE_AES_ENC_KEY_ALIAS \
-    #   -keypass $KEYCLOAK_KEYSTORE_PASSWORD \
-    #   -storetype $KEYCLOAK_KEYSTORE_TYPE
+# Keystore must have been set up at build time.
+if [ ! -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
+    echo "File $KEYCLOAK_KEYSTORE_FILE not found..."
+    echo "Keystore could not be loaded"
+    exit 1
 fi
 
 # Add concret info and passwords to key provider
