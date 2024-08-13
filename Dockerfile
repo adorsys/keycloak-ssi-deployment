@@ -1,30 +1,29 @@
 # Use a base image with Java 17 and Maven installed
 FROM maven:3.8.4-openjdk-17-slim AS builder
 
+# Set the working directory
+WORKDIR /app
+
 # Install Git, apt-utils and other dependencies
 RUN apt-get update && apt-get install -y git apt-utils
 
-# Configure Git for large HTTP requests
-RUN git config --global http.postBuffer 524288000
+# Copy the Keycloak start-up script and .env file
+COPY . .
 
-# Clone the repository
-RUN git clone --depth 1 https://github.com/keycloak/keycloak.git /tmp/keycloak
-WORKDIR /tmp/keycloak
+# Run the Keycloak start-up script
+RUN ./build-kc-oid4vci.sh
 
-# Build Keycloak without running tests
-RUN mvn clean install -DskipTests
+# Base image for the runtime stage
+FROM openjdk:17-jdk-slim
 
-# Unpack the distribution
-RUN tar xzf ./quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz -C /opt
-WORKDIR /opt/keycloak-999.0.0-SNAPSHOT
+# Set the working directory
+WORKDIR /opt/keycloak/
 
-# Environment variables
-ENV KEYCLOAK_ADMIN=admin
-ENV KEYCLOAK_ADMIN_PASSWORD=admin
-ENV KC_HOSTNAME_STRICT=false
+# Copy the built Keycloak deployment from the build stage
+COPY --from=builder /app/target /opt/keycloak/target
 
-# Build Keycloak with the oid4vc-vci feature
-RUN bin/kc.sh build --features="oid4vc-vci"
+# Copy the environment variable file from the build stage
+COPY --from=builder /app/.env /opt/keycloak/
 
-# Entry point
-ENTRYPOINT ["bin/kc.sh", "start-dev", "--features=oid4vc-vci"]
+# Set the entry point
+ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && set +a && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci"]
