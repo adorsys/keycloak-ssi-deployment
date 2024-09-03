@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Check and create directories
 if [ ! -d "$TARGET_DIR" ]; then
@@ -52,3 +52,15 @@ fi
 
 echo "unpacking keycloak ..."
 cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $WORK_DIR # undo directory change
+
+# Generate or reuse keystore file
+# If a keystore with the same base name as `KEYCLOAK_KEYSTORE_FILE` 
+# is found at the root of project, it will be reused and not generated.
+KEYCLOAK_KEYSTORE_FILE_BASENAME=$(basename "$KEYCLOAK_KEYSTORE_FILE")
+if [ -f "$WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME" ]; then
+    echo "Keystore $WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME exists, will be reused..."
+    cp "$WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME" "$KEYCLOAK_KEYSTORE_FILE"
+else
+    ./generate_keystore.sh
+fi

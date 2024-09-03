@@ -129,7 +129,7 @@ The cert config file can be found at: ```cert-config.txt```
 ```bash
 #!/bin/bash
 # Source environment variables
-. .env  
+. load_env.sh
 
 openssl req -newkey rsa:2048 -nodes \
   -keyout "${KC_SERVER_KEY}" -x509 -days 3650 -out "${KC_SERVER_CERT}" -config "${WORK_DIR}/cert-config.txt"

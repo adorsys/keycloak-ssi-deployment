@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Stop if CREDENTIAL_ACCESS_TOKEN is not retrieved
 if [ -z "$CREDENTIAL_ACCESS_TOKEN" ]; then

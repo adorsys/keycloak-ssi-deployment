@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. .env
+. load_env.sh
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
