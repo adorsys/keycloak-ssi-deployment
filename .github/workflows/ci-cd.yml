@@ -3,15 +3,11 @@ name: ci-cd
 on:
   push:
     branches:
-      - main
+      - 36-build-a-pipeline-to-automate-the-update-of-the-kc-environment
 
 env:
   REGISTRY: 917848404243.dkr.ecr.eu-central-1.amazonaws.com
-  IMAGE_NAME: kcoid4vci
-  ECS_SERVICE: kcoid4vci                     
-  ECS_CLUSTER: kcoid4vci                     
-  ECS_TASK_DEFINITION: .aws/task-definition.json 
-  CONTAINER_NAME: "app"                          
+  IMAGE_NAME: kcoid4vci                     
   
 jobs:
   build-deliver:
