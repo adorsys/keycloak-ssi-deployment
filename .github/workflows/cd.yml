@@ -3,7 +3,7 @@ name: Deploy to Amazon ECS
 on:
   push:
     branches:
-      - 36-build-a-pipeline-to-automate-the-update-of-the-kc-environment
+      - main
 
 env:
   REGISTRY: 917848404243.dkr.ecr.eu-central-1.amazonaws.com
