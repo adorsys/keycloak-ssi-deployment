@@ -55,4 +55,4 @@ jobs:
           secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           repo: ${{ env.IMAGE_NAME }}
           registry: ${{ env.REGISTRY }}
-          region: ${{ secrets.AWS_REGION }}
+          region: ${{ secrets.AWS_REGION }} 
