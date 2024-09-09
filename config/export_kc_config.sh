@@ -16,7 +16,7 @@ echo "Cloning repository from $REPO_URL..."
 cd $KC_CLI_DIR && git clone --branch main "$REPO_URL" || { echo "Failed to clone repository"; exit 1; }
 
 # Navigate to cloned dir and build CLI tool
-cd "$PROJECT_DIR" && mvn clean install -DskipTests || { echo "Failed to build the CLI tool"; exit 1; }
+cd "$PROJECT_DIR" && ./mvnw clean install -DskipTests || { echo "Failed to build the CLI tool"; exit 1; }
 
 # Check if JAR file is created in the target directory
 if ls target/*.jar 1> /dev/null 2>&1; then
