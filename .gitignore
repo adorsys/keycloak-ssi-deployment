@@ -1,3 +1,4 @@
 signing_service-tmp.json
 target
 /.idea/
+config/keycloak-config-cli
