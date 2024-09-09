@@ -1,6 +1,6 @@
 {
     "id": "a9db380a-6f76-4054-904a-8eecab7db250",
-    "realm": "test1",
+    "realm": "master2",
     "displayName": "Keycloak",
     "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak</span></div>",
     "notBefore": 0,
@@ -906,7 +906,7 @@
         "enabled": true,
         "alwaysDisplayInConsole": false,
         "clientAuthenticatorType": "client-secret",
-        "secret": "uArydomqOymeF0tBrtipkPYujNNUuDlt",
+        "secret": "CLIENT_SECRET",
         "redirectUris": [
           "http://localhost:8080/*",
           "https://kc-issuer.solutions.adorsys.com/*",
@@ -1912,7 +1912,7 @@
           "subComponents": {},
           "config": {
             "keystorePassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "keyAlias": [
               "rsa_sig_key"
@@ -1921,13 +1921,13 @@
               "PKCS12"
             ],
             "keyPassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "active": [
               "true"
             ],
             "keystore": [
-              "/home/ubuntu/keycloak-ssi-deployment/target/kc_keystore.pkcs12"
+              "KC_KEYSTORE_PATH"
             ],
             "priority": [
               "0"
@@ -1986,7 +1986,7 @@
           "subComponents": {},
           "config": {
             "keystorePassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "keyAlias": [
               "rsa_enc_key"
@@ -1998,13 +1998,13 @@
               "PKCS12"
             ],
             "keyPassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "active": [
               "true"
             ],
             "keystore": [
-              "/home/ubuntu/keycloak-ssi-deployment/target/kc_keystore.pkcs12"
+              "KC_KEYSTORE_PATH"
             ],
             "priority": [
               "0"
@@ -2024,7 +2024,7 @@
           "subComponents": {},
           "config": {
             "keystorePassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "keyAlias": [
               "ecdsa_key"
@@ -2033,13 +2033,13 @@
               "PKCS12"
             ],
             "keyPassword": [
-              "store_key_password"
+              "KEYCLOAK_KEYSTORE_PASSWORD"
             ],
             "active": [
               "true"
             ],
             "keystore": [
-              "/home/ubuntu/keycloak-ssi-deployment/target/kc_keystore.pkcs12"
+              "KC_KEYSTORE_PATH"
             ],
             "priority": [
               "0"
@@ -2713,7 +2713,7 @@
       "cibaExpiresIn": "120",
       "oauth2DeviceCodeLifespan": "600",
       "parRequestUriLifespan": "60",
-      "issuerDid": "https://kc-ssi.solutions.adorsys.com/realms/master",
+      "issuerDid": "https://kc-ssi.solutions.adorsys.com//realms/master",
       "clientSessionMaxLifespan": "0",
       "organizationsEnabled": "false",
       "preAuthorizedCodeLifespanS": "120"

@@ -26,12 +26,21 @@ else
   exit 1
 fi
 
+# Define a temporary file to store the modified realm.json
+MODIFIED_REALM_JSON="modified_realm.json"
+
+# Replace the placeholder 'KEYCLOAK_KEYSTORE_PATH' in the realm.json file with the actual value from the .env
+sed -e "s|KC_KEYSTORE_PATH|$KC_KEYSTORE_PATH|g" \
+    -e "s|KEYCLOAK_KEYSTORE_PASSWORD|$KEYCLOAK_KEYSTORE_PASSWORD|g" \
+    -e "s|CLIENT_SECRET|$CLIENT_SECRET|g" \
+    $IMPORT_PATH > $MODIFIED_REALM_JSON
+
 # Run the JAR file with the specified parameters
 echo "Running the JAR file..."
 java -jar target/$JAR_FILE \
   --keycloak.url="$KEYCLOAK_URL" \
   --keycloak.user="$KEYCLOAK_USER" \
   --keycloak.password="$KEYCLOAK_PASSWORD" \
-  --keycloak.ssl-verify="true" \
-  --import.files.locations="$IMPORT_PATH" || { echo "Failed to run the JAR file"; exit 1; }
+  --keycloak.ssl-verify="false" \
+  --import.files.locations="$MODIFIED_REALM_JSON" || { echo "Failed to run the JAR file"; exit 1; }
 echo "Script completed successfully."
