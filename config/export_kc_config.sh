@@ -35,9 +35,14 @@ sed -e "s|KC_KEYSTORE_PATH|$KC_KEYSTORE_PATH|g" \
     -e "s|CLIENT_SECRET|$CLIENT_SECRET|g" \
     $IMPORT_PATH > $MODIFIED_REALM_JSON
 
+#Save the modified relm file
+cat $MODIFIED_REALM_JSON > $WORK_DIR/modified_realm.json
+
 # Run the JAR file with the specified parameters
 echo "Running the JAR file..."
 java -jar target/$JAR_FILE \
+  -Dimport-realm="true" \
+  -Dforce="true" \
   --keycloak.url="$KEYCLOAK_URL" \
   --keycloak.user="$KEYCLOAK_USER" \
   --keycloak.password="$KEYCLOAK_PASSWORD" \
