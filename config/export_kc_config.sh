@@ -3,7 +3,7 @@
 # Variables
 source .env
 
-# Check if the CLI project folder alredy exits, if so remove and clone again...
+# Check if the CLI project folder already exits, if so remove and clone again...
 if [ -d "$PROJECT_DIR" ]; then
   echo "Directory $PROJECT_DIR exists. Removing it..."
   rm -rf "$PROJECT_DIR" || { echo "Failed to remove directory $PROJECT_DIR"; exit 1; }
@@ -35,8 +35,6 @@ sed -e "s|KC_KEYSTORE_PATH|$KC_KEYSTORE_PATH|g" \
     -e "s|CLIENT_SECRET|$CLIENT_SECRET|g" \
     $IMPORT_PATH > $MODIFIED_REALM_JSON
 
-#Save the modified relm file
-cat $MODIFIED_REALM_JSON > $WORK_DIR/modified_realm.json
 
 # Run the JAR file with the specified parameters
 echo "Running the JAR file..."
@@ -46,6 +44,6 @@ java -jar target/$JAR_FILE \
   --keycloak.url="$KEYCLOAK_URL" \
   --keycloak.user="$KEYCLOAK_USER" \
   --keycloak.password="$KEYCLOAK_PASSWORD" \
-  --keycloak.ssl-verify="false" \
+  --keycloak.ssl-verify="true" \
   --import.files.locations="$MODIFIED_REALM_JSON" || { echo "Failed to run the JAR file"; exit 1; }
 echo "Script completed successfully."

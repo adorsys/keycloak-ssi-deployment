@@ -1,6 +1,6 @@
 {
     "id": "a9db380a-6f76-4054-904a-8eecab7db250",
-    "realm": "testrealm",
+    "realm": "master",
     "displayName": "Keycloak",
     "displayNameHtml": "<div class=\"kc-logo-text\"><span>Keycloak</span></div>",
     "notBefore": 0,
@@ -2713,7 +2713,7 @@
       "cibaExpiresIn": "120",
       "oauth2DeviceCodeLifespan": "600",
       "parRequestUriLifespan": "60",
-      "issuerDid": "https://localhost:8443/realms/master",
+      "issuerDid": "https://kc-ssi.solutions.adorsys.com/realms/master",
       "clientSessionMaxLifespan": "0",
       "organizationsEnabled": "false",
       "preAuthorizedCodeLifespanS": "120"
