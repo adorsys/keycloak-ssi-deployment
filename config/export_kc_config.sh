@@ -47,5 +47,5 @@ java -jar target/$KC_CLI_JAR_FILE \
   --import.files.locations="$MODIFIED_REALM_JSON" || { echo "Failed to run the JAR file"; exit 1; }
 echo "Script completed successfully."
 
-#Removing MODIFIED_REALM_JSON form memory
-unset MODIFIED_REALM_JSON
+# If everything is successful, delete the modified realm file
+rm -f "$MODIFIED_REALM_JSON"
