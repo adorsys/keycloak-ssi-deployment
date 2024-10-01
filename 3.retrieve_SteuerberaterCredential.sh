@@ -24,7 +24,7 @@ USER_ACCESS_TOKEN=$(jq -r '.access_token' < $TARGET_DIR/response.json )
 echo -e "Bearer Token: $USER_ACCESS_TOKEN \n"
 
 # Retrieve link to the credential offer
-CREDENTIAL_OFFER_LINK=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=test-credential \
+CREDENTIAL_OFFER_LINK=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential-offer-uri?credential_configuration_id=SteuerberaterCredential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN" | jq -r '"\(.issuer)\(.nonce)"')
@@ -65,7 +65,7 @@ CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/proto
     -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
     -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
     -d "client_id=openid4vc-rest-api" \
-    -d "client_secret=$CLIENT_SECRET")
+    -d "client_secret=$CLIENT_SECRET") \
 
 # Stop if CREDENTIAL_BEARER_TOKEN is not retrieved
 if [ -z "$CREDENTIAL_BEARER_TOKEN" ]; then
@@ -85,12 +85,19 @@ fi
 
 echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 
+. ./generate_key_proof.sh
+
+# Prepare request payload
+REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_identifier "SteuerberaterCredential" --arg proof_jwt "$USER_KEY_PROOF" '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt')
+
+echo "REQ_BODY: " $REQ_BODY
+
 # Obtain the credential
 CREDENTIAL=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/master/protocol/oid4vc/credential \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
-    -d '{"format": "vc+sd-jwt", "credential_identifier": "test-credential"}')
+    -d "$REQ_BODY")
 
 
 # Stop if CREDENTIAL is not retrieved
