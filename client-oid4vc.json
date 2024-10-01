@@ -23,25 +23,23 @@
     "vc.SteuerberaterCredential.cryptographic_binding_methods_supported": "jwk",
     "vc.SteuerberaterCredential.credential_signing_alg_values_supported": "ES256",
     "vc.SteuerberaterCredential.proof_types_supported":"{\"jwt\":{\"proof_signing_alg_values_supported\":[\"ES256\"]}}",
-    "vc.SteuerberaterCredential.display.0": "{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl-icon.png\",\"alternative_text\":\"STBK\"},\"background_image\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl.png\",\"alternative_text\":\"Mitgliedsausweis\"},\"background_image_svg\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl.svg\",\"alternative_text\":\"Mitgliedsausweis\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
-    "vc.SteuerberaterCredential.display.1": "{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl-icon.png\",\"alternative_text\":\"STBK\"},\"background_image\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl.png\",\"alternative_text\":\"Member Card\"},\"background_image_svg\":{\"url\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl.svg\",\"alternative_text\":\"Member Card\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
+    "vc.SteuerberaterCredential.display.0": "{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
+    "vc.SteuerberaterCredential.display.1": "{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"https:\/\/adorsys-my.sharepoint.com\/personal\/ingrid_kamga_adorsys_com\/Documents\/World\/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
     "vc.SteuerberaterCredential.claims": "{\"academic_title\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Titel\"},{\"locale\":\"en-US\",\"name\":\"Title\"},{\"locale\":\"fr-FR\",\"name\":\"Titre\"}]},\"family_name\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Name\"},{\"locale\":\"en-US\",\"name\":\"Surname\"},{\"locale\":\"fr-FR\",\"name\":\"Nom\"}]},\"given_name\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Vornamen\"},{\"locale\":\"en-US\",\"name\":\"Given names\"},{\"locale\":\"fr-FR\",\"name\":\"Pr\u00E8nomes\"}]},\"date_of_birth\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Geburtstag\"},{\"locale\":\"en-US\",\"name\":\"Date of birth\"},{\"locale\":\"fr-FR\",\"name\":\"Date de naissance\"}]},\"member_id\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"},{\"locale\":\"fr-FR\",\"name\":\"Member ID\"}]},\"address_country\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Staat\"},{\"locale\":\"en-US\",\"name\":\"Country\"},{\"locale\":\"fr-FR\",\"name\":\"Pays\"}]},\"address_locality\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Wohnort Stadt\"},{\"locale\":\"en-US\",\"name\":\"City\"},{\"locale\":\"fr-FR\",\"name\":\"Ville\"}]},\"address_postal_code\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Wohnnort PLZ\"},{\"locale\":\"en-US\",\"name\":\"Postcode\"},{\"locale\":\"fr-FR\",\"name\":\"Code Postal\"}]},\"address_street_address\":{\"display\":[{\"locale\":\"de-DE\",\"name\":\"Wohnnort Stra\u00DFe\"},{\"locale\":\"en-US\",\"name\":\"Street\"},{\"locale\":\"fr-FR\",\"name\":\"Rue\"}]}}"
   },
   "protocolMappers": [
     {
-      "id": "academic_title-mapper-bsk-001",
-      "name": "academic_title-mapper",
+      "name": "academic_title-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "academic_title",
-        "subjectValue": "",
+        "staticValue": "",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "family_name-mapper-bsk-001",
-      "name": "family_name-mapper",
+      "name": "family_name-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-user-attribute-mapper",
       "config": {
@@ -51,8 +49,7 @@
       }
     },
     {
-      "id": "given_name-mapper-bsk-001",
-      "name": "given_name-mapper",
+      "name": "given_name-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-user-attribute-mapper",
       "config": {
@@ -62,19 +59,17 @@
       }
     },
     {
-      "id": "date_of_birth-mapper-bsk-001",
-      "name": "date_of_birth-mapper",
+      "name": "date_of_birth-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "date_of_birth",
-        "subjectValue": "01.01.1990",
+        "staticValue": "01.01.1990",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "member_id-mapper-bsk-001",
-      "name": "member_id-mapper",
+      "name": "member_id-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-subject-id-mapper",
       "config": {
@@ -83,52 +78,47 @@
       }
     },
     {
-      "id": "address_country-mapper-bsk-001",
-      "name": "address_country-mapper",
+      "name": "address_country-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "address_country",
-        "subjectValue": "Germany",
+        "staticValue": "Germany",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "address_locality-mapper-bsk-001",
-      "name": "address_locality-mapper",
+      "name": "address_locality-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "address_locality",
-        "subjectValue": "Berlin",
+        "staticValue": "Berlin",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "address_postal_code-mapper-bsk-001",
-      "name": "address_postal_code-mapper",
+      "name": "address_postal_code-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "address_postal_code",
-        "subjectValue": "12345",
+        "staticValue": "12345",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "address_street_address-mapper-bsk-001",
-      "name": "address_street_address-mapper",
+      "name": "address_street_address-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "address_street_address",
-        "subjectValue": "Alexanderstraße 9",
+        "staticValue": "Alexanderstraße 9",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
-      "id": "role-mapper-001",
-      "name": "role-mapper",
+      "name": "role-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-target-role-mapper",
       "config": {
@@ -138,8 +128,7 @@
       }
     },
     {
-      "id": "id-mapper-001",
-      "name": "id-mapper",
+      "name": "id-mapper-bsk",
       "protocol": "oid4vc",
       "protocolMapper": "oid4vc-subject-id-mapper",
       "config": {

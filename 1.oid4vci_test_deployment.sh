@@ -161,10 +161,10 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | sel
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
-# Create the signing service component for test-credential
-echo "Creating signing service component for test-credential..."
-SIGNING_SERVICE_TEST_CRED=$(cat $WORK_DIR/signing_service-test-credential.json)
-echo "$SIGNING_SERVICE_TEST_CRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'Could not create signing service component for test-credential' ; exit 1; }
+# Create the signing service component for SteuerberaterCredential
+echo "Creating signing service component for SteuerberaterCredential..."
+SIGNING_SERVICE_TEST_CRED=$(cat $WORK_DIR/signing_service-SteuerberaterCredential.json)
+echo "$SIGNING_SERVICE_TEST_CRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - || { echo 'Could not create signing service component for SteuerberaterCredential' ; exit 1; }
 
 echo "Creating signing service component for IdentityCredential..."
 SIGNING_SERVICE_IDENTITYCRED=$(cat $WORK_DIR/signing_service-IdentityCredential.json)
@@ -197,8 +197,8 @@ $KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.preAuthorizedCod
 # Check server status and oid4vc-vci feature
 response=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/master/.well-known/openid-credential-issuer)
 
-if ! jq -e '."credential_configurations_supported"."test-credential"' <<< "$response" > /dev/null; then
-    echo "Server started but error occurred. 'test-credential' not found in OID4VCI configuration."
+if ! jq -e '."credential_configurations_supported"."SteuerberaterCredential"' <<< "$response" > /dev/null; then
+    echo "Server started but error occurred. 'SteuerberaterCredential' not found in OID4VCI configuration."
     exit 1  # Exit with an error code
 fi
 
@@ -207,7 +207,7 @@ if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$r
     exit 1  # Exit with an error code
 fi
 
-# Server is up and OID4VCI feature with 'test-credential' seems installed
-echo "Keycloak server is running with OID4VCI feature and credentials 'test-credential, IdentityCredential' configured."
+# Server is up and OID4VCI feature with 'SteuerberaterCredential' seems installed
+echo "Keycloak server is running with OID4VCI feature and credentials 'SteuerberaterCredential, IdentityCredential' configured."
 
 echo "Deployment script completed."
