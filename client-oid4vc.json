@@ -34,7 +34,7 @@
       "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
         "subjectProperty": "academic_title",
-        "staticValue": "",
+        "staticValue": "\u0020",
         "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
@@ -71,10 +71,11 @@
     {
       "name": "member_id-mapper-bsk",
       "protocol": "oid4vc",
-      "protocolMapper": "oid4vc-subject-id-mapper",
+      "protocolMapper": "oid4vc-static-claim-mapper",
       "config": {
-        "supportedCredentialTypes": "stbk_westfalen_lippe",
-        "subjectIdProperty": "member_id"
+        "subjectProperty": "member_id",
+        "staticValue": "123",
+        "supportedCredentialTypes": "stbk_westfalen_lippe"
       }
     },
     {
