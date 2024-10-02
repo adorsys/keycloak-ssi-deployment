@@ -9,7 +9,7 @@ if [ ! -f "$FRANCIS_KEYSTORE_FILE" ]; then
 keytool \
   -genkeypair \
   -keyalg EC \
-  -keysize 256 \
+  -groupname secp256r1 \
   -keystore "$FRANCIS_KEYSTORE_FILE" \
   -storepass "$FRANCIS_KEYSTORE_PASSWORD" \
   -alias "$FRANCIS_KEYSTORE_ECDSA_KEY_ALIAS" \
