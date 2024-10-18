@@ -24,7 +24,7 @@ fi
 # checkout keycloak
 if [ ! -d "$TARGET_DIR/$KC_OID4VCI" ]; then
     echo "Directory $TARGET_DIR/$KC_OID4VCI does not exist, cloning repo..."
-    cd $TARGET_DIR && git clone --depth 1 --branch $KC_TARGET_BRANCH https://github.com/adorsys/keycloak-oid4vc.git $TARGET_DIR/$KC_OID4VCI
+    cd $TARGET_DIR && git clone --depth 1 --branch $KC_TARGET_BRANCH https://github.com/keycloak/keycloak.git $TARGET_DIR/$KC_OID4VCI
     echo "Keycloak cloned into $TARGET_DIR/$KC_OID4VCI."
 else
     echo "Directory $TARGET_DIR/$KC_OID4VCI already exists."
@@ -36,8 +36,8 @@ if [ ! -f "$KC_TRUST_STORE" ]; then
 fi
 
 # change into keycloak directory & build keycloak
-if [ ! -f "$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz" ]; then
-    echo "File $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz does not exist, building keycloak..."
+if [ ! -f "$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-25.0.5.tar.gz" ]; then
+    echo "File $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-25.0.5.tar.gz does not exist, building keycloak..."
     cd $TARGET_DIR/$KC_OID4VCI && $TARGET_DIR/$KC_OID4VCI/mvnw clean install -DskipTests || { echo 'Could not build keycloak' ; exit 1; }
     echo "Keycloak installed"
 else
@@ -51,7 +51,7 @@ if [ -d "$KC_INSTALL_DIR" ]; then
 fi
 
 echo "unpacking keycloak ..."
-cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-25.0.5.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
 cd $WORK_DIR # undo directory change
 
 # Generate or reuse keystore file
