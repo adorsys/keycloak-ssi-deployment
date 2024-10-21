@@ -36,17 +36,17 @@ $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --
 $KC_INSTALL_DIR/bin/kcadm.sh create realms -s realm=$KEYCLOAK_REALM -s enabled=true
 
 # Collect the 4 active keys to be disabled.
-RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
-RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
-echo "Generated RSA-OAEP key will be disbled... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
+RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
+RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
+echo "Generated RSA-OAEP key will be disabled... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
 
 # HS512_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(HS512)' | jq -r '.active.HS512')
 # HS512_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$HS512_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
 # echo "Generated HS512 key will be disbled... KID=$HS512_KID PROV_ID=$HS512_PROV_ID"
 
-RS256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(RS256)' | jq -r '.active.RS256')
-RS256_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
-echo "Generated RS256 key will be disbled... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
+RS256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RS256)' | jq -r '.active.RS256')
+RS256_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
+echo "Generated RS256 key will be disabled... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
 
 # AES_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(AES)' | jq -r '.active.AES')
 # AES_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
@@ -149,23 +149,20 @@ echo "$RSA_ENC_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r
 
 # Disable generated keys
 echo "Deactivating generated RSA-OAEP... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
-$KC_INSTALL_DIR/bin/kcadm.sh update components/$RSA_OAEP_PROV_ID -s 'config.active=["false"]' || { echo 'Updating RSA_OAEP provider failed' ; exit 1; }
-$KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)'
+$KC_INSTALL_DIR/bin/kcadm.sh update components/$RSA_OAEP_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RSA_OAEP provider failed' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)'
 
 # echo "Deactivating generated HS512 key... KID=$HS512_KID PROV_ID=$HS512_PROV_ID"
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$HS512_PROV_ID -s 'config.active=["false"]' || { echo 'Updating HS512 provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$HS512_KID" '.keys[] | select(.kid == $kid)'
 
 echo "Deactivating generated RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
-$KC_INSTALL_DIR/bin/kcadm.sh update components/$RS256_PROV_ID -s 'config.active=["false"]' || { echo 'Updating RS256 provider failed' ; exit 1; }
-$KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)'
+$KC_INSTALL_DIR/bin/kcadm.sh update components/$RS256_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RS256 provider failed' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)'
 
 # echo "Deactivating generated AES key will... KID=$AES_KID PROV_ID=$AES_PROV_ID"
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
-
-echo "keysssssssssssssssssssssssssssssssssssssssssssssssssssssss"
-$KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM
 
 # Create the signing service component for SteuerberaterCredential
 echo "Creating signing service component for SteuerberaterCredential..."
@@ -179,14 +176,14 @@ echo "$SIGNING_SERVICE_IDENTITYCRED" | $KC_INSTALL_DIR/bin/kcadm.sh create compo
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
 OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
-echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
+echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 CONFIG=$(cat $WORK_DIR/openid4vc-rest-api.json | jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET')
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
-echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
+echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
 
 # Clear the CONFIG variable
 unset CONFIG

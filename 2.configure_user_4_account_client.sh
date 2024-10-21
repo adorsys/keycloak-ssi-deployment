@@ -10,10 +10,10 @@ $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --
 
 # Read the direct access property of the openid4vc-rest-api client
 echo "Reading direct access property of the openid4vc-rest-api client..."
-$KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=openid4vc-rest-api --fields 'id,directAccessGrantsEnabled'
+$KC_INSTALL_DIR/bin/kcadm.sh get clients -r $KEYCLOAK_REALM -q clientId=openid4vc-rest-api --fields 'id,directAccessGrantsEnabled'
 
 # Store property ACC_CLIENT_ID in an environment variable
-export ACC_CLIENT_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get clients -q clientId=openid4vc-rest-api --fields id | jq -r '.[0].id')
+export ACC_CLIENT_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get clients -r $KEYCLOAK_REALM -q clientId=openid4vc-rest-api --fields id | jq -r '.[0].id')
 echo "Stored openid4vc-rest-api Client ID: $ACC_CLIENT_ID"
 
 # Enable direct grant on the openid4vc-rest-api client
