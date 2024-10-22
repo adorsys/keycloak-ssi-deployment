@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-source load_env.sh
+source ../.env
 
 # Check if the CLI project folder already exits, if so remove and clone again...
 if [ -d "$KC_CLI_PROJECT_DIR" ]; then
@@ -43,7 +43,7 @@ java -jar target/$KC_CLI_JAR_FILE \
   --keycloak.url="$KEYCLOAK_URL" \
   --keycloak.user="$KEYCLOAK_ADMIN" \
   --keycloak.password="$KEYCLOAK_ADMIN_PASSWORD" \
-  --keycloak.ssl-verify="true" \
+  --keycloak.ssl-verify="false" \
   --import.files.locations="$MODIFIED_REALM_JSON" || { echo "Failed to run the JAR file"; exit 1; }
 echo "Script completed successfully."
 

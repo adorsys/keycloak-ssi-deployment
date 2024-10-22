@@ -88,7 +88,7 @@ echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 . ./generate_key_proof.sh
 
 # Prepare request payload
-REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_identifier "IdentityCredential" --arg proof_jwt "$USER_KEY_PROOF" '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt')
+REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_identifier "IdentityCredential" --arg proof_jwt "$USER_KEY_PROOF" '.credential_identifier = $credential_identifier | .proof.proofObject = $proof_jwt')
 
 echo "REQ_BODY: " $REQ_BODY
 
