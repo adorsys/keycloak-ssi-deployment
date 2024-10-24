@@ -1,6 +1,6 @@
 {
   "id": "7388e3a1-ed09-4c1e-9c42-4a3a4ce8984e",
-  "realm": "oid4vc-vci",
+  "realm": "ssi-realm",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
@@ -66,7 +66,7 @@
       },
       {
         "id": "f35b48dc-2d9a-4965-b9b8-795b4d059c92",
-        "name": "default-roles-oid4vc-vci",
+        "name": "default-roles-ssi-realm",
         "description": "${role_default-roles}",
         "composite": true,
         "composites": {
@@ -408,7 +408,7 @@
   "groups": [],
   "defaultRole": {
     "id": "f35b48dc-2d9a-4965-b9b8-795b4d059c92",
-    "name": "default-roles-oid4vc-vci",
+    "name": "default-roles-ssi-realm",
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
@@ -475,7 +475,7 @@
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-oid4vc-vci" ],
+    "realmRoles" : [ "default-roles-ssi-realm" ],
     "notBefore" : 0,
     "groups" : [ ]
   } ],
@@ -504,13 +504,13 @@
       "clientId": "account",
       "name": "${client_account}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/oid4vc-vci/account/",
+      "baseUrl": "/realms/ssi-realm/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/oid4vc-vci/account/*"
+        "/realms/ssi-realm/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -549,13 +549,13 @@
       "clientId": "account-console",
       "name": "${client_account-console}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/oid4vc-vci/account/",
+      "baseUrl": "/realms/ssi-realm/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/oid4vc-vci/account/*"
+        "/realms/ssi-realm/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -929,7 +929,7 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "CLIENT_SECRET",
+      "secret": "$(env:CLIENT_SECRET)",
       "redirectUris": [
         "http://localhost:8080/*",
         "https://kc-issuer.solutions.adorsys.com/*",
@@ -1033,13 +1033,13 @@
       "clientId": "security-admin-console",
       "name": "${client_security-admin-console}",
       "rootUrl": "${authAdminUrl}",
-      "baseUrl": "/admin/oid4vc-vci/console/",
+      "baseUrl": "/admin/ssi-realm/console/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/admin/oid4vc-vci/console/*"
+        "/admin/ssi-realm/console/*"
       ],
       "webOrigins": [
         "+"
@@ -1952,13 +1952,13 @@
         "subComponents": {},
         "config": {
           "keystorePassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_sig_key"
           ],
           "keyPassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "keystoreType": [
             "PKCS12"
@@ -1967,7 +1967,7 @@
             "true"
           ],
           "keystore": [
-            "../../kc_keystore.pkcs12"
+            "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
             "0"
@@ -2029,7 +2029,7 @@
         "subComponents": {},
         "config": {
           "keystorePassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_enc_key"
@@ -2041,13 +2041,13 @@
             "enc"
           ],
           "keyPassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "active": [
             "true"
           ],
           "keystore": [
-            "../../kc_keystore.pkcs12"
+            "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
             "0"
@@ -2067,7 +2067,7 @@
         "subComponents": {},
         "config": {
           "keystorePassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "ecdsa_key"
@@ -2076,13 +2076,13 @@
             "PKCS12"
           ],
           "keyPassword": [
-            "KEYCLOAK_KEYSTORE_PASSWORD"
+            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
           ],
           "active": [
             "true"
           ],
           "keystore": [
-            "../../kc_keystore.pkcs12"
+            "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
             "0"
@@ -2756,7 +2756,7 @@
     "cibaExpiresIn": "120",
     "oauth2DeviceCodeLifespan": "600",
     "parRequestUriLifespan": "60",
-    "issuerDid": "https://localhost:8443/realms/oid4vc-vci",
+    "issuerDid": "$(env:KEYCLOAK_EXTERNAL_ADDR)/realms/ssi-realm",
     "clientSessionMaxLifespan": "0",
     "organizationsEnabled": "false",
     "preAuthorizedCodeLifespanS": "120"
