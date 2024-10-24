@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-source ../.env
+source .env
 
 # Check if the CLI project folder already exits, if so remove and clone again...
 if [ -d "$KC_CLI_PROJECT_DIR" ]; then
@@ -26,26 +26,19 @@ else
   exit 1
 fi
 
-# Define a temporary file to store the modified realm.json
-MODIFIED_REALM_JSON="modified_realm.json"
-
-# Replace the placeholders 'KEYCLOAK_KEYSTORE_PATH','KEYCLOAK_KEYSTORE_PASSWORD' and 'CLIENT_SECRETin' in the realm.json file with the actual value from the .env
-sed -e "s|KC_KEYSTORE_PATH|$KC_KEYSTORE_PATH|g" \
-    -e "s|KEYCLOAK_KEYSTORE_PASSWORD|$KEYCLOAK_KEYSTORE_PASSWORD|g" \
-    -e "s|CLIENT_SECRET|$CLIENT_SECRET|g" \
-    $KC_REALM_FILE > $MODIFIED_REALM_JSON
-
 # Run the JAR file with the specified parameters
+# When running locally , let the option keycloak.ssl-verify be false otherwise let it be true.
 echo "Running the JAR file..."
-java -jar target/$KC_CLI_JAR_FILE \
-  -Dimport-realm="true" \
-  -Dforce="true" \
-  --keycloak.url="$KEYCLOAK_URL" \
-  --keycloak.user="$KEYCLOAK_ADMIN" \
-  --keycloak.password="$KEYCLOAK_ADMIN_PASSWORD" \
-  --keycloak.ssl-verify="false" \
-  --import.files.locations="$MODIFIED_REALM_JSON" || { echo "Failed to run the JAR file"; exit 1; }
+java -DCLIENT_SECRET="$CLIENT_SECRET" \
+     -DKEYCLOAK_EXTERNAL_ADDR="$KEYCLOAK_EXTERNAL_ADDR" \
+     -DKEYCLOAK_KEYSTORE_PASSWORD="$KEYCLOAK_KEYSTORE_PASSWORD" \
+     -DKC_KEYSTORE_PATH="$KC_KEYSTORE_PATH" \
+     -jar target/$KC_CLI_JAR_FILE \
+     -Dimport-realm=true \
+     --import.var-substitution.enabled=true \
+     --keycloak.url="$KEYCLOAK_URL" \
+     --keycloak.user="$KEYCLOAK_ADMIN" \
+     --keycloak.password="$KEYCLOAK_ADMIN_PASSWORD" \
+     --keycloak.ssl-verify=false \
+     --import.files.locations="$KC_REALM_FILE" || { echo "Failed to run the JAR file"; exit 1; }
 echo "Script completed successfully."
-
-# If everything is successful, delete the modified realm file
-rm -f "$MODIFIED_REALM_JSON"
