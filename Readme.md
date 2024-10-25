@@ -23,7 +23,17 @@ keytool -version
 ```
 
 ### Script
-In the project directory execute following scripts (tested on debian & ubuntu linux only):
+In the project directory, you can set up Keycloak in a docker environment with an external database and all necessary configurations in a single command using Docker Compose. This has been tested on Debian and Ubuntu Linux.
+
+### Setup Keycloak
+
+To start Keycloak and configure everything, run the following command:
+
+```bash
+docker-compose up -d
+```
+
+If you prefer to start Keycloak manually, you can use the following script:
 
 ```bash
 # checkout build and start keycloak on localhost:8443
@@ -32,41 +42,26 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 
 This will start keycloak in the background on `https://localhost:8443`. Wait for Keycloak to start
 
-## Configure the keycloak Deployment
-This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access te admin interface and shares generated 
-keystore files with keycloak. 
+## Configure the Keycloak Deployment
 
-### Prerequisites
+To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm for SSI operations.
 
-Before proceeding with OID4VCI configuration, ensure you have the following tools and components ready:
+### Step-by-Step Configuration
 
-* **Keycloak Built from Source:** The Keycloak Admin CLI (`kcadm.sh`) will be available in the `bin` directory of the Keycloak installation.
+1. **Check the `.env` File**
 
-* **Java Keytool:** see above
+   Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
 
-* **OpenSSL:** see above
+   Key variables to review:
+   - `KEYCLOAK_URL`: URL of your Keycloak server.
+   - `KEYCLOAK_ADMIN`: Admin username for Keycloak.
+   - `KEYCLOAK_ADMIN_PASSWORD`: Admin password for Keycloak.
 
-* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide. 
+Optionally we can achieve thesame configuration stated above using the scripts: 
 
-**Verification:** You can verify that the tools are working by running:
-
-```bash
-keytool -version
-openssl version
-jq --version
-```
-### Script
-In the project directory execute following scripts (tested on debian & ubuntu linux only):
-
-```bash
-# Configure oid4vci protocol
-./1.oid4vci_test_deployment.sh
-```
-
-```bash
-# Create a user account
-./2.configure_user_4_account_client.sh
-```
+  - ./0.start-kc-oid4vci.sh (builds and starts keycloak)
+  - ./1.oid4vci_test_deployment.sh (Configure oid4vci protocol)
+  - 2.configure_user_4_account_client.sh (Create a user account)
 
 ## Requesting Credentials
 Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl certificate validation.
@@ -96,28 +91,17 @@ All environment variables defined here are to be found in a .env file source ahe
 
 Keycloak's OID4VCI feature is still under active development, with changes happening frequently. This means the specific branch you clone from will determine the available functionality and potential issues you might encounter.
 
-The current version of this work builds on to of  [pull request #30692](https://github.com/keycloak/keycloak/pull/30692) (related to [issue #30525](https://github.com/keycloak/keycloak/issues/30525)).
-* **If this PR is merged:** You can safely clone from the `main` branch of the official Keycloak repository:
-   ```bash
-   KC_REMOTE=https://github.com/keycloak/keycloak.git
-   KC_TARGET_BRANCH=main 
-   ```
-* **As long as this PR is NOT merged:** Clone the `issue-30525` branch from the `adorsys/keycloak-oid4vc` fork:
-   ```bash
-   KC_REMOTE=https://github.com/adorsys/keycloak-oid4vc.git
-   KC_TARGET_BRANCH=issue-30525 
-   ```
-  This branch should contain the latest changes related to OID4VCI, but be aware it might not be as stable as the official `main` branch.
+The current version of this work builds on to of keycloak 25.0.5.
 
 * **Environment Variable Summary:**
 
   ```bash
-  KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH # Example: keycloak_issue-30525
+  KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH # Example: keycloak_25.0.5
   ```
   This combines the name "keycloak" with your chosen branch for convenient project naming.
 
-### Cloning and Building Keycloak
-You can the clone and build keycloak as defined in ```0.start-kc-oid4vci.sh```. This might take a while.
+### Cloning and Building and Starting Keycloak
+You can the clone, build and start keycloak as defined in ```0.start-kc-oid4vci.sh```. This might take a while.
 
 ### Generating SSL Keys for Keycloak
 
@@ -139,13 +123,14 @@ keytool -importcert -trustcacerts -noprompt -alias localhost -file "${KC_SERVER_
 
 ### Keycloak Startup with SSL
 
-After generating ssl keys, you can start Keycloak with SSL enabled, as indicated in ```0.start-kc-oid4vci.sh```
+After generating ssl keys, you can start Keycloak with SSL enabled, as indicated in ```0.start-kc-oid4vci.sh``` and ```build-kc-oid4vci.sh```
 
 ```bash
+# build-kc-oid4vci.sh
 echo "unpacking keycloak ..."
-cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-25.0.5.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
 
-# Starts keycloak with OID4VCI feature
+# Starts keycloak with OID4VCI feature (0.start-kc-oid4vci.sh)
 
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
 export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci
@@ -191,7 +176,7 @@ The following batch command sets the `issuerDid` attribute for your realm (e.g.,
 ```bash
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
 ```
 
 ### Configuring a Keycloak ECDSA Signing Key for Verifiable Credentials
@@ -265,13 +250,13 @@ cat $WORK_DIR/issuer_key_ecdsa.json | \
 
 **4. Adding the Key to the Keycloak Realm:**
 
-The following bash command will add the ec key to the keycloak realm `master` and configure it to produce JWS ES256 signature
+The following bash command will add the ec key to the keycloak realm `${KEYCLOAK_REALM}` and configure it to produce JWS ES256 signature
 (ECDSA on curve P-256).
 
 ```bash
 # Register the EC-key with Keycloak
 echo "Registering issuer key ecdsa..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
+echo "$ECDSA_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
 ```
 
 ### Defining VCs in Keycloak
@@ -322,7 +307,8 @@ To register this client with Keycloak, use the following command:
 ```bash
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
+OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
+echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
 ```
 
 #### Protocol Mapper Example
@@ -370,6 +356,7 @@ Here's an example of a signing service configuration for a credential type calle
   "providerId": "vc+sd-jwt",
   "providerType": "org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService",
   "config": {
+    "keyId": ["key-id"],
     "algorithmType": ["ES256"],
     "hashAlgorithm": ["sha-256"],
     "tokenType": ["vc+sd-jwt"],
@@ -392,7 +379,8 @@ You can register this signing service with Keycloak using the following command:
 
 ```bash
 echo "Creating signing service component for IdentityCredential..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < "$WORK_DIR/signing_service-IdentityCredential.json" || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
+SIGNING_SERVICE_IDENTITYCRED=$(cat $WORK_DIR/signing_service-IdentityCredential.json)
+echo "$SIGNING_SERVICE_IDENTITYCRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
 ```
 
 After registering a signing service, keycloak is ready to deliver a verifiable credential for the given credential type and format.
