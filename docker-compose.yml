@@ -12,16 +12,40 @@ services:
       - "${KC_DB_EXPOSED_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-  app:
-    build:
-      context: .
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.5
     env_file: .env
     environment:
-      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://db:5432/keycloak
+      - KC_DB_USERNAME=${KC_DB_USERNAME}
+      - KC_DB_PASSWORD=${KC_DB_PASSWORD}
+    command: >
+      start-dev --features=oid4vc-vci
     depends_on:
       - db
     ports:
-      - "${KEYCLOAK_HTTPS_PORT}:${KEYCLOAK_HTTPS_PORT}"
+      - "${KEYCLOAK_HTTP_PORT}:${KEYCLOAK_HTTP_PORT}"
+    volumes:
+      - ./target/kc_keystore.pkcs12:/opt/keycloak/target/kc_keystore.pkcs12
+
+  keycloak-config-cli:
+    image: adorsys/keycloak-config-cli:latest
+    env_file: .env
+    environment:
+      - IMPORT_VARSUBSTITUTION_ENABLED=true
+      - KEYCLOAK_URL=http://keycloak:${KEYCLOAK_HTTP_PORT}
+      - KEYCLOAK_USER=${KEYCLOAK_ADMIN}
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - KEYCLOAK_SSLVERIFY=false
+      - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
+      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=20s
+      - IMPORT_FILES_LOCATIONS=/config/ssi-realm-configuration.json
+    depends_on:
+      - keycloak
+    volumes:
+      - ./config:/config
 
 volumes:
   db_data:
