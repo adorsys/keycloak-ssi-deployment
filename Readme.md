@@ -32,9 +32,32 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 
 This will start keycloak in the background on `https://localhost:8443`. Wait for Keycloak to start
 
-## Configure the keycloak Deployment
-This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access te admin interface and shares generated 
-keystore files with keycloak. 
+## Keycloak Configuration for Verifiable Credential Issuance
+
+To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm.
+
+### Step-by-Step Configuration
+
+1. **Check the `.env` File**
+
+   Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
+
+   **Key variables to review:**
+   - `KEYCLOAK_URL`: URL of your Keycloak server.
+   - `KEYCLOAK_ADMIN`: Admin username for Keycloak.
+   - `KEYCLOAK_ADMIN_PASSWORD`: Admin password for Keycloak.
+
+2. **Run the Configuration Script**
+
+   After verifying your `.env` file, run the following script to configure your Keycloak environment:
+
+   ```bash
+   # Export Keycloak configuration
+   ./config/export_kc_config.sh
+   ```
+
+
+We can also configure Keycloak manually using the kcadm.sh tool. This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access the admin interface and shares generated keystore files with Keycloak.
 
 ### Prerequisites
 
