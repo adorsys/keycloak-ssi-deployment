@@ -13,7 +13,7 @@ fi
 iat=$(date +%s)
 # Compute the sha256 of the credential access token and use it as a c_nonce.
 nonce=$(echo -n "$CREDENTIAL_ACCESS_TOKEN" | openssl dgst -sha256 -binary | openssl base64 | tr -d '=' | tr '/+' '_-')
-aud=$KEYCLOAK_EXTERNAL_ADDR/realms/master
+aud=$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM
 cat $WORK_DIR/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
 
 KEY_PROOF_HEADER_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_header.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')

@@ -1,4 +1,4 @@
-# /bin/bash
+#!/bin/bash
 
 . load_env.sh
 
