@@ -14,19 +14,21 @@ Before proceeding, ensure you have the following tools installed on your system:
 
 * **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
 * **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
+* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide. 
 
 **Verification:** You can verify that the tools are working by running:
 
 ```bash
 openssl version
 keytool -version
+jq --version
 ```
 
 ### Script
 In the project directory execute following scripts (tested on debian & ubuntu linux only):
 
 ```bash
-# checkout build and start keycloak on localhost:8443
+# checkout build and start keycloak
 ./0.start-kc-oid4vci.sh 
 ```
 
@@ -44,40 +46,24 @@ To set up Keycloak for Verifiable Credential Issuance, we use a script that util
 
    **Key variables to review:**
    - `KEYCLOAK_URL`: URL of your Keycloak server.
-   - `KEYCLOAK_ADMIN`: Admin username for Keycloak.
-   - `KEYCLOAK_ADMIN_PASSWORD`: Admin password for Keycloak.
+   - `KC_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
+   - `KC_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
 
 2. **Run the Configuration Script**
 
    After verifying your `.env` file, run the following script to configure your Keycloak environment:
 
    ```bash
-   # Export Keycloak configuration
-   ./config/export_kc_config.sh
+   # Import Keycloak configuration
+   ./config/import_kc_config.sh
    ```
-
 
 We can also configure Keycloak manually using the kcadm.sh tool. This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access the admin interface and shares generated keystore files with Keycloak.
 
 ### Prerequisites
 
-Before proceeding with OID4VCI configuration, ensure you have the following tools and components ready:
+Refer to the TLDR section for initial setup requirements.
 
-* **Keycloak Built from Source:** The Keycloak Admin CLI (`kcadm.sh`) will be available in the `bin` directory of the Keycloak installation.
-
-* **Java Keytool:** see above
-
-* **OpenSSL:** see above
-
-* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide. 
-
-**Verification:** You can verify that the tools are working by running:
-
-```bash
-keytool -version
-openssl version
-jq --version
-```
 ### Script
 In the project directory execute following scripts (tested on debian & ubuntu linux only):
 
@@ -110,37 +96,30 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 
 ### Prerequisites
 
-See TLDR 
+Refer to the TLDR section for initial setup requirements.
 
 ### The .env File
-All environment variables defined here are to be found in a .env file source ahead of executing any command.
+All environment variables defined here are to be found in a .env file, sourced ahead of executing any command.
 
-### Choosing the Keycloak Branch to Build From
+### Using Keycloak with OID4VCI Support
 
-Keycloak's OID4VCI feature is still under active development, with changes happening frequently. This means the specific branch you clone from will determine the available functionality and potential issues you might encounter.
+The project now uses the officially released version of Keycloak that includes OID4VCI support. To get started:
 
-The current version of this work builds on to of  [pull request #30692](https://github.com/keycloak/keycloak/pull/30692) (related to [issue #30525](https://github.com/keycloak/keycloak/issues/30525)).
-* **If this PR is merged:** You can safely clone from the `main` branch of the official Keycloak repository:
-   ```bash
-   KC_REMOTE=https://github.com/keycloak/keycloak.git
-   KC_TARGET_BRANCH=main 
-   ```
-* **As long as this PR is NOT merged:** Clone the `issue-30525` branch from the `adorsys/keycloak-oid4vc` fork:
-   ```bash
-   KC_REMOTE=https://github.com/adorsys/keycloak-oid4vc.git
-   KC_TARGET_BRANCH=issue-30525 
-   ```
-  This branch should contain the latest changes related to OID4VCI, but be aware it might not be as stable as the official `main` branch.
+### Clone the repository using the 26.0.6 tag:
+  ```bash
+  KC_REMOTE=https://github.com/keycloak/keycloak.git
+  KC_TARGET_BRANCH=26.0.6
+  ```
 
 * **Environment Variable Summary:**
 
   ```bash
-  KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH # Example: keycloak_issue-30525
+  KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH # Example: keycloak_26.0.6
   ```
-  This combines the name "keycloak" with your chosen branch for convenient project naming.
+  This combines the name "keycloak" with your chosen branch/tag for convenient project naming.
 
 ### Cloning and Building Keycloak
-You can the clone and build keycloak as defined in ```0.start-kc-oid4vci.sh```. This might take a while.
+Run the script ```0.start-kc-oid4vci.sh``` to clone and build Keycloak. This process might take some time as it sets up the environment.
 
 ### Generating SSL Keys for Keycloak
 
@@ -162,19 +141,19 @@ keytool -importcert -trustcacerts -noprompt -alias localhost -file "${KC_SERVER_
 
 ### Keycloak Startup with SSL
 
-After generating ssl keys, you can start Keycloak with SSL enabled, as indicated in ```0.start-kc-oid4vci.sh```
+After generating SSL keys, you can start Keycloak with SSL enabled by using the script ```0.start-kc-oid4vci.sh```
 
 ```bash
 echo "unpacking keycloak ..."
-cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
+cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-26.0.6.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
 
 # Starts keycloak with OID4VCI feature
 
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
-export KEYCLOAK_ADMIN=$KEYCLOAK_ADMIN && export KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci
+export KC_BOOTSTRAP_ADMIN_USERNAME=$KC_BOOTSTRAP_ADMIN_USERNAME && export KC_BOOTSTRAP_ADMIN_PASSWORD=$KC_BOOTSTRAP_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci
 ```
 
-For an external deployment, **make sure you modify the keycloak admin password**.
+For external deployments, **ensure you update the Keycloak admin password** to a more secure value.
 
 Recall the start command in `.env` file is:
 ```bash
@@ -185,14 +164,13 @@ KC_START="start --hostname-strict=false --https-port=$KEYCLOAK_HTTPS_PORT --http
 
 ### Prerequisites
 
-See TLDR
+Refer to the TLDR section for initial setup requirements.
 
-### All in One
-All steps described bellow can be achieved running the script ```1.oid4vci_test_deployment.sh```.
+### All-in-One Deployment
+All the steps outlined below can be executed by running the script ```1.oid4vci_test_deployment.sh```.
 
 ### Keycloak Admin CLI
-Although they are many integrated ways of administering keycloak. We will be using the keycloak ```kcadm.sh``` as we want the
-reader to try out on a shell and achieve quick results. For a more complex deployment, we will be using [keycloak-config-cli](https://github.com/adorsys/keycloak-config-cli).
+Although Keycloak provides various integrated ways to manage configurations, we use the ```kcadm.sh``` CLI tool. This approach allows readers to work directly in a shell for quick results. For more complex deployments, consider using [keycloak-config-cli](https://github.com/adorsys/keycloak-config-cli).
 
 ### Accessing the Keycloak admin interface with SSL
 The following lines will allow you to configure a truststore for used by ```kcadm.sh``` and obtain and administrator access token to perform administrative tasks.
@@ -202,19 +180,19 @@ The following lines will allow you to configure a truststore for used by ```kcad
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 echo "Obtaining admin token..."
 # Get admin token using environment variables for credentials
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
 ```
 
 ### Setting the Issuer Identifier (DID)
 
-In the decentralized identity ecosystem, a Decentralized Identifier (DID) is a unique identifier that can be resolved to a DID Document. This document contains information about the entity identified by the DID, such as its public keys and service endpoints. Keycloak, as a VC issuer, needs a DID to clearly identify itself. Other parties may dereference this DID Document (or its associated endpoint) to retrieve the cryptographic material needed to validate credentials issued by Keycloak.
+In the decentralized identity ecosystem, a Decentralized Identifier (DID) serves as a unique identifier that resolves to a DID Document. This document contains information such as public keys and service endpoints for the associated entity. As a VC issuer, Keycloak requires a DID to identify itself. Other parties may dereference the DID Document (or its associated endpoint) to retrieve the cryptographic material needed to validate credentials issued by Keycloak.
 
-The following batch command sets the `issuerDid` attribute for your realm (e.g., "master") using the value configured in your `.env` file:
+The following batch command sets the `issuerDid` attribute for your realm using the value configured in your `.env` file:
 
 ```bash
 # Add realm attribute issuerDid
 echo "Updating realm attributes for issuerDid..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/master -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
 ```
 
 ### Configuring a Keycloak ECDSA Signing Key for Verifiable Credentials
@@ -288,13 +266,12 @@ cat $WORK_DIR/issuer_key_ecdsa.json | \
 
 **4. Adding the Key to the Keycloak Realm:**
 
-The following bash command will add the ec key to the keycloak realm `master` and configure it to produce JWS ES256 signature
-(ECDSA on curve P-256).
+The following Bash command adds an EC key to the Keycloak realm specified in the ```.env``` file and configures it to produce JWS ES256 signatures (ECDSA on curve P-256):
 
 ```bash
 # Register the EC-key with Keycloak
 echo "Registering issuer key ecdsa..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < $TARGET_DIR/issuer_key_ecdsa-tmp.json || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
 ```
 
 ### Defining VCs in Keycloak
@@ -415,7 +392,7 @@ You can register this signing service with Keycloak using the following command:
 
 ```bash
 echo "Creating signing service component for IdentityCredential..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r master -o -f - < "$WORK_DIR/signing_service-IdentityCredential.json" || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
+$KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < "$WORK_DIR/signing_service-IdentityCredential.json" || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
 ```
 
 After registering a signing service, keycloak is ready to deliver a verifiable credential for the given credential type and format.
@@ -427,21 +404,21 @@ After registering a signing service, keycloak is ready to deliver a verifiable c
 This endpoint is **mandatory** and describes the issuer's capabilities, including supported credential types, formats, cryptographic binding methods, and display information. It also provides the URLs for other essential endpoints like the `credential_endpoint`, `batch_credential_endpoint`, and `deferred_credential_endpoint`. The current keycloak implementation supports only the credential endpoint.
 
 * URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-credential-issuer`
-* e.g: `http://localhost:8443/realms/master/.well-known/openid-credential-issuer`
+* e.g: `https://localhost:8443/realms/master/.well-known/openid-credential-issuer`
 
 ### OpenID Configuration Endpoint
 
 This endpoint is **mandatory** in OpenID Connect and provides general metadata about the issuer's OpenID Connect configuration, such as supported scopes, response types, and grant types. While not specific to OID4VCI, it's essential for the overall OpenID Connect flow that underpins VC issuance.
 
 * URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-configuration`
-* e.g.: `http://localhost:8443/realms/master/.well-known/openid-configuration`
+* e.g.: `https://localhost:8443/realms/master/.well-known/openid-configuration`
 
 ### JWT Issuer Endpoint
 
 This endpoint is **optional** and provides metadata specifically about the issuer's JWT-based VCs. It includes information about supported algorithms, key IDs, and other details relevant to JWT-based VCs.
 
 * URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/jwt-vc-issuer`
-* e.g: `http://localhost:8080/realms/master/.well-known/jwt-vc-issuer`
+* e.g: `https://localhost:8443/realms/master/.well-known/jwt-vc-issuer`
 
 
 ## Creating User and User key Materials
@@ -458,6 +435,5 @@ Certain credential types require cryptographic binding to the user's identity. T
 
 For these examples, we will be using the **pre-authorized_code** flow.
 
-* The script `3.retrieve_test_credential.sh` will allow you to request and obtain a test_credential, without holder binding.
+* The script `3.retrieve_SteuerberaterCredential.sh` will allow you to request and obtain a test_credential, without holder binding.
 * The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
-

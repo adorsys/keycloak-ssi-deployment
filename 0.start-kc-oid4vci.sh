@@ -32,6 +32,6 @@ fi
 # Start keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
-export KEYCLOAK_ADMIN KEYCLOAK_ADMIN_PASSWORD \
+export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD \
 && cd $KC_INSTALL_DIR \
 && bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci &
