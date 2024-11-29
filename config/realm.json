@@ -946,7 +946,7 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "$(env:CLIENT_SECRET)",
       "redirectUris": [
-        "$(env:ISSUER_BACKEND_URL)",
+        "$(env:ISSUER_BACKEND_URL)/*",
         "http://back.localhost.com/*"
       ],
       "webOrigins": [
@@ -966,7 +966,7 @@
         "client.secret.creation.time": "1719785014",
         "client.introspection.response.allow.jwt.claim.enabled": "false",
         "login_theme": "keycloak",
-        "post.logout.redirect.uris": "$(env:ISSUER_FRONTEND_URL)/*##$(env:ISSUER_FRONTEND_URL)##http://localhost:5173##http://front.localhost.com",
+        "post.logout.redirect.uris": "$(env:ISSUER_FRONTEND_URL)/*##$(env:ISSUER_FRONTEND_URL)##http://front.localhost.com",
         "oauth2.device.authorization.grant.enabled": "false",
         "use.jwks.url": "false",
         "backchannel.logout.revoke.offline.tokens": "false",

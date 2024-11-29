@@ -13,7 +13,7 @@ fi
 
 # Clone the main branch of the Git repository
 echo "Cloning repository from ${REPO_URL}..."
-cd $KC_CLI_DIR && git clone --branch main "$REPO_URL" || { echo "Failed to clone repository"; exit 1; }
+cd $TARGET_DIR && git clone --branch main "$REPO_URL" || { echo "Failed to clone repository"; exit 1; }
 
 # Navigate to cloned dir and build CLI tool
 cd "$KC_CLI_PROJECT_DIR" && ./mvnw clean install -DskipTests || { echo "Failed to build the CLI tool"; exit 1; }
