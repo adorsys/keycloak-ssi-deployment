@@ -19,8 +19,8 @@ case "$OS" in
         ;;
 esac
 
-# Run Build script
-./build-kc-oid4vci.sh
+# Download, unpack, and prepare Keycloak for start-up.
+./setup-kc-oid4vci.sh
 
 # Start database container
 if [ -z "${KC_DB_OPTS}" ]; then

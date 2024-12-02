@@ -6,7 +6,7 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 Checkout this project.
 
-## Checkout, Build and Deploy keycloak
+## Checkout, Download, and Deploy Keycloak
 
 ### Prerequisites
 
@@ -28,7 +28,7 @@ jq --version
 In the project directory execute following scripts (tested on debian & ubuntu linux only):
 
 ```bash
-# checkout build and start keycloak
+# Set up and start Keycloak
 ./0.start-kc-oid4vci.sh 
 ```
 
@@ -55,7 +55,7 @@ To set up Keycloak for Verifiable Credential Issuance, we use a script that util
 
    ```bash
    # Import Keycloak configuration
-   ./config/import_kc_config.sh
+   config/import_kc_config.sh
    ```
 
 We can also configure Keycloak manually using the kcadm.sh tool. This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access the admin interface and shares generated keystore files with Keycloak.
@@ -92,7 +92,7 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 
 # Detailed Description
 
-## Building and Deploying Keycloak
+## Downloading and Deploying Keycloak
 
 ### Prerequisites
 
@@ -105,21 +105,23 @@ All environment variables defined here are to be found in a .env file, sourced a
 
 The project now uses the officially released version of Keycloak that includes OID4VCI support. To get started:
 
-### Clone the repository using the 26.0.6 tag:
-  ```bash
-  KC_REMOTE=https://github.com/keycloak/keycloak.git
-  KC_TARGET_BRANCH=26.0.6
-  ```
-
-* **Environment Variable Summary:**
+### Download and Setup Keycloak
+The ```setup-kc-oid4vci.sh``` script now downloads the prebuilt Keycloak tarball (keycloak-26.0.6.tar.gz) from the [official Keycloak GitHub Releases](https://github.com/keycloak/keycloak/releases/tag/26.0.6). This simplifies the setup process, as no build step is required.
 
   ```bash
-  KC_OID4VCI="keycloak_"$KC_TARGET_BRANCH # Example: keycloak_26.0.6
+  ./setup-kc-oid4vci.sh
   ```
-  This combines the name "keycloak" with your chosen branch/tag for convenient project naming.
 
-### Cloning and Building Keycloak
-Run the script ```0.start-kc-oid4vci.sh``` to clone and build Keycloak. This process might take some time as it sets up the environment.
+This script:
+
+- Downloads the Keycloak tarball.
+- Unpacks it to the specified directory.
+- Prepares Keycloak for OID4VCI usage.
+
+```bash
+echo "unpacking keycloak ..."
+cd $TOOLS_DIR && tar xzf $KEYCLOAK_OID4VCI_TARBALL || { echo 'Could not unpack keycloak' ; exit 1; }
+```
 
 ### Generating SSL Keys for Keycloak
 
@@ -141,23 +143,27 @@ keytool -importcert -trustcacerts -noprompt -alias localhost -file "${KC_SERVER_
 
 ### Keycloak Startup with SSL
 
-After generating SSL keys, you can start Keycloak with SSL enabled by using the script ```0.start-kc-oid4vci.sh```
+After setting up Keycloak and generating SSL keys, you can start Keycloak with OID4VCI features enabled. Use the ```0.start-kc-oid4vci.sh``` script:
+
+This script:
+- Shuts down any running Keycloak instance.
+- Prepares Keycloak by running the setup script.
+- Starts the database container if not already running (Used for local development).
+- Launches Keycloak with SSL, database connection, and OID4VCI support.
 
 ```bash
-echo "unpacking keycloak ..."
-cd $TOOLS_DIR && tar xzf $TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-26.0.6.tar.gz || { echo 'Could not unpack keycloak' ; exit 1; }
-
 # Starts keycloak with OID4VCI feature
 
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
-export KC_BOOTSTRAP_ADMIN_USERNAME=$KC_BOOTSTRAP_ADMIN_USERNAME && export KC_BOOTSTRAP_ADMIN_PASSWORD=$KC_BOOTSTRAP_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START --features=oid4vc-vci
+export KC_BOOTSTRAP_ADMIN_USERNAME=$KC_BOOTSTRAP_ADMIN_USERNAME && export KC_BOOTSTRAP_ADMIN_PASSWORD=$KC_BOOTSTRAP_ADMIN_PASSWORD && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci
 ```
 
 For external deployments, **ensure you update the Keycloak admin password** to a more secure value.
 
-Recall the start command in `.env` file is:
+Recall the start and database commands in `.env` file are:
 ```bash
 KC_START="start --hostname-strict=false --https-port=$KEYCLOAK_HTTPS_PORT --https-certificate-file=$KC_SERVER_CERT --https-certificate-key-file=$KC_SERVER_KEY"
+KC_DB_OPTS="--db postgres --db-url jdbc:postgresql://localhost:$KC_DB_EXPOSED_PORT/$KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 ```
 
 ## Configuring Keycloak to Service Verifiable Credentials
