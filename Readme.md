@@ -6,7 +6,7 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 Checkout this project.
 
-## Checkout, Download, and Deploy Keycloak
+## Checkout, Build, and Deploy Keycloak
 
 ### Prerequisites
 
@@ -14,7 +14,8 @@ Before proceeding, ensure you have the following tools installed on your system:
 
 * **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
 * **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
-* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide. 
+* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide.
+* **.env File:** Review the `.env` file to ensure all the necessary environment variables are correctly set up.
 
 **Verification:** You can verify that the tools are working by running:
 
@@ -24,15 +25,37 @@ keytool -version
 jq --version
 ```
 
-### Script
-In the project directory execute following scripts (tested on debian & ubuntu linux only):
+### Setting Up Keycloak
+You can set up Keycloak in one of two ways, based on your requirements:
 
-```bash
-# Set up and start Keycloak
-./0.start-kc-oid4vci.sh 
-```
+1. **Using the Keycloak Tarball:** Downloads an official release from [Keycloak GitHub Releases](https://github.com/keycloak/keycloak/releases).
+2. **Cloning and Building a Specific Keycloak Branch:** Builds Keycloak from a specific branch.
 
-This will start keycloak in the background on `https://localhost:8443`. Wait for Keycloak to start
+### Configuring the Setup Method
+The setup method is controlled by the ```KC_USE_UPSTREAM``` environment variable:
+
+- `true`: Use the Keycloak tarball.
+- `false`: Clone and build a specific branch.
+
+### Option 1: Using the Keycloak Tarball
+Set ```KC_USE_UPSTREAM=true``` in the `.env file` and run:
+  ```bash
+  ./0.start-kc-oid4vci.sh
+  ```
+This will:
+
+- Download and unpack the tarball (e.g., keycloak-26.0.6.tar.gz).
+- Start Keycloak with OID4VCI feature on https://localhost:8443.
+
+### Option 2: Cloning a Specific Branch
+Set ```KC_USE_UPSTREAM=false``` in the `.env file` and run:
+  ```bash
+  ./0.start-kc-oid4vci.sh
+  ```
+This will:
+
+- Clone and Build Keycloak from the specified branch.
+- Start Keycloak with OID4VCI feature on https://localhost:8443.
 
 ## Keycloak Configuration for Verifiable Credential Issuance
 
@@ -92,7 +115,7 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 
 # Detailed Description
 
-## Downloading and Deploying Keycloak
+## Building and Deploying Keycloak
 
 ### Prerequisites
 
@@ -103,10 +126,10 @@ All environment variables defined here are to be found in a .env file, sourced a
 
 ### Using Keycloak with OID4VCI Support
 
-The project now uses the officially released version of Keycloak that includes OID4VCI support. To get started:
+The project uses the officially released version of Keycloak with OID4VCI support, and it also provides the option to clone and build a specific branch (e.g., for testing new features before integration).
 
-### Download and Setup Keycloak
-The ```setup-kc-oid4vci.sh``` script now downloads the prebuilt Keycloak tarball (keycloak-26.0.6.tar.gz) from the [official Keycloak GitHub Releases](https://github.com/keycloak/keycloak/releases/tag/26.0.6). This simplifies the setup process, as no build step is required.
+### Cloning and Building Keycloak
+The ```setup-kc-oid4vci.sh``` script simplifies the setup process. It either downloads a prebuilt tarball or builds Keycloak from source, depending on the ```KC_USE_UPSTREAM``` value.
 
   ```bash
   ./setup-kc-oid4vci.sh
@@ -114,14 +137,17 @@ The ```setup-kc-oid4vci.sh``` script now downloads the prebuilt Keycloak tarball
 
 This script:
 
-- Downloads the Keycloak tarball.
-- Unpacks it to the specified directory.
+- Downloads or builds Keycloak.
 - Prepares Keycloak for OID4VCI usage.
 
 ```bash
 echo "unpacking keycloak ..."
-cd $TOOLS_DIR && tar xzf $KEYCLOAK_OID4VCI_TARBALL || { echo 'Could not unpack keycloak' ; exit 1; }
+tar xzf "$TAR_FILE" -C "$TOOLS_DIR" || { echo "Could not unpack Keycloak tarball"; exit 1; }
+echo "Keycloak unpacked to $KC_INSTALL_DIR."
 ```
+
+```$TAR_FILE```: The path to the Keycloak tarball, either the upstream tarball (if using the official Keycloak release) or the custom build (if building from source).
+
 
 ### Generating SSL Keys for Keycloak
 
@@ -147,7 +173,7 @@ After setting up Keycloak and generating SSL keys, you can start Keycloak with O
 
 This script:
 - Shuts down any running Keycloak instance.
-- Prepares Keycloak by running the setup script.
+- Prepares Keycloak by running the setup script ```(setup-kc-oid4vci.sh)```.
 - Starts the database container if not already running (Used for local development).
 - Launches Keycloak with SSL, database connection, and OID4VCI support.
 

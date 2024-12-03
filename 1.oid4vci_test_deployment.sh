@@ -183,10 +183,10 @@ CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
   --arg CLIENT_SECRET "$CLIENT_SECRET" \
   --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
   --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
-  '.secret = $CLIENT_SECRET | 
-   .redirectUris = [$ISSUER_BACKEND_URL + "/*", "http://back.localhost.com/*"] | 
-   .webOrigins = [$ISSUER_BACKEND_URL] | 
-   .attributes["post.logout.redirect.uris"] =($ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL + "##http://front.localhost.com")'
+  '.secret += $CLIENT_SECRET |
+   .redirectUris += [$ISSUER_BACKEND_URL + "/*"] |
+   .webOrigins += [$ISSUER_BACKEND_URL] |
+   .attributes["post.logout.redirect.uris"] +=("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)'
 )
 
 # Create client for openid4vc-rest-api
