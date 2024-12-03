@@ -8,10 +8,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y git apt-utils
 
 # Copy necessary files for building and starting keycloak
-COPY generate-kc-certs.sh .env build-kc-oid4vci.sh load_env.sh cert-config.txt kc_keystore.pkcs12 ./
+COPY generate-kc-certs.sh .env setup-kc-oid4vci.sh load_env.sh cert-config.txt kc_keystore.pkcs12 ./
 
-# Run the Keycloak start-up script
-RUN ./build-kc-oid4vci.sh
+# Download, unpack, and prepare Keycloak
+RUN ./setup-kc-oid4vci.sh
 
 # Base image for the runtime stage
 FROM openjdk:17-jdk-slim

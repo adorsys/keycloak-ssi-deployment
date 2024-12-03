@@ -9,17 +9,11 @@
     "enabled": true,
     "alwaysDisplayInConsole": false,
     "clientAuthenticatorType": "client-secret",
-    "secret": "${CLIENT_SECRET}",
+    "secret": "",
     "redirectUris": [
-      "http://localhost:8080/*",
-      "https://kc-issuer.solutions.adorsys.com/*",
-      "http://kc-issuer.solutions.adorsys.com/*",
-      "http://localhost:8080",
       "http://back.localhost.com/*"
     ],
     "webOrigins": [
-      "http://kc-issuer.solutions.adorsys.com",
-      "https://kc-issuer.solutions.adorsys.com"
     ],
     "notBefore": 0,
     "bearerOnly": false,
@@ -35,7 +29,7 @@
       "client.secret.creation.time": "1719785014",
       "client.introspection.response.allow.jwt.claim.enabled": "false",
       "login_theme": "keycloak",
-      "post.logout.redirect.uris": "http://localhost:8080/*##http://localhost:8080##https://kci-portal.solutions.adorsys.com/*##https://kci-portal.solutions.adorsys.com##http://localhost:5173##http://front.localhost.com",
+      "post.logout.redirect.uris": "http://front.localhost.com",
       "oauth2.device.authorization.grant.enabled": "false",
       "use.jwks.url": "false",
       "backchannel.logout.revoke.offline.tokens": "false",

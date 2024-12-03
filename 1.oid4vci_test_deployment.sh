@@ -30,7 +30,7 @@ echo "Keycloak is running with PID: $keycloak_pid"
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_ADMIN --password $KEYCLOAK_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
 
 # Create new realm
 $KC_INSTALL_DIR/bin/kcadm.sh create realms -s realm=$KEYCLOAK_REALM -s enabled=true
@@ -179,7 +179,15 @@ OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
 echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
-CONFIG=$(cat $WORK_DIR/openid4vc-rest-api.json | jq --arg CLIENT_SECRET "$CLIENT_SECRET" '.secret = $CLIENT_SECRET')
+CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
+  --arg CLIENT_SECRET "$CLIENT_SECRET" \
+  --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
+  --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
+  '.secret += $CLIENT_SECRET |
+   .redirectUris += [$ISSUER_BACKEND_URL + "/*"] |
+   .webOrigins += [$ISSUER_BACKEND_URL] |
+   .attributes["post.logout.redirect.uris"] +=("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)'
+)
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
