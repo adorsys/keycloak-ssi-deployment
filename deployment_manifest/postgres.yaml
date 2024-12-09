@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
-  namespace: datev-wallet
+  namespace: default
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: postgres
@@ -21,9 +21,9 @@ spec:
             - containerPort: 5432
           env:
           - name: POSTGRES_DB
-            value: keycloak
+            value: keycloakdb
           - name: POSTGRES_USER
-            value: keycloak
+            value: keycloakadmin
           - name: POSTGRES_PASSWORD
             value: keycloak
           volumeMounts:
@@ -38,7 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: datev-wallet
+  namespace: default
 spec:
   ports:
     - port: 5432
