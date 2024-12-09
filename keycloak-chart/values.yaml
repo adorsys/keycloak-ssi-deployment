@@ -1,0 +1,59 @@
+usePostgresInCluster: true # If true, use internal PostgreSQL in the cluster; false will use external RDS
+host: postgres-service
+rdsEndpoint: datev-rds.c9ocg0umkn0m.eu-central-1.rds.amazonaws.com
+fullnameOverride: keycloak
+
+keycloak:
+  image:
+    repository: ghcr.io/adorsys/eudiw-verifier
+    tag: latest
+    pullPolicy: Always
+    secrets: datev-wallet-secret
+  replicas: 1
+  service:
+    type: LoadBalancer
+    port: 8443
+  imagePullSecret: ghcr-pull-secret
+  env:
+    KC_DB_NAME: keycloakdb
+    KC_DB_USERNAME: keycloakadmin
+    DB_PORT: 5432
+    KC_DB_OPTS: "-db postgres --db-url jdbc:postgresql://$KC_DB_HOST:$DB_PORT/$KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
+    KC_BOOTSTRAP_ADMIN_USERNAME: admin
+
+# Postgresql Configuration
+postgres:
+  image:
+    repository: postgres
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    name: postgres-service
+    type: ClusterIP
+    port: 5432
+  volumes:
+    - name: db-data
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /var/lib/postgresql/data
+      name: db-data
+  env:
+    POSTGRES_DB: keycloakdb
+    POSTGRES_USER: keycloakadmin
+
+# External Secret Store
+awsSecretName: eudiw-verifier-secrets
+namespace: datev-wallet
+
+# External secrets
+externalSecret:
+  metadata:
+    name: external-secret
+  spec:
+    refreshInterval: 1h
+    secretStoreRef:
+      name: datev-secret-store
+    target:
+      name: datev-wallet-secret
+      creationPolicy: Owner

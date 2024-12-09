@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak-chart.fullname" . }}
+  labels:
+    app: {{ include "keycloak-chart.name" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.keycloak.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "keycloak-chart.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "keycloak-chart.name" . }}
+    spec:
+      imagePullSecrets:
+      - name: {{.Values.keycloak.imagePullSecret }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
+          imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
+          ports:
+          - containerPort: {{ .Values.keycloak.service.port }}
+          env: 
+            - name: KC_DB_HOST
+              value: 
+              {{- if .Values.usePostgresInCluster }}
+                {{ .Values.host }}
+              {{- else }}
+                {{ .Values.rdsEndpoint }}
+              {{- end }}
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.keycloak.image.secrets }}
+                  key: KC_DB_PASSWORD
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.keycloak.image.secrets }}
+                  key: KC_BOOTSTRAP_ADMIN_PASSWORD
+          {{- range $key, $value := .Values.keycloak.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+          {{- end }}
