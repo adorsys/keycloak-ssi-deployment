@@ -24,6 +24,11 @@ spec:
           ports:
           - containerPort: {{ .Values.keycloak.service.port }}
           env:
+             - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.keycloak.secrets }}
+                  key: KC_DB_PASSWORD
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
