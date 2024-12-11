@@ -23,4 +23,26 @@ spec:
           imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
           ports:
           - containerPort: {{ .Values.keycloak.service.port }}
-          
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.keycloak.secrets }}
+                  key: KC_BOOTSTRAP_ADMIN_PASSWORD
+          volumeMounts:
+            {{- range .Values.keycloak.volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+      volumes:
+        {{- range .Values.keycloak.volumes }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ .configMap.name }}
+            optional: {{ .configMap.optional | default false }}
+            items:
+              {{- range .configMap.items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+              {{- end }}
+        {{- end }}

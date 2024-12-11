@@ -1,5 +1,4 @@
 ---
-# Keycloak service
 apiVersion: v1
 kind: Service
 metadata:
@@ -16,7 +15,6 @@ spec:
     app: {{ include "keycloak-chart.name" . }}
     
 ---
-# Postgres service
 {{- if .Values.postgres.enabled }}
 apiVersion: v1
 kind: Service

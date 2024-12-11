@@ -1,4 +1,4 @@
-usePostgresInCluster: true # If true, use internal PostgreSQL in the cluster; false will use external RDS
+usePostgresInCluster: false # If true, use internal PostgreSQL in the cluster; false will use external RDS
 host: postgres-service
 rdsEndpoint: datev-rds.c9ocg0umkn0m.eu-central-1.rds.amazonaws.com
 fullnameOverride: keycloak
@@ -14,17 +14,29 @@ keycloak:
     type: LoadBalancer
     port: 8443
   imagePullSecret: ghcr-pull-secret
+  envConfigMapName: keycloak-env-config
+  volumes:
+    - name: env-volume
+      configMap:
+        name: keycloak-env-config
+        optional: true
+        items:
+          - key: ".env"
+            path: ".env"
+  volumeMounts:
+    - name: env-volume
+      mountPath: /opt/keycloak/env
 
 # Postgresql Configuration
 postgres:
-  enabled: true
+  enabled: false
   image:
     repository: postgres
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
   service:
-    name: postgres-services
+    name: postgres-service
     type: ClusterIP
     port: 5432
   volumes:
@@ -34,8 +46,8 @@ postgres:
     - mountPath: /var/lib/postgresql/data
       name: db-data
   env:
-    POSTGRES_DB: keycloakdb
-    POSTGRES_USER: keycloakadmin
+    POSTGRES_DB: kc_ssi_db
+    POSTGRES_USER: datevadmin
 
 # External Secret Store
 awsSecretName: datev-wallet-secrets
