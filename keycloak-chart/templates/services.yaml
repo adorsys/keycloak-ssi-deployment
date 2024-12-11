@@ -1,0 +1,35 @@
+---
+# Keycloak service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "keycloak-chart.fullname" . }}
+  labels:
+    app: {{ include "keycloak-chart.name" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.keycloak.service.type }}
+  ports:
+    - port: {{ .Values.keycloak.service.port }}
+      targetPort: {{ .Values.keycloak.service.port }}
+  selector:
+    app: {{ include "keycloak-chart.name" . }}
+    
+---
+# Postgres service
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.postgres.service.name }}
+  labels:
+    app: {{ include "keycloak-chart.name" . }}-postgres
+  namespace: {{ .Values.namespace }}
+spec:
+  type: {{ .Values.postgres.service.type }}
+  ports:
+    - port: {{ .Values.postgres.service.port }}
+      targetPort: {{ .Values.postgres.service.port }}
+  selector:
+    app: {{ include "keycloak-chart.name" . }}-postgres
+{{- end}}

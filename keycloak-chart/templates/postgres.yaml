@@ -1,0 +1,47 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak-chart.fullname" . }}-postgres
+  labels:
+    app: {{ include "keycloak-chart.name" . }}-postgres
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.postgres.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "keycloak-chart.name" . }}-postgres
+  template:
+    metadata:
+      labels:
+        app: {{ include "keycloak-chart.name" . }}-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          env:
+          {{- range $key, $value := .Values.postgres.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+          {{- end }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.keycloak.secrets }}
+                  key: KC_DB_PASSWORD
+          ports:
+            - containerPort: {{ .Values.postgres.service.port }}
+          volumeMounts:
+          {{- range .Values.postgres.volumeMounts }}
+            - mountPath: {{ .mountPath }}
+              name: {{ .name }}
+          {{- end }}
+      volumes:
+      {{- range .Values.postgres.volumes }}
+        - name: {{ .name }}
+          {{- if .emptyDir }}
+          emptyDir: {}
+          {{- end }}
+      {{- end }}
+{{- end }}

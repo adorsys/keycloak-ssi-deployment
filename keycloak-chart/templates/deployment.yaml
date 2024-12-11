@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "keycloak-chart.fullname" . }}
+  labels:
+    app: {{ include "keycloak-chart.name" . }}
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.keycloak.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "keycloak-chart.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "keycloak-chart.name" . }}
+    spec:
+      imagePullSecrets:
+      - name: {{.Values.keycloak.imagePullSecret }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
+          imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
+          ports:
+          - containerPort: {{ .Values.keycloak.service.port }}
+          
