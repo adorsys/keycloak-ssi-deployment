@@ -17,7 +17,7 @@ services:
       context: .
     env_file: .env
     environment:
-      - KC_DB_OPT=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
+      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
     depends_on:
       - db
     ports:

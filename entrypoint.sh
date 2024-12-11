@@ -30,4 +30,4 @@ fi
 
 # Start Keycloak
 cd $KC_INSTALL_DIR
-exec bin/kc.sh $KC_START $KC_DB_OPTS--features=oid4vc-vci
+exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci
