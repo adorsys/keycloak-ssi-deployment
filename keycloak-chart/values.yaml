@@ -1,0 +1,61 @@
+fullnameOverride: keycloak
+awsSecretName: datev-wallet-secrets
+namespace: datev-wallet
+
+keycloak:
+  image:
+    repository: ghcr.io/adorsys/keycloak-ssi-deployment
+    tag: latest
+    pullPolicy: Always
+  secrets: keycloak-secret
+  replicas: 1
+  service:
+    type: LoadBalancer
+    port: 8443
+  imagePullSecret: ghcr-pull-secret
+  envConfigMapName: keycloak-env-config
+  volumes:
+    - name: env-volume
+      configMap:
+        name: keycloak-env-config
+        optional: true
+        items:
+          - key: ".env"
+            path: ".env"
+  volumeMounts:
+    - name: env-volume
+      mountPath: /opt/keycloak/env
+
+# Postgresql Configuration
+postgres:
+  enabled: false
+  image:
+    repository: postgres
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    name: postgres-service
+    type: ClusterIP
+    port: 5432
+  volumes:
+    - name: db-data
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /var/lib/postgresql/data
+      name: db-data
+  env:
+    POSTGRES_DB: kc_ssi_db
+    POSTGRES_USER: datevadmin
+
+# External secrets
+externalSecret:
+  metadata:
+    name: keycloak-external-secret
+  spec:
+    refreshInterval: 1h
+    secretStoreRef:
+      name: datev-secret-store
+    target:
+      name: keycloak-secret
+      creationPolicy: Owner

@@ -17,7 +17,7 @@ RUN ./setup-kc-oid4vci.sh
 FROM openjdk:17-jdk-slim
 
 # Set the working directory
-WORKDIR /opt/keycloak/
+WORKDIR /opt/keycloak
 
 # Copy the built Keycloak deployment from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
@@ -25,5 +25,9 @@ COPY --from=builder /app/target /opt/keycloak/target
 # Copy the environment variable file from the build stage
 COPY --from=builder /app/.env /opt/keycloak/
 
+# Copy the custom entrypoint script to the container and make it executable
+COPY entrypoint.sh /opt/keycloak/entrypoint.sh
+RUN chmod +x /opt/keycloak/entrypoint.sh
+
 # Set the entry point
-ENTRYPOINT ["sh", "-c", "set -a && . /opt/keycloak/.env && set +a && cd $KC_INSTALL_DIR && bin/kc.sh $KC_START $KC_DB_OPT --features=oid4vc-vci"]
+ENTRYPOINT ["sh", "/opt/keycloak/entrypoint.sh"]
