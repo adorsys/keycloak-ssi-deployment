@@ -1,7 +1,6 @@
-usePostgresInCluster: false # If true, use internal PostgreSQL in the cluster; false will use external RDS
-host: postgres-service
-rdsEndpoint: datev-rds.c9ocg0umkn0m.eu-central-1.rds.amazonaws.com
 fullnameOverride: keycloak
+awsSecretName: datev-wallet-secrets
+namespace: datev-wallet
 
 keycloak:
   image:
@@ -48,10 +47,6 @@ postgres:
   env:
     POSTGRES_DB: kc_ssi_db
     POSTGRES_USER: datevadmin
-
-# External Secret Store
-awsSecretName: datev-wallet-secrets
-namespace: datev-wallet
 
 # External secrets
 externalSecret:
