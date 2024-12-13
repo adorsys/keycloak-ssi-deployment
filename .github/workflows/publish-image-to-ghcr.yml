@@ -2,7 +2,7 @@ name: Build and Push Image to GHCR
 
 on:
   push:
-    branches: feature/create-kyelcoak-helm-charts
+    branches: main
 
 env:
   IMAGE_NAME: keycloak-ssi-deployment
