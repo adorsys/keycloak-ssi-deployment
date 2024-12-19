@@ -7,6 +7,7 @@ metadata:
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.externalDnsHostname }}
     service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ .Values.certificateArn }}
     service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "https"
   labels:
     app: {{ include "keycloak-chart.name" . }}
   namespace: {{ .Values.namespace }}
