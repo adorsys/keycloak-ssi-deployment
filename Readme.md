@@ -44,7 +44,7 @@ Set ```KC_USE_UPSTREAM=true``` in the `.env file` and run:
   ```
 This will:
 
-- Download and unpack the tarball (e.g., keycloak-26.0.6.tar.gz).
+- Download and unpack the tarball (e.g., keycloak-26.0.7.tar.gz).
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
 ### Option 2: Cloning a Specific Branch

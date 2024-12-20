@@ -1,6 +1,8 @@
 fullnameOverride: keycloak
 awsSecretName: datev-wallet-secrets
 namespace: datev-wallet
+certificateArn: arn:aws:acm:{region}:{user id}:certificate/{id}
+externalDnsHostname: keycloak.eudi-adorsys.com
 
 keycloak:
   image:
@@ -11,7 +13,8 @@ keycloak:
   replicas: 1
   service:
     type: LoadBalancer
-    port: 8443
+    port: 443
+    targetPort: 8443
   imagePullSecret: ghcr-pull-secret
   envConfigMapName: keycloak-env-config
   volumes:
