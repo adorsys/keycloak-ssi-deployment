@@ -22,7 +22,7 @@ spec:
           image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
           imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
           ports:
-          - containerPort: {{ .Values.keycloak.service.port }}
+          - containerPort: {{ .Values.keycloak.service.targetPort }}
           volumeMounts:
             {{- range .Values.keycloak.volumeMounts }}
             - name: {{ .name }}
