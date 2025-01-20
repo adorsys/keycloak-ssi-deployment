@@ -1,7 +1,6 @@
 fullnameOverride: keycloak
 awsSecretName: datev-wallet-secrets
 namespace: datev-wallet
-certificateArn: arn:aws:acm:{region}:{user id}:certificate/{id}
 externalDnsHostname: keycloak.eudi-adorsys.com
 
 keycloak:
@@ -12,9 +11,17 @@ keycloak:
   secrets: keycloak-secret
   replicas: 1
   service:
-    type: LoadBalancer
-    port: 443
+    type: ClusterIP
+    port: 8443
     targetPort: 8443
+  ingress:
+    tls:
+      hosts:
+        - "*.eudi-adorsys.com"
+        - "eudi-adorsys.com"
+    secretName: eudi-adorsys-tls
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
   imagePullSecret: ghcr-pull-secret
   envConfigMapName: keycloak-env-config
   volumes:
