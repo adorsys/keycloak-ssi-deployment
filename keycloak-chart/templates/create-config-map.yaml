@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-env-file
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: download-env
+        image: "amazon/aws-cli"
+        command:
+          - "sh"
+          - "-c"
+          - |
+            aws s3 cp s3://keycloakenv/.env /tmp/.env
+        volumeMounts:
+          - name: tmp-volume
+            mountPath: /tmp
+            
+      - name: kubectl
+        image: "bitnami/kubectl"
+        command:
+          - "sh"
+          - "-c"
+          - |
+            # Wait for the .env file to be available
+            sleep 5
+            kubectl create configmap keycloak-env-config --from-file=/tmp/.env --namespace=datev-wallet --dry-run=client -o yaml | kubectl apply -f -
+        volumeMounts:
+          - name: tmp-volume
+            mountPath: /tmp
+
+      containers:
+      - name: placeholder
+        image: "busybox"
+        command: ["sh", "-c", "echo 'Job completed' && sleep 1"]
+
+      restartPolicy: OnFailure
+      serviceAccountName: argocd-server
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}

@@ -23,6 +23,9 @@ spec:
           imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
           ports:
           - containerPort: {{ .Values.keycloak.service.targetPort }}
+          envFrom:
+          - configMapRef:
+              name: {{ .Values.keycloak.envConfigMapName }}
           volumeMounts:
             {{- range .Values.keycloak.volumeMounts }}
             - name: {{ .name }}
