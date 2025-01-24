@@ -101,7 +101,6 @@ kubectl:
 
 placeholder:
   image: busybox
-  command: ["sh", "-c", "echo 'Job completed' && sleep 1"]
 
 job:
   restartPolicy: OnFailure
