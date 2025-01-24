@@ -97,6 +97,7 @@ awsCli:
 
 kubectl:
   image: bitnami/kubectl
+  sleepDuration: 5
 
 placeholder:
   image: busybox
