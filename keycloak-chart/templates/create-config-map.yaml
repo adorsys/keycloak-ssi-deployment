@@ -27,7 +27,6 @@ spec:
           - "sh"
           - "-c"
           - |
-            # Wait for the .env file to be available
             sleep {{ .Values.kubectl.sleepDuration }}
             kubectl create configmap {{ .Values.kubectl.configMapName }} --from-file={{ .Values.kubectl.envFilePath }} --namespace={{ .Values.kubectl.namespace }} --dry-run=client -o yaml | kubectl apply -f -
         volumeMounts:
