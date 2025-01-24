@@ -5,8 +5,8 @@ metadata:
   namespace: {{ .Values.namespace }}
   annotations:
     external-dns.alpha.kubernetes.io/hostname: {{ .Values.externalDnsHostname }}
-    nginx.ingress.kubernetes.io/backend-protocol: {{ .Values.keycloak.ingress.annotations.backendProtocol }}
-    nginx.ingress.kubernetes.io/ssl-passthrough: {{ .Values.keycloak.ingress.annotations.sslPassthrough }}
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     {{- toYaml .Values.keycloak.ingress.annotations | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.keycloak.ingress.ingressClassName }}
