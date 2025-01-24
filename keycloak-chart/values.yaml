@@ -6,7 +6,7 @@ externalDnsHostname: keycloak.eudi-adorsys.com
 keycloak:
   image:
     repository: ghcr.io/adorsys/keycloak-ssi-deployment
-    tag: latest
+    tag: 1.0.0
     pullPolicy: Always
   secrets: keycloak-secret
   replicas: 1
