@@ -26,8 +26,8 @@ keycloak:
         - "eudi-adorsys.com"
     secretName: eudi-adorsys-tls
     annotations:
-      backendProtocol: HTTPS
-      sslPassthrough: true
+      backendProtocol: "HTTPS"
+      sslPassthrough: "true"
       cert-manager.io/cluster-issuer: letsencrypt-prod
   imagePullSecret: ghcr-pull-secret
   envConfigMapName: keycloak-env-config
@@ -97,10 +97,6 @@ awsCli:
 
 kubectl:
   image: bitnami/kubectl
-  configMapName: keycloak-env-config
-  namespace: datev-wallet
-  envFilePath: /tmp/.env
-  sleepDuration: 5
 
 placeholder:
   image: busybox

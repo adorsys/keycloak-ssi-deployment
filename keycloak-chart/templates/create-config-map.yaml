@@ -28,7 +28,7 @@ spec:
           - "-c"
           - |
             sleep {{ .Values.kubectl.sleepDuration }}
-            kubectl create configmap {{ .Values.kubectl.configMapName }} --from-file={{ .Values.kubectl.envFilePath }} --namespace={{ .Values.kubectl.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap keycloak-env-config --from-file=/tmp/.env --namespace=datev-wallet --dry-run=client -o yaml | kubectl apply -f -
         volumeMounts:
           - name: {{ .Values.volumeMounts.name }}
             mountPath: {{ .Values.volumeMounts.mountPath }}
