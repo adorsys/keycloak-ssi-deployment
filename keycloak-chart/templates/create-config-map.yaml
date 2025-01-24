@@ -1,46 +1,46 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: download-env-file
-  namespace: argocd
+  name: {{ .Values.metadata.name }}
+  namespace: {{ .Values.metadata.namespace }}
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook: {{ .Values.metadata.annotations.hook }}
+    argocd.argoproj.io/hook-delete-policy: {{ .Values.metadata.annotations.hookDeletePolicy }}
 spec:
   template:
     spec:
       initContainers:
       - name: download-env
-        image: "amazon/aws-cli"
+        image: "{{ .Values.awsCli.image }}"
         command:
           - "sh"
           - "-c"
           - |
-            aws s3 cp s3://keycloakenv/.env /tmp/.env
+            aws s3 cp s3://{{ .Values.awsCli.s3Bucket }}/.env {{ .Values.awsCli.envFilePath }}
         volumeMounts:
-          - name: tmp-volume
-            mountPath: /tmp
+          - name: {{ .Values.volumeMounts.name }}
+            mountPath: {{ .Values.volumeMounts.mountPath }}
             
       - name: kubectl
-        image: "bitnami/kubectl"
+        image: "{{ .Values.kubectl.image }}"
         command:
           - "sh"
           - "-c"
           - |
             # Wait for the .env file to be available
-            sleep 5
-            kubectl create configmap keycloak-env-config --from-file=/tmp/.env --namespace=datev-wallet --dry-run=client -o yaml | kubectl apply -f -
+            sleep {{ .Values.kubectl.sleepDuration }}
+            kubectl create configmap {{ .Values.kubectl.configMapName }} --from-file={{ .Values.kubectl.envFilePath }} --namespace={{ .Values.kubectl.namespace }} --dry-run=client -o yaml | kubectl apply -f -
         volumeMounts:
-          - name: tmp-volume
-            mountPath: /tmp
+          - name: {{ .Values.volumeMounts.name }}
+            mountPath: {{ .Values.volumeMounts.mountPath }}
 
       containers:
       - name: placeholder
-        image: "busybox"
-        command: ["sh", "-c", "echo 'Job completed' && sleep 1"]
+        image: "{{ .Values.placeholder.image }}"
+        command: {{ .Values.placeholder.command }}
 
-      restartPolicy: OnFailure
-      serviceAccountName: argocd-server
+      restartPolicy: {{ .Values.job.restartPolicy }}
+      serviceAccountName: {{ .Values.job.serviceAccountName }}
       volumes:
-        - name: tmp-volume
+        - name: {{ .Values.volumeMounts.name }}
           emptyDir: {}

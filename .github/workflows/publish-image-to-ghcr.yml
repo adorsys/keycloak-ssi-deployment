@@ -2,10 +2,12 @@ name: Build and Push Image to GHCR
 
 on:
   push:
-    branches: main
+    tags:
+      - v*.*.*
 
 env:
   IMAGE_NAME: keycloak-ssi-deployment
+  REGISTRY: ghcr.io
 
 jobs:
   build-and-deploy:
@@ -38,11 +40,20 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract Metadata
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+
       - name: Build Docker image and push to GHCR
+        id: push
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -50,6 +61,6 @@ jobs:
           builder: ${{ steps.builder.outputs.name }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache

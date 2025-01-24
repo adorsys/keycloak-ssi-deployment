@@ -11,16 +11,23 @@ keycloak:
   secrets: keycloak-secret
   replicas: 1
   service:
+    ports:
+      name: https
     type: ClusterIP
     port: 8443
     targetPort: 8443
   ingress:
+    ingressClassName: nginx
+    path: /
+    pathType: Prefix
     tls:
       hosts:
         - "*.eudi-adorsys.com"
         - "eudi-adorsys.com"
     secretName: eudi-adorsys-tls
     annotations:
+      backendProtocol: HTTPS
+      sslPassthrough: true
       cert-manager.io/cluster-issuer: letsencrypt-prod
   imagePullSecret: ghcr-pull-secret
   envConfigMapName: keycloak-env-config
@@ -69,3 +76,36 @@ externalSecret:
     target:
       name: keycloak-secret
       creationPolicy: Owner
+
+
+# Job to create config map
+metadata:
+  name: download-env-file
+  namespace: argocd
+  annotations:
+    hook: PreSync
+    hookDeletePolicy: HookSucceeded
+
+volumeMounts:
+    name: tmp-volume
+    mountPath: /tmp
+
+awsCli:
+  image: amazon/aws-cli
+  s3Bucket: keycloakenv
+  envFilePath: "/tmp/.env"
+
+kubectl:
+  image: bitnami/kubectl
+  configMapName: keycloak-env-config
+  namespace: datev-wallet
+  envFilePath: /tmp/.env
+  sleepDuration: 5
+
+placeholder:
+  image: busybox
+  command: ["sh", "-c", "echo 'Job completed' && sleep 1"]
+
+job:
+  restartPolicy: OnFailure
+  serviceAccountName: argocd-server

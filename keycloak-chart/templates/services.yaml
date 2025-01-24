@@ -9,7 +9,7 @@ metadata:
 spec:
   type: {{ .Values.keycloak.service.type }}
   ports:
-  - name: https
+  - name: {{ .Values.keycloak.service.ports.name }}
     port: {{ .Values.keycloak.service.port }}
     targetPort: {{ .Values.keycloak.service.targetPort }}
   selector:
