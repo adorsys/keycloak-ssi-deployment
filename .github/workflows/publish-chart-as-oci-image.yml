@@ -1,9 +1,7 @@
 name: Publish Helm Chart as OCI Image
 
 on:
-  push:
-    branches:
-      - improved-helm-chart-deployment
+  workflow_dispatch:
 
 permissions:
   contents: read
