@@ -1,0 +1,39 @@
+name: Publish Helm Chart as OCI Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-helm-chart:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Package Helm Charts
+        run: |
+          helm package ./keycloak-chart && mv keycloak-chart*.tgz ocr-keycloak.tgz
+
+      - name: Push Helm Charts to GitHub Container Registry (GHCR)
+        run: |
+          CHART_REPO="ghcr.io/${{ github.repository }}"
+          helm push ./ocr-keycloak.tgz oci://$CHART_REPO/keycloak
+
+      - name: Clean up temporary files
+        run: |
+          rm -f ocr-*.tgz
