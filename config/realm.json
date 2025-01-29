@@ -2778,7 +2778,7 @@
     "organizationsEnabled": "false",
     "preAuthorizedCodeLifespanS": "120"
   },
-  "keycloakVersion": "26.0.7",
+  "keycloakVersion": "26.1.0",
   "userManagedAccessAllowed": false,
   "organizationsEnabled": false,
   "clientProfiles": {
