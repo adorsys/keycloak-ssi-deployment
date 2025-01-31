@@ -13,10 +13,22 @@ fi
 
 # Clone the main branch of the Git repository
 echo "Cloning repository from ${REPO_URL}..."
-cd $TARGET_DIR && git clone --branch main "$REPO_URL" || { echo "Failed to clone repository"; exit 1; }
+cd $TARGET_DIR && git clone "$REPO_URL" || { echo "Failed to clone repository"; exit 1; }
 
-# Navigate to cloned dir and build CLI tool
-cd "$KC_CLI_PROJECT_DIR" && ./mvnw clean install -DskipTests || { echo "Failed to build the CLI tool"; exit 1; }
+# Navigate to the cloned repository
+cd "$KC_CLI_PROJECT_DIR" || { echo "Failed to navigate to $KC_CLI_PROJECT_DIR"; exit 1; }
+
+# Fetch all tags
+echo "Fetching tags from the repository..."
+git fetch --tags || { echo "Failed to fetch tags"; exit 1; }
+
+# Switch to the desired release tag
+echo "Checking out tag $TAG..."
+git checkout tags/$TAG -b $TAG || { echo "Failed to checkout tag $TAG"; exit 1; }
+
+
+# Build CLI tool
+./mvnw clean install -DskipTests || { echo "Failed to build the CLI tool"; exit 1; }
 
 # Check if JAR file is created in the target directory
 if ls target/*.jar 1> /dev/null 2>&1; then
