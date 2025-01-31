@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.keycloak.envConfigMapName }}
-  namespace: {{ .Values.namespace }}
-data:
-  .env: |
-    {{ .Files.Get "files/.env" | nindent 4 }}

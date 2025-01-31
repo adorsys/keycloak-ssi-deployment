@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.metadata.name }}
+  namespace: {{ .Values.metadata.namespace }}
+  annotations:
+    argocd.argoproj.io/hook: {{ .Values.metadata.annotations.hook }}
+    argocd.argoproj.io/hook-delete-policy: {{ .Values.metadata.annotations.hookDeletePolicy }}
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: download-env
+        image: "{{ .Values.awsCli.image }}"
+        command:
+          - "sh"
+          - "-c"
+          - |
+            aws s3 cp s3://{{ .Values.awsCli.s3Bucket }}/.env {{ .Values.awsCli.envFilePath }}
+        volumeMounts:
+          - name: {{ .Values.volumeMounts.name }}
+            mountPath: {{ .Values.volumeMounts.mountPath }}
+            
+      - name: kubectl
+        image: "{{ .Values.kubectl.image }}"
+        command:
+          - "sh"
+          - "-c"
+          - |
+            sleep {{ .Values.kubectl.sleepDuration }}
+            kubectl create configmap keycloak-env-config --from-file=/tmp/.env --namespace=datev-wallet --dry-run=client -o yaml | kubectl apply -f -
+        volumeMounts:
+          - name: {{ .Values.volumeMounts.name }}
+            mountPath: {{ .Values.volumeMounts.mountPath }}
+
+      containers:
+      - name: placeholder
+        image: "{{ .Values.placeholder.image }}"
+        command: ["sh", "-c", "echo 'Job completed' && sleep 1"]
+
+      restartPolicy: {{ .Values.job.restartPolicy }}
+      serviceAccountName: {{ .Values.job.serviceAccountName }}
+      volumes:
+        - name: {{ .Values.volumeMounts.name }}
+          emptyDir: {}
