@@ -77,7 +77,6 @@ externalSecret:
       name: keycloak-secret
       creationPolicy: Owner
 
-
 # Job to create config map
 metadata:
   name: download-env-file
@@ -87,8 +86,8 @@ metadata:
     hookDeletePolicy: HookSucceeded
 
 volumeMounts:
-    name: tmp-volume
-    mountPath: /tmp
+  name: tmp-volume
+  mountPath: /tmp
 
 awsCli:
   image: amazon/aws-cli
