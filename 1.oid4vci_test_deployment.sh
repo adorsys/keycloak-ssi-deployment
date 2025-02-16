@@ -173,6 +173,16 @@ echo "Creating signing service component for IdentityCredential..."
 SIGNING_SERVICE_IDENTITYCRED=$(cat $WORK_DIR/signing_service-IdentityCredential.json)
 echo "$SIGNING_SERVICE_IDENTITYCRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
 
+# Update realm configuration with VC credentials
+echo "Updating realm with VC credentials configuration..."
+VC_CREDENTIALS_CONFIG=$(cat $WORK_DIR/vc-credentials-config.json)
+echo "$VC_CREDENTIALS_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || { echo 'Realm update with VC credentials failed'; exit 1; }
+
+# Create client scopes for OID4VCI
+echo "Creating OID4VCI client scopes..."
+CLIENT_SCOPES_CONFIG=$(cat $WORK_DIR/client-scope-config.json)
+echo "$CLIENT_SCOPES_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r $KEYCLOAK_REALM -o -f - || { echo 'Client scopes creation failed'; exit 1; }
+
 # Create client for oid4vci
 echo "Creating OID4VCI client..."
 OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
