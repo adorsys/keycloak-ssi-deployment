@@ -164,29 +164,28 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
-# Create the signing service component for SteuerberaterCredential
-echo "Creating signing service component for SteuerberaterCredential..."
-SIGNING_SERVICE_TEST_CRED=$(cat $WORK_DIR/signing_service-SteuerberaterCredential.json)
-echo "$SIGNING_SERVICE_TEST_CRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'Could not create signing service component for SteuerberaterCredential' ; exit 1; }
-
-echo "Creating signing service component for IdentityCredential..."
-SIGNING_SERVICE_IDENTITYCRED=$(cat $WORK_DIR/signing_service-IdentityCredential.json)
-echo "$SIGNING_SERVICE_IDENTITYCRED" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
+echo "Creating Credential Builder component..."
+CREDENTIAL_BUILDER_CONFIG=$(cat "$WORK_DIR/credential-builder.json")
+echo "$CREDENTIAL_BUILDER_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { 
+  echo 'Could not create Credential Builder component' 
+  exit 1
+}
 
 # Update realm configuration with VC credentials
 echo "Updating realm with VC credentials configuration..."
-VC_CREDENTIALS_CONFIG=$(cat $WORK_DIR/vc-credentials-config.json)
-echo "$VC_CREDENTIALS_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || { echo 'Realm update with VC credentials failed'; exit 1; }
+VC_CREDENTIALS_CONFIG=$(cat $WORK_DIR/verifiable-credentials-config.json)
+echo "$VC_CREDENTIALS_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || { 
+  echo 'Realm update with VC credentials failed' 
+  exit 1
+}
 
-# Create client scopes for OID4VCI
 echo "Creating OID4VCI client scopes..."
-CLIENT_SCOPES_CONFIG=$(cat $WORK_DIR/client-scope-config.json)
-echo "$CLIENT_SCOPES_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r $KEYCLOAK_REALM -o -f - || { echo 'Client scopes creation failed'; exit 1; }
-
-# Create client for oid4vci
-echo "Creating OID4VCI client..."
-OID4VCI_CLIENT=$(cat $WORK_DIR/client-oid4vc.json)
-echo "$OID4VCI_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OID4VCIClient creation failed' ; exit 1; }
+# Read the JSON file into a variable
+CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json")
+# Loop through each scope in the JSON array
+echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
+    echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
+done
 
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
@@ -219,13 +218,13 @@ $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.preAuth
 response=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer)
 
 if ! jq -e '."credential_configurations_supported"."SteuerberaterCredential"' <<< "$response" > /dev/null; then
-    echo "Server started but error occurred. 'SteuerberaterCredential' not found in OID4VCI configuration."
-    exit 1  # Exit with an error code
+  echo "Server started but error occurred. 'SteuerberaterCredential' not found in OID4VCI configuration."
+  exit 1  # Exit with an error code
 fi
 
 if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$response" > /dev/null; then
-    echo "Server started but error occurred. 'IdentityCredential' not found in OID4VCI configuration."
-    exit 1  # Exit with an error code
+  echo "Server started but error occurred. 'IdentityCredential' not found in OID4VCI configuration."
+  exit 1  # Exit with an error code
 fi
 
 # Server is up and OID4VCI feature with 'SteuerberaterCredential' seems installed

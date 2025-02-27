@@ -1,9 +1,0 @@
-{
-  "id": "oid4vci-client",
-  "clientId": "oid4vci-client",
-  "name": "OID4VC-VCI Client",
-  "protocol": "oid4vc",
-  "enabled": true,
-  "publicClient": true,
-  "defaultClientScopes": ["vc-mapping-scope"]
-}
