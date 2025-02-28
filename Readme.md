@@ -387,7 +387,7 @@ Clients that require access to Verifiable Credentials must have the appropriate 
 }
 ```
 
-## Verifiable Credential Formats and Credential Builder
+## Verifiable Credential Formats and Credential Builders
 
 Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) formats, including:
 
@@ -395,23 +395,23 @@ Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) f
 * **JWT_VC:** JSON Web Token Verifiable Credentials, based on the JWT VC Presentation Profile ([https://identity.foundation/jwt-vc-presentation-profile/](https://identity.foundation/jwt-vc-presentation-profile/)).
 * **SD-JWT:**  Self-Issued OpenID Provider (SIOP) v2 JSON Web Token Verifiable Credentials, as defined in the IETF OAuth SD-JWT VC draft ([https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html)).
 
-Keycloak automatically manages credential creation and signing, removing the need for separate signing services. Instead, issuance is handled by a Credential Builder, which structures and signs credentials according to the specified format.
+Keycloak automates credential issuance, with a Credential Builder structuring credentials according to the required format and a dedicated Credential Signer handling the signing process. While Credential Builders are configurable, Credential Signers function transparently within the system.
 
 ### Credential Builder Configuration
 
-A single Credential Builder can support all formats, ensuring a streamlined issuance process. Below is an example of a Credential Builder configuration:
+Each Credential Builder is designed to handle a specific credential format. The providerId property should correspond to the format the builder is intended to support. Below is an example of a Credential Builder configuration:
 
 ```json
 {
-  "name": "credential-builder",
-  "providerId": "vc-credential-builder",
+  "name": "sd-jwt-credentialbuilder",
+  "providerId": "vc+sd-jwt",
   "providerType": "org.keycloak.protocol.oid4vc.issuance.credentialbuilder.CredentialBuilder"
 }
 ```
 
 #### Realm-Level Credential Configuration
 
-Credential-specific settings are managed at the realm level under attributes, allowing customization for different credential types and formats.
+Credential settings are managed at the realm level, where you can define attributes for various credential formats and types. This includes the configuration for building credentials, which can be customized according to the desired parameters.
 
 **Example: Credential Build Configuration**
 
