@@ -60,7 +60,9 @@
       "address",
       "phone",
       "offline_access",
-      "microprofile-jwt"
+      "microprofile-jwt",
+      "stbk_westfalen_lippe",
+      "identity_credential"
     ],
     "access": {
       "view": true,
