@@ -1,0 +1,62 @@
+= Keycloak OID4VCI Implementation Guide
+:toc: left
+:toclevels: 3
+:source-highlighter: highlight.js
+
+## Overview
+
+This guide walks you through configuring Keycloak to issue Verifiable Credentials (VCs) using the OpenID for Verifiable Credential Issuance (OID4VCI) protocol.
+
+To Configure Keycloak to issue VCs, you will need to:
+
+## I- automates the deployment and configuration of a Keycloak server with OID4VCI capabilities. It sets up necessary components for issuing verifiable credentials, specifically `SteuerberaterCredential` and `IdentityCredential`.
+### 1-Create new realm
+To create a new realm , you can follo this link link:../topics/realms/proc-creating-a-realm.adoc[Creating a realm]
+
+### 2-Create a Key Management
+* Disables default generated keys:
+** RSA-OAEP
+** RS256
+* Configures custom key providers:
+** ECDSA signing key
+** RSA signing key
+** RSA encryption key
+
+### 3-Create a Component Registration
+* Creates signing service components for:
+** SteuerberaterCredential
+** IdentityCredential
+
+### 4-Create a Client Configuration
+* Creates and configures two clients:
+** OID4VCI client
+** OPENID4VC-REST-API client with custom redirect URIs and web origins
+
+### 5-Verification
+* Validates the deployment by checking the credential issuer endpoint
+* Verifies the presence of supported credential configurations
+
+## II-  configures a Keycloak instance by setting up a user account and configuring the OpenID4VC REST API client. It's part of a larger authentication and identity management setup.
+
+
+=== 1. Administrative Setup
+* Sources common environment variables
+* Configures trust store settings
+* Authenticates with Keycloak using admin credentials
+
+=== 2. Configure the OpenID4VC REST API Client
+* Retrieves the client configuration
+* Stores the client ID in an environment variable
+* Enables direct access grants for the client
+
+=== 3. Create a user account
+* Creates a new user named "Francis" with the following details:
+** Username: francis
+** First Name: Francis
+** Last Name: Pouatcha
+** Email: fpo@mail.de
+* Sets the password for the user Francis
+
+=== 4. Generate a user key
+* Checks for existing user key proof header
+* Generates new user keypair if none exists (via `generate_user_key.sh`)
