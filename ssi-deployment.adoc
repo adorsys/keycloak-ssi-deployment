@@ -9,7 +9,7 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 To Configure Keycloak to issue VCs, you will need to:
 
-## I- automates the deployment and configuration of a Keycloak server with OID4VCI capabilities. It sets up necessary components for issuing verifiable credentials, specifically `SteuerberaterCredential` and `IdentityCredential`.
+## I- deploy and configur a Keycloak server with OID4VCI capabilities. sets up necessary components for issuing verifiable credentials, specifically `SteuerberaterCredential` and `IdentityCredential`.
 ### 1-Create new realm
 To create a new realm , you can follo this link link:../topics/realms/proc-creating-a-realm.adoc[Creating a realm]
 
