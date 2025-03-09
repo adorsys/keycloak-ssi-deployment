@@ -57,13 +57,11 @@ This will:
 - Clone and Build Keycloak from the specified branch.
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
-## Keycloak Configuration for Verifiable Credential Issuance
+## Alternative-1: Use Kc-config-cli to Configure Keycloak (Not working for the moment)
 
 To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm.
 
-### Step-by-Step Configuration
-
-1. **Check the `.env` File**
+### 1. **Check the `.env` File**
 
    Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
 
@@ -72,14 +70,16 @@ To set up Keycloak for Verifiable Credential Issuance, we use a script that util
    - `KC_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
    - `KC_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
 
-2. **Run the Configuration Script**
+### 2. **Run the Configuration Script**
 
    After verifying your `.env` file, run the following script to configure your Keycloak environment:
 
    ```bash
    # Import Keycloak configuration
-   config/import_kc_config.sh
+   export JAVA_HOME="<YOUR JAVA HOME DIR>" && config/import_kc_config.sh
    ```
+
+## Alternative-2: Manual Configuration Keycloak for Verifiable Credential Issuance
 
 We can also configure Keycloak manually using the kcadm.sh tool. This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access the admin interface and shares generated keystore files with Keycloak.
 
@@ -102,11 +102,6 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 
 ## Requesting Credentials
 Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl certificate validation.
-
-### Request a credential without key binding
-```bash
-./3.retrieve_test_credential.sh
-```
 
 ### Request a credential with key binding
 ```bash
@@ -479,5 +474,5 @@ Certain credential types require cryptographic binding to the user's identity. T
 
 For these examples, we will be using the **pre-authorized_code** flow.
 
-* The script `3.retrieve_SteuerberaterCredential.sh` will allow you to request and obtain a test_credential, without holder binding.
 * The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
+* We are missing an example without key binding
