@@ -57,7 +57,7 @@ This will:
 - Clone and Build Keycloak from the specified branch.
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
-## Alternative-1: Use Kc-config-cli to Configure Keycloak (Not working for the moment)
+## Alternative-1: Use Kc-config-cli to Configure Keycloak
 
 To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm.
 
@@ -474,5 +474,5 @@ Certain credential types require cryptographic binding to the user's identity. T
 
 For these examples, we will be using the **pre-authorized_code** flow.
 
-* The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
+* The script `3.retrieve_IdentityCredential.sh` will create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
 * We are missing an example without key binding
