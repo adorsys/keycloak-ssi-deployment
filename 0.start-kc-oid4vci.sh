@@ -22,10 +22,23 @@ esac
 # Download, unpack, and prepare Keycloak for start-up.
 ./setup-kc-oid4vci.sh
 
+# Check the proper docker compose command
+# Detect Docker Compose command
+if command -v docker compose &> /dev/null; then
+  DOCKER_COMPOSE_COMMAND="docker compose"
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE_COMMAND="docker-compose"
+else
+  echo "Neither docker compose nor docker-compose is installed."
+  exit 1
+fi
+
+echo "$DOCKER_COMPOSE_COMMAND is installed."
+
 # Start database container
 if [ -z "${KC_DB_OPTS}" ]; then
     echo "Starting database container..."
-    docker-compose up -d db || { echo 'Could not start database container' ; exit 1; }
+    $DOCKER_COMPOSE_COMMAND up -d db || { echo 'Could not start database container' ; exit 1; }
     KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 fi
 
