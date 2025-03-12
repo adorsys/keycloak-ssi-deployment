@@ -59,6 +59,14 @@ clone_and_build_keycloak() {
     fi
 }
 
+# Set KC_USE_UPSTREAM to "true" to use the upstream Keycloak tarball for installation (download from release).
+# Set to "false" to build Keycloak from a cloned branch with custom changes.
+if [ "$KC_VERSION" != "999.0.0-SNAPSHOT" ]; then
+  KC_USE_UPSTREAM=true
+else
+  KC_USE_UPSTREAM=false
+fi
+
 # Function to unpack the Keycloak tarball to the installation directory
 unpack_keycloak() {
     # Ensure the tarball path is set correctly based on whether using upstream or custom build

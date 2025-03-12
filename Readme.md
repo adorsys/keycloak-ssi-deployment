@@ -57,13 +57,11 @@ This will:
 - Clone and Build Keycloak from the specified branch.
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
-## Keycloak Configuration for Verifiable Credential Issuance
+## Alternative-1: Use Kc-config-cli to Configure Keycloak
 
 To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm.
 
-### Step-by-Step Configuration
-
-1. **Check the `.env` File**
+### 1. **Check the `.env` File**
 
    Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
 
@@ -72,14 +70,16 @@ To set up Keycloak for Verifiable Credential Issuance, we use a script that util
    - `KC_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
    - `KC_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
 
-2. **Run the Configuration Script**
+### 2. **Run the Configuration Script**
 
    After verifying your `.env` file, run the following script to configure your Keycloak environment:
 
    ```bash
    # Import Keycloak configuration
-   config/import_kc_config.sh
+   export JAVA_HOME="<YOUR JAVA HOME DIR>" && config/import_kc_config.sh
    ```
+
+## Alternative-2: Manual Configuration Keycloak for Verifiable Credential Issuance
 
 We can also configure Keycloak manually using the kcadm.sh tool. This shall be executed on the same machine, as it uses `kcadm.sh` on localhost to access the admin interface and shares generated keystore files with Keycloak.
 
@@ -102,11 +102,6 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 
 ## Requesting Credentials
 Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl certificate validation.
-
-### Request a credential without key binding
-```bash
-./3.retrieve_test_credential.sh
-```
 
 ### Request a credential with key binding
 ```bash
@@ -322,112 +317,124 @@ Just as Keycloak's protocol mappers determine the information included in a toke
 2. **Formatting:** Transforming the data into the appropriate format for the VC.
 3. **Adding:** Including the formatted data as claims within the VC.
 
-#### Clients and the OID4VCI Protocol
+#### Realm Configuration
 
-The definition of a VC's structure in Keycloak is closely tied to the *client* that requests it. In the context of VCs, the client interacts with Keycloak using the OID4VCI protocol, which defines the necessary endpoints for requesting and receiving VCs.
-
-A Keycloak client configuration for OID4VCI looks like this:
+The realm attributes define available Verifiable Credentials (VCs) and their configurations: Here's an example of a realm configuration:
 
 ```json
 {
-  "clientId": "oid4vci-client",
-  "name": "OID4VC-VCI Client",
-  "protocol": "oid4vc",
+  "realm": "oid4vc-vci",
   "enabled": true,
-  "publicClient": true,
   "attributes": {
-    "vc.test-credential.expiry_in_s": 100,
-    "vc.test-credential.format": "vc+sd-jwt",
-    "vc.test-credential.scope": "test-credential",
+    "vc.IdentityCredential.expiry_in_s": 31536000,
+    "vc.IdentityCredential.format": "vc+sd-jwt",
+    "vc.IdentityCredential.scope": "identity_credential",
     "// ...": "other VC configurations for additional credential types"
-  },
-  "protocolMappers": [
-    "// ... (protocol mapper definitions)"
-  ]
-}
-```
-
-#### Creating the OID4VCI Client
-
-To register this client with Keycloak, use the following command:
-
-```bash
-# Create client for oid4vci
-echo "Creating OID4VCI client..."
-$KC_INSTALL_DIR/bin/kcadm.sh create clients -o -f - < $WORK_DIR/client-oid4vc.json || { echo 'OID4VCIClient creation failed' ; exit 1; }
-```
-
-#### Protocol Mapper Example
-
-Here's an example of a protocol mapper within the client configuration:
-
-```json
-{
-  "id": "given_name-mapper-001",
-  "name": "given_name-mapper",
-  "protocol": "oid4vc",
-  "protocolMapper": "oid4vc-user-attribute-mapper",
-  "config": {
-    "subjectProperty": "given_name",
-    "userAttribute": "firstName",
-    "supportedCredentialTypes": "identity_credential"
   }
 }
 ```
 
-This mapper extracts the user's `firstName` attribute and includes it as the `given_name` claim in VCs of the "identity_credential" type.
+#### Client Scopes
 
-## Verifiable Credential Formats and Signing Services
+Client scopes contain protocol mappers that define how credential claims are structured. These scopes are assigned to clients that need access to specific credentials.
 
-Keycloak's OID4VCI implementation supports multiple formats for VCs, including:
+**Example of a client scope configuration:**
+
+```bash
+{
+  "name": "stbk_westfalen_lippe",
+  "protocol": "openid-connect",
+  "attributes": {
+    "include.in.token.scope": "false",
+    "display.on.consent.screen": "false"
+  },
+  "protocolMappers": [
+    {
+      "name": "academic_title-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-static-claim-mapper",
+      "config": {
+        "subjectProperty": "academic_title",
+        "staticValue": "N/A",
+        "supportedCredentialTypes": "stbk_westfalen_lippe"
+      }
+    },
+    {
+      // ... (protocol mapper definitions)
+    }
+  ]
+}
+```
+
+#### Assigning Scopes to Clients
+
+Clients that require access to Verifiable Credentials must have the appropriate scopes assigned to them. Instead of defining credential attributes within the client configuration, a client is linked to the necessary scopes.
+
+**Example: Client Configuration with Assigned Scopes**
+
+```json
+{
+  "clientId": "openid4vc-rest-api",
+  "optionalClientScopes": [
+    "stbk_westfalen_lippe",
+    "other scopes"
+  ]
+}
+```
+
+## Verifiable Credential Formats and Credential Builders
+
+Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) formats, including:
 
 * **LDP_VC:** Linked Data Proof Verifiable Credentials, as defined in the W3C Verifiable Credentials Data Model specification ([https://www.w3.org/TR/vc-data-model/](https://www.w3.org/TR/vc-data-model/)).
 * **JWT_VC:** JSON Web Token Verifiable Credentials, based on the JWT VC Presentation Profile ([https://identity.foundation/jwt-vc-presentation-profile/](https://identity.foundation/jwt-vc-presentation-profile/)).
 * **SD-JWT:**  Self-Issued OpenID Provider (SIOP) v2 JSON Web Token Verifiable Credentials, as defined in the IETF OAuth SD-JWT VC draft ([https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html)).
 
-Each format has its own way of representing and signing the VC. Keycloak utilizes the `VerifiableCredentialsSigningService` interface to accommodate these different formats.
+Keycloak automates credential issuance, with a Credential Builder structuring credentials according to the required format and a dedicated Credential Signer handling the signing process. While Credential Builders are configurable, Credential Signers function transparently within the system.
 
-### Signing Service Configurations
+### Credential Builder Configuration
 
-To support a specific format, a corresponding signing service must be active.  Signing services can be configured to handle all credential types of a given format. However, you'll often need specific signing service configurations for certain credential types, allowing you to tailor the signing process to their unique requirements.
-
-#### Example: Signing Service for `IdentityCredential`
-
-Here's an example of a signing service configuration for a credential type called `IdentityCredential` using the SD-JWT format:
+Each Credential Builder is designed to handle a specific credential format. The providerId property should correspond to the format the builder is intended to support. Below is an example of a Credential Builder configuration:
 
 ```json
 {
-  "id": "sd-jwt-signing/IdentityCredential",
-  "name": "sd-jwt-signing-service for IdentityCredential",
+  "name": "sd-jwt-credentialbuilder",
   "providerId": "vc+sd-jwt",
-  "providerType": "org.keycloak.protocol.oid4vc.issuance.signing.VerifiableCredentialsSigningService",
-  "config": {
-    "algorithmType": ["ES256"],
-    "hashAlgorithm": ["sha-256"],
-    "tokenType": ["vc+sd-jwt"],
-    "vcConfigId": ["IdentityCredential"],
-    "decoys": [2]  
+  "providerType": "org.keycloak.protocol.oid4vc.issuance.credentialbuilder.CredentialBuilder"
+}
+```
+
+#### Realm-Level Credential Configuration
+
+Credential settings are managed at the realm level, where you can define attributes for various credential formats and types. This includes the configuration for building credentials, which can be customized according to the desired parameters.
+
+**Example: Credential Build Configuration**
+
+```json
+{
+  "realm": "oid4vc-vci",
+  "enabled": true,
+  "attributes": {
+    "vc.SteuerberaterCredential.credential_build_config.token_jws_type": "vc+sd-jwt",
+    "vc.SteuerberaterCredential.credential_build_config.hash_algorithm": "sha-256",
+    "vc.SteuerberaterCredential.credential_build_config.visible_claims": "iat,nbf",
+    "vc.SteuerberaterCredential.credential_build_config.decoys": "2",
+    "vc.SteuerberaterCredential.credential_build_config.signing_algorithm": "ES256"
   }
 }
 ```
+
 **Note:** decoys are optional number of decoy claims for privacy enhancement
 
 **Key Configuration Points:**
 
-* **`providerId`:** Indicates the VC format this service handles ("vc+sd-jwt" for SD-JWT).
-* **`vcConfigId`:** Identifies the specific credential type this instance is responsible for ("IdentityCredential" in this case).
-* **`algorithmType`:** Specifies the signing algorithm (e.g., "ES256" for ECDSA with SHA-256). If you don't provide a specific key ID, Keycloak will automatically select the active key that supports the specified algorithm.
+* **`token_jws_type`:** Specifies the VC format (e.g., "vc+sd-jwt", "jwt_vc").
+* **`hash_algorithm`:** Defines the hashing algorithm (e.g., "sha-256").
+* **`signing_algorithm`:** Determines the signing algorithm (e.g., "ES256").
 
-**Registering a Signing Service:**
+**Credential Signing:**
 
-You can register this signing service with Keycloak using the following command:
-
-```bash
-echo "Creating signing service component for IdentityCredential..."
-$KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < "$WORK_DIR/signing_service-IdentityCredential.json" || { echo 'Could not create signing service component for IdentityCredential' ; exit 1; }
-```
-
-After registering a signing service, keycloak is ready to deliver a verifiable credential for the given credential type and format.
+Signing is now handled automatically based on the configured signing key, which can be passed as part of the credential attributes. This simplifies the issuance process while ensuring security and compliance.
 
 # Key Endpoints
 
@@ -467,5 +474,5 @@ Certain credential types require cryptographic binding to the user's identity. T
 
 For these examples, we will be using the **pre-authorized_code** flow.
 
-* The script `3.retrieve_SteuerberaterCredential.sh` will allow you to request and obtain a test_credential, without holder binding.
-* The script `3.retrieve_IdentityCredential.sh` with create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
+* The script `3.retrieve_IdentityCredential.sh` will create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
+* We are missing an example without key binding
