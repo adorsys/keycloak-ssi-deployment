@@ -2,48 +2,96 @@
 
 This guide provides step-by-step instructions for configuring **Keycloak** as a **Verifiable Credential Issuer**. It covers the setup process for issuing **Verifiable Credentials (VCs)** using the OpenID for **Verifiable Credential Issuance (OID4VCI)** protocol. By the end of this guide, you will have a fully configured Keycloak instance capable of securely issuing and managing Verifiable Credentials.
 
+### What are Verifiable Credentials (VCs)?
+**Verifiable Credentials (VCs)** are cryptographically signed, tamper-evident data structures representing claims about an entity (e.g., a person, organization, or device). They form the foundation of decentralized identity systems, enabling secure and privacy-preserving identity verification without relying on centralized authorities. VCs support advanced cryptographic mechanisms such as selective disclosure and zero-knowledge proofs.
+
+### What is OID4VCI?
+**OpenID for Verifiable Credential Issuance (OID4VCI)** is an extension of the **OpenID Connect (OIDC)** protocol, designed to standardize the issuance of Verifiable Credentials. It defines an interoperable framework for credential issuers to securely deliver VCs to holders, who can then present them to verifiers.
+
+### Scope
+The guide includes the following technical configurations:
+
+* Creating a realm dedicated to VC issuance.
+* Setting up a test user for credential testing.
+* Configuring custom cryptographic keys for signing and encrypting VCs.
+* Defining realm attributes for VC metadata.
+* Establishing client scopes and mappers for user attribute inclusion in VCs.
+* Registering a client to manage VC requests.
+* Configuring a credential builder for VC formatting.
+* Verifying the configuration via the issuer metadata endpoint.
+
 ## Prerequisite
 
-* Ensure **Keycloak** is running with the **OID4VC_VCI** feature enabled.
-* Have an **access token** to authenticate API requests.
+Before proceeding, ensure the following requirements are met:
 
-🔗 **Refer to the official Keycloak documentation** for steps on:
+  **1. Keycloak Instance:**
+  * A running Keycloak server with the OID4VCI feature enabled. Enable the feature by adding the following flag to the startup command:
+    ```bash
+      --features=oid4vc-vci
+    ```
+  * Verify successful activation by checking the server logs for the OID4VC_VCI initialization message.
 
-* Setting up clients
-* Requesting an access token
+  **2. Authentication:**
+  * Obtain an access token to authenticate API requests.
 
-👉 Guide: [Keycloak Authentication & Token Requests](https://www.keycloak.org/docs/latest/authorization_services/index.html). This token will be required for various API requests throughout this guide.
+🔗 **Reference:** For detailed instructions on setting up clients and requesting an access token, refer to the [official Keycloak documentation.](https://www.keycloak.org/docs/latest/authorization_services/index.html)
 
-To configure keycloak as a VC Issuer, you can proceed as follows:
+### Configuring Keycloak as a VC Issuer
+Follow the steps below to configure Keycloak for issuing Verifiable Credentials.
 
 ### Create a new realm
 
 Using a dedicated realm instead of the default **master** realm improves security, isolates configurations, and simplifies management.
 
-Procedure:
+Run the command below to create a realm:
 
-  1. Log in to the **Keycloak Admin Console**.
-  2. In the left menu, click the dropdown showing the current realm (**master**).
-  3. Click **Create Realm** (top-left corner).
-  4. Enter a **Name** for the realm.
-  5. Click **Create** to save.
+  ```bash
+    kcadm.sh create realms -s realm=$REALM_NAME -s enabled=true
+  ```
+
+Parameters:
+
+  `-s realm=$REALM_NAME`: Specifies the realm name.
+  
+  `-s enabled=true`: Activates the realm upon creation.
 
 ### Create a User Account
 
 After setting up the realm, create a user account to facilitate testing and authentication.
 
-Procedure:
+Run the command below to create the User:
 
-  1. In the **Keycloak Admin Console**, navigate to **Users** → Click **Add User**.
-  2. Enter the user details:
-     * **Username:** Define a unique username.
-     * **First Name:** Enter the user's first name.
-     * **Last Name:** Enter the user's last name.
-     * **Email:** Provide a valid email address.
-  3. Click **Save** to create the user.
-  4. Navigate to the **Credentials** tab → Click **Set Password**
-  5. Enter and confirm the user's password.
-  6. Click **Save** to apply the changes.
+  ```bash
+    kcadm.sh create users -r $REALM_NAME -s username=$USERNAME -s firstName=$USER_FIRST_NAME -s lastName=$USER_LAST_NAME -s email=$USER_EMAIL -s enabled=true
+  ```
+
+Parameters:
+
+  `-r $REALM_NAME`: Targets the oid4vc-vci realm.
+
+  `-s username=$USERNAME`: Sets the username.
+
+  `-s firstName=$USER_FIRST_NAME`: Assigns the first name.
+
+  `-s lastName=$USER_LAST_NAME`: Assigns the last name.
+
+  `-s email=$USER_EMAIL`: Sets the email address.
+
+  `-s enabled=true`: Enables the user account.
+
+Set the User's Password:
+
+After creating the user, define a password using the following command:
+
+  ```bash
+    kcadm.sh set-password -r $REALM_NAME --username $USERNAME --new-password $USER_PASSWORD
+  ```
+
+Parameters
+
+  `--username $USERNAME`: Identifies the target user.
+  
+  `--new-password $USER_PASSWORD`: Sets the user password (use a strong, unique password in production).
 
 ### Key Management Configuration
 
@@ -53,62 +101,78 @@ Configuring key management is essential for securing the signing and encryption 
 **Disable Default Generated Keys:**  
 By default, Keycloak generates signing and encryption keys (e.g., **RSA-OAEP, RS256**). Disabling these ensures only custom-configured keys are used.
 
-Procedure:
+Run the command below to retrieve and disable the active keys:
 
-1. In the left menu, go to **Realm Settings** → **Keys**.
-2. Click on the **Add Providers** tab.
-3. Identify the default keys (**rsa-enc-generated** and **rsa-generated**).
-4. Click on each key, then select **Disable**.
-5. Click **Save** to apply the changes.
+  ```bash
+    # Disable the RSA-OAEP key
+    kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"'
+    $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId'
+    echo "Disabling RSA-OAEP key... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
+    kcadm.sh delete keys/$RSA_OAEP_PROV_ID -r $KEYCLOAK_REALM
+
+    # Disable the RS256 key
+    RS256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RS256)' | jq -r '.active.RS256')
+    RS256_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
+    echo "Disabling RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
+    kcadm.sh delete keys/$RS256_PROV_ID -r $KEYCLOAK_REALM
+  ```
 
 **Configure Custom Key Providers:**
 
-To securely sign and encrypt **Verifiable Credentials (VCs)**, configure custom key providers in Keycloak. This involves setting up **ECDSA** and **RSA** keys through the **Keycloak Admin Console**, loaded from a keystore.
+To securely sign and encrypt **Verifiable Credentials (VCs)**, configure custom key providers in Keycloak. This setup loads cryptographic keys from a Java (PKCS12) Keystore.
 
-   - **Adding an ECDSA Key Provider:** 
-     1. Navigate to **Realm Settings** → **Keys**.
-     2. Click **Add Provider**, then select **java-keystore** from the list.
-     3. Fill in the required fields:
-        * **Keystore:** Path to the keystore file.
-        * **Keystore Type:** Format of the keystore (e.g., JKS or PKCS12).
-        * **Keystore Password:** Password used to access the keystore.
-        * **Key Alias:** Alias of the key inside the keystore.
-        * **Key Password:** Password for the key inside the keystore.
-        * **Algorithm:** Select ES256 for ECDSA signing.
-        * **Priority:** Set the key’s precedence.
-        * **Key use:** Choose signing.
-     4. Ensure **Active** and **Enabled** are set to **true**.
-     5. Click **Save** to register the key provider.
+- **1. Adding an ECDSA Key Provider:** 
+
+ECDSA keys provide an efficient and secure mechanism for signing credentials. To add an ES256 (ECDSA with SHA-256) key provider, run the following command:
+
+  ```bash
+    kcadm.sh create keys -r <REALM> -s providerId=java-keystore \
+    -s "config.keystore=<KEYSTORE_PATH>" \
+    -s "config.keystorePassword=<KEYSTORE_PASSWORD>" \
+    -s "config.keystoreAlias=<KEY_ALIAS>" \
+    -s "config.keyPassword=<KEY_PASSWORD>" \
+    -s "config.keyType=EC" \
+    -s "config.algorithm=ES256" \
+    -s "config.priority=100" \
+    -s "config.active=true" \
+    -s "config.enabled=true"
+  ```
+
+- **Adding an RSA Signing Key Provider:**  
+
+To use RS256 (RSA with SHA-256) for signing, add an RSA key provider with the following command:
+
+  ```bash
+    kcadm.sh create keys -r <REALM> -s providerId=java-keystore \
+    -s "config.keystore=<KEYSTORE_PATH>" \
+    -s "config.keystorePassword=<KEYSTORE_PASSWORD>" \
+    -s "config.keystoreAlias=<KEY_ALIAS>" \
+    -s "config.keyPassword=<KEY_PASSWORD>" \
+    -s "config.keyType=RSA" \
+    -s "config.algorithm=RS256" \
+    -s "config.priority=90" \
+    -s "config.active=true" \
+    -s "config.enabled=true"
+  ```
    
-   - **Adding an RSA Signing Key Provider:**  
-     1. Navigate to **Realm Settings** → **Keys**.
-     2. Click **Add Provider**, then select **java-keystore** from the list.
-     3. Fill in the required fields:
-        * **Keystore:** Path to the keystore file.
-        * **Keystore Type:** Format of the keystore (JKS or PKCS12).
-        * **Keystore Password:** Password used to access the keystore.
-        * **Key Alias:** Alias of the key inside the keystore.
-        * **Key Password:** Password for the key inside the keystore.
-        * **Algorithm:** Select RS256 for RSA signing.
-        * **Priority:** Set the key’s precedence.
-        * **Key Use:** Choose signing.
-     4. Ensure **Active** and **Enabled** are set to true.
-     5. Click **Save** to register the key provider.
-   
-   - **Adding an RSA Encryption Key Provider:**  
-     1. Navigate to **Realm Settings** → **Keys**.
-     2. Click **Add Provider**, then select **java-keystore** from the list.
-     3. Fill in the required fields:
-        * **Keystore:** Path to the keystore file.
-        * **Keystore Type:** Format of the keystore (JKS or PKCS12).
-        * **Keystore Password:** Password used to access the keystore.
-        * **Key Alias:** Alias of the key inside the keystore.
-        * **Key Password:** Password for the key inside the keystore.
-        * **Algorithm:** Select RSA-OAEP for encryption.
-        * **Priority:** Set the key’s precedence.
-        * **Key Use:** Choose encryption.
-     4. Ensure **Active** and **Enabled** are set to true.
-     5. Click **Save** to register the key provider.
+- **Adding an RSA Encryption Key Provider:**  
+
+For RSA-OAEP (Optimal Asymmetric Encryption Padding) encryption, configure an RSA key provider with:
+
+  ```bash
+    kcadm.sh create keys -r <REALM> -s providerId=java-keystore \
+    -s "config.keystore=<KEYSTORE_PATH>" \
+    -s "config.keystorePassword=<KEYSTORE_PASSWORD>" \
+    -s "config.keystoreAlias=<KEY_ALIAS>" \
+    -s "config.keyPassword=<KEY_PASSWORD>" \
+    -s "config.keyType=RSA" \
+    -s "config.algorithm=RSA-OAEP" \
+    -s "config.priority=80" \
+    -s "config.active=true" \
+    -s "config.enabled=true"
+  ```
+
+**Note:** Replace the placeholders (`<REALM>`, `<KEYSTORE_PATH>`, etc.) with appropriate values.
 
 ### Registering Attributes at the Realm Level
 
