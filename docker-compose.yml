@@ -18,6 +18,9 @@ services:
     env_file: .env
     environment:
       - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
+      - KC_LOG_LEVEL=debug
+    volumes:
+      - ./config/providers/keycloak-eid-identity-provider.jar:/opt/keycloak/target/tools/keycloak-25.0.0/providers/keycloak-eid-identity-provider.jar
     depends_on:
       - db
     ports:
