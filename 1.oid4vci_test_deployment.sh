@@ -187,16 +187,16 @@ echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
 done
 
-# Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
+# Update openid4vc-rest-api client to support authorization_code
+echo "Configuring OPENID4VCI-REST-API client..."
 CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
   --arg CLIENT_SECRET "$CLIENT_SECRET" \
   --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
   --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
   '.secret += $CLIENT_SECRET |
-   .redirectUris += [$ISSUER_BACKEND_URL + "/*"] |
-   .webOrigins += [$ISSUER_BACKEND_URL] |
-   .attributes["post.logout.redirect.uris"] +=("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)'
-)
+   .redirectUris += [$ISSUER_BACKEND_URL + "/*", "http://localhost:8080/callback"] |
+   .webOrigins += [$ISSUER_BACKEND_URL, "http://localhost:8080"] |
+   .attributes["post.logout.redirect.uris"] +=("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)')
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
