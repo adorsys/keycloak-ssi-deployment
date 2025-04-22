@@ -43,7 +43,8 @@
       "require.pushed.authorization.requests": "false",
       "acr.loa.map": "{}",
       "display.on.consent.screen": "false",
-      "token.response.type.bearer.lower-case": "false"
+      "token.response.type.bearer.lower-case": "false",
+      "vc.IdentityCredential.scope": "identity_credential"
     },
     "authenticationFlowBindingOverrides": {},
     "fullScopeAllowed": true,
