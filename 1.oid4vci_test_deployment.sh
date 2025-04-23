@@ -187,7 +187,7 @@ echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
 done
 
-# Update openid4vc-rest-api client to support authorization_code
+# Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 echo "Configuring OPENID4VCI-REST-API client..."
 CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
   --arg CLIENT_SECRET "$CLIENT_SECRET" \
