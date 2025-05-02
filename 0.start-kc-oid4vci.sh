@@ -42,6 +42,21 @@ if [ -z "${KC_DB_OPTS}" ]; then
     KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 fi
 
+# Copy the EID provider if Keycloak version is >= 25.0.0
+# This includes "999.0.0-SNAPSHOT"
+KC_MAJOR_VERSION=$(echo "$KC_VERSION" | cut -d. -f1)
+
+if [[ "$KC_MAJOR_VERSION" -ge 25 ]]; then
+  PROVIDERS_DIR="$KC_INSTALL_DIR/providers"
+  cp ./config/providers/keycloak-eid-identity-provider.jar "$PROVIDERS_DIR/" || {
+    echo "Failed to copy keycloak-eid-identity-provider.jar to $PROVIDERS_DIR"
+    exit 1
+  }
+  echo "EID provider JAR copied to $PROVIDERS_DIR"
+else
+  echo "Keycloak version is $KC_VERSION, which is less than 25; skipping EID provider copy."
+fi
+
 # Start keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources

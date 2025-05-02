@@ -15,6 +15,7 @@ RUN ./setup-kc-oid4vci.sh
 
 # Base image for the runtime stage
 FROM openjdk:17-jdk-slim
+ARG KC_VERSION=26.0.7
 
 # Set the working directory
 WORKDIR /opt/keycloak
@@ -24,6 +25,9 @@ COPY --from=builder /app/target /opt/keycloak/target
 
 # Copy the environment variable file from the build stage
 COPY --from=builder /app/.env /opt/keycloak/
+
+# Copy the EID provider JAR
+COPY config/providers/keycloak-eid-identity-provider.jar /opt/keycloak/target/tools/keycloak-${KC_VERSION}/providers/keycloak-eid-identity-provider.jar
 
 # Copy the custom entrypoint script to the container and make it executable
 COPY entrypoint.sh /opt/keycloak/entrypoint.sh

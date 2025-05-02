@@ -2,6 +2,9 @@ name: Build and Push Image to GHCR
 
 on:
   push:
+    branches:
+      - develop
+      - feat/issue-#91
     tags:
       - v*.*.*
 
