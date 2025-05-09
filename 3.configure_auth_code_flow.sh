@@ -16,7 +16,20 @@ exit_with_error() {
     exit 1
 }
 
-# Wait for Keycloak to be healthy
+# Function to generate PKCE (Proof Key for Code Exchange) parameters:
+# - code_verifier: high-entropy cryptographic random string
+# - code_challenge: derived from code_verifier using SHA-256 and base64url encoding
+generate_pkce() {
+    local code_verifier
+    code_verifier=$(openssl rand -base64 96 | tr -d '+/=' | tr -d '\n' | cut -c -128)
+
+    local code_challenge
+    code_challenge=$(echo -n "$code_verifier" | openssl dgst -sha256 -binary |
+        openssl base64 | tr -d '=+' | tr '/+' '_-' | tr -d '\n')
+
+    echo "$code_verifier" "$code_challenge"
+}
+
 log_message "Waiting for Keycloak at ${KEYCLOAK_ADMIN_ADDR}..."
 until curl -s -k "${KEYCLOAK_ADMIN_ADDR}/health" > /dev/null; do
     sleep 5
@@ -67,52 +80,56 @@ get_access_token() {
 # Function to request credential
 request_credential() {
     local credential_id=$1
-    local scopes="openid identity_credential stbk_westfalen_lippe"
-    
+    local credential_scope
+    case "$credential_id" in
+        "IdentityCredential") credential_scope="identity_credential" ;;
+        "SteuerberaterCredential") credential_scope="stbk_westfalen_lippe" ;;
+        *) exit_with_error "Unknown credential ID: $credential_id" ;;
+    esac
+
+    local scopes="openid $credential_scope"
     log_message "=== Requesting credential: ${credential_id} ==="
 
-    # Get access token
     local login_token
     login_token=$(get_access_token "$scopes")
 
-    # Fetch credential offer link
     log_message "Fetching credential offer link..."
     local credential_offer_link
     credential_offer_link=$(curl -s -k "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential-offer-uri?credential_configuration_id=${credential_id}" \
         -H "Authorization: Bearer $login_token" | jq -r '"\(.issuer)\(.nonce)"')
-    
+
     if [ -z "$credential_offer_link" ] || [ "$credential_offer_link" == "null" ]; then
         exit_with_error "Failed to retrieve credential offer URI"
     fi
 
-    # Retrieve credential offer
     log_message "Retrieving credential offer..."
     local credential_offer
     credential_offer=$(curl -s -k "$credential_offer_link" -H "Authorization: Bearer $login_token")
-    
+
     if ! echo "$credential_offer" | jq -e '.' > /dev/null; then
         exit_with_error "Invalid credential offer response"
     fi
-    
     if ! echo "$credential_offer" | jq -e ".credential_configuration_ids[] | select(. == \"$credential_id\")" > /dev/null; then
         exit_with_error "Credential ID '$credential_id' not included in credential offer"
     fi
 
-    # Prepare authorization URL
     local encoded_scopes
     encoded_scopes=$(echo "$scopes" | tr -d '\n' | jq -sRr @uri)
     local issuer_state="state-$(uuidgen)"
-    local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D"
 
-    log_message "Open the following URL in your browser, login as 'francis', and paste the redirect 'code':"
+    read code_verifier code_challenge <<< "$(generate_pkce)"
+    log_message "PKCE: code_verifier=$code_verifier code_challenge=$code_challenge"
+
+    local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
+
+    log_message "Manual step required: Open this URL in your browser and login as 'francis'. Paste the 'code' param from the redirect URL."
     echo "$auth_url"
     read -p "Authorization code: " auth_code
-    
     if [ -z "$auth_code" ]; then
         exit_with_error "No authorization code provided"
     fi
+    log_message "Authorization code obtained: $auth_code"
 
-    # Exchange authorization code for token
     log_message "Exchanging authorization code for token..."
     local token_response
     token_response=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
@@ -120,8 +137,9 @@ request_credential() {
         -d "code=${auth_code}" \
         -d "client_id=openid4vc-rest-api" \
         -d "client_secret=${CLIENT_SECRET}" \
-        -d "redirect_uri=https://localhost:8443/callback")
-    
+        -d "redirect_uri=https://localhost:8443/callback" \
+        -d "code_verifier=${code_verifier}")
+
     local access_token
     access_token=$(echo "$token_response" | jq -r '.access_token')
     if [ -z "$access_token" ] || [ "$access_token" == "null" ]; then
@@ -130,30 +148,28 @@ request_credential() {
 
     log_message "Access token obtained successfully"
     echo -e "\nACCESS_TOKEN: $access_token"
+    log_message "Token scopes:"
     echo "$token_response" | jq '.scope'
 
-    # Generate key proof
     export CREDENTIAL_ACCESS_TOKEN="$access_token"
     log_message "Generating key proof..."
     source ./generate_key_proof.sh || exit_with_error "Failed to generate key proof"
 
-    # Prepare request body
     local req_body
     req_body=$(jq --arg credential_identifier "$credential_id" --arg proof_jwt "$USER_KEY_PROOF" \
         '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt' < "$WORK_DIR/credential_request_body.json")
-    
+
     log_message "Request body prepared: $req_body"
 
-    # Request credential
     log_message "Requesting credential..."
     local credential
     credential=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential" \
         -H "Authorization: Bearer ${access_token}" \
         -H "Content-Type: application/json" \
         -d "$req_body" | jq .)
-    
-    if [ -z "$credential" ] || [ "$credential" == "null" ]; then
-        exit_with_error "Credential issuance failed for $credential_id"
+
+    if [ -z "$credential" ] || [ "$credential" == "null" ] || echo "$credential" | jq -e '.error' > /dev/null; then
+        exit_with_error "Credential issuance failed for $credential_id. Response: $credential"
     fi
 
     log_message "Credential successfully issued: $credential"
