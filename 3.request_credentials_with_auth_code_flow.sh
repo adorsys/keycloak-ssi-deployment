@@ -39,11 +39,18 @@ log_message "Keycloak is running."
 # Authenticate admin via kcadm
 log_message "Configuring Keycloak admin credentials..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials \
-    --server "$KEYCLOAK_ADMIN_ADDR" \
-    --realm master \
-    --user "$KC_BOOTSTRAP_ADMIN_USERNAME" \
-    --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" || exit_with_error "Failed to configure Keycloak admin credentials"
+
+# Check if admin credentials are already configured
+if ! $KC_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
+    log_message "No existing admin credentials found. Configuring new credentials..."
+    $KC_INSTALL_DIR/bin/kcadm.sh config credentials \
+        --server "$KEYCLOAK_ADMIN_ADDR" \
+        --realm master \
+        --user "$KC_BOOTSTRAP_ADMIN_USERNAME" \
+        --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" || exit_with_error "Failed to configure Keycloak admin credentials"
+else
+    log_message "Admin credentials already configured."
+fi
 
 # Check if user 'francis' exists
 log_message "Verifying user 'francis'..."
@@ -57,26 +64,6 @@ if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
     source ./generate_user_key.sh || exit_with_error "Failed to generate user key proof"
 fi
 
-# Function to obtain access token with required scopes
-get_access_token() {
-    local scopes=$1
-    log_message "Obtaining access token with scopes: $scopes"
-    local token
-    token=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "client_id=openid4vc-rest-api" \
-        -d "client_secret=${CLIENT_SECRET}" \
-        -d "username=francis" \
-        -d "password=${USER_FRANCIS_PASSWORD}" \
-        -d "grant_type=password" \
-        -d "scope=${scopes}" | jq -r '.access_token')
-    
-    if [ -z "$token" ] || [ "$token" == "null" ]; then
-        exit_with_error "Failed to obtain access token"
-    fi
-    echo "$token"
-}
-
 # Function to request credential
 request_credential() {
     local credential_id=$1
@@ -89,29 +76,6 @@ request_credential() {
 
     local scopes="openid $credential_scope"
     log_message "=== Requesting credential: ${credential_id} ==="
-
-    local login_token
-    login_token=$(get_access_token "$scopes")
-
-    log_message "Fetching credential offer link..."
-    local credential_offer_link
-    credential_offer_link=$(curl -s -k "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential-offer-uri?credential_configuration_id=${credential_id}" \
-        -H "Authorization: Bearer $login_token" | jq -r '"\(.issuer)\(.nonce)"')
-
-    if [ -z "$credential_offer_link" ] || [ "$credential_offer_link" == "null" ]; then
-        exit_with_error "Failed to retrieve credential offer URI"
-    fi
-
-    log_message "Retrieving credential offer..."
-    local credential_offer
-    credential_offer=$(curl -s -k "$credential_offer_link" -H "Authorization: Bearer $login_token")
-
-    if ! echo "$credential_offer" | jq -e '.' > /dev/null; then
-        exit_with_error "Invalid credential offer response"
-    fi
-    if ! echo "$credential_offer" | jq -e ".credential_configuration_ids[] | select(. == \"$credential_id\")" > /dev/null; then
-        exit_with_error "Credential ID '$credential_id' not included in credential offer"
-    fi
 
     local encoded_scopes
     encoded_scopes=$(echo "$scopes" | tr -d '\n' | jq -sRr @uri)

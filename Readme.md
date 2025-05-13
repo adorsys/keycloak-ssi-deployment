@@ -58,7 +58,14 @@ This will:
 
 ### Option 2: Cloning a Specific Branch
 
-Set `KC_VERSION=999.0.0-SNAPSHOT` in your `.env` file and run:
+Set keycloak version and the desired branch in your `.env` file, for example:
+
+```bash
+KC_VERSION=999.0.0-SNAPSHOT
+KC_TARGET_BRANCH=main
+```
+
+Then run:
 
 ```bash
 ./0.start-kc-oid4vci.sh
