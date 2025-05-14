@@ -12,10 +12,10 @@ Checkout this project.
 
 Before proceeding, ensure you have the following tools installed on your system:
 
-* **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
-* **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
-* **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide.
-* **.env File:** Review the `.env` file to ensure all the necessary environment variables are correctly set up.
+- **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
+- **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
+- **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide.
+- **.env File:** Review the `.env` file to ensure all the necessary environment variables are correctly set up.
 
 **Verification:** You can verify that the tools are working by running:
 
@@ -26,35 +26,54 @@ jq --version
 ```
 
 ### Setting Up Keycloak
+
 You can set up Keycloak in one of two ways, based on your requirements:
 
 1. **Using the Keycloak Tarball:** Downloads an official release from [Keycloak GitHub Releases](https://github.com/keycloak/keycloak/releases).
 2. **Cloning and Building a Specific Keycloak Branch:** Builds Keycloak from a specific branch.
 
 ### Configuring the Setup Method
-The setup method is controlled by the ```KC_USE_UPSTREAM``` environment variable:
 
-- `true`: Use the Keycloak tarball.
-- `false`: Clone and build a specific branch.
+**You no longer need to set `KC_USE_UPSTREAM` in your `.env` file.**
+
+The setup method is now handled automatically by the `setup-kc-oid4vci.sh` script based on the value of the `KC_VERSION` variable in your `.env` file:
+
+- If `KC_VERSION` is not `999.0.0-SNAPSHOT`, the script will use the official Keycloak tarball (upstream).
+- If `KC_VERSION` is `999.0.0-SNAPSHOT`, the script will clone and build the custom Keycloak branch.
+
+**To control which method is used, simply set the `KC_VERSION` variable in your `.env` file.**
 
 ### Option 1: Using the Keycloak Tarball
-Set ```KC_USE_UPSTREAM=true``` in the `.env file` and run:
-  ```bash
-  ./0.start-kc-oid4vci.sh
-  ```
+
+Set `KC_VERSION` to the desired official Keycloak version (e.g., `26.0.7`) in your `.env` file and run:
+
+```bash
+./0.start-kc-oid4vci.sh
+```
+
 This will:
 
 - Download and unpack the tarball (e.g., keycloak-26.0.7.tar.gz).
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
 ### Option 2: Cloning a Specific Branch
-Set ```KC_USE_UPSTREAM=false``` in the `.env file` and run:
-  ```bash
-  ./0.start-kc-oid4vci.sh
-  ```
+
+Set keycloak version and the desired branch in your `.env` file, for example:
+
+```bash
+KC_VERSION=999.0.0-SNAPSHOT
+KC_TARGET_BRANCH=main
+```
+
+Then run:
+
+```bash
+./0.start-kc-oid4vci.sh
+```
+
 This will:
 
-- Clone and Build Keycloak from the specified branch.
+- Clone and build Keycloak from the specified branch.
 - Start Keycloak with OID4VCI feature on https://localhost:8443.
 
 ## Alternative-1: Use Kc-config-cli to Configure Keycloak
@@ -63,21 +82,22 @@ To set up Keycloak for Verifiable Credential Issuance, we use a script that util
 
 ### 1. **Check the `.env` File**
 
-   Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
+Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
 
-   **Key variables to review:**
-   - `KEYCLOAK_URL`: URL of your Keycloak server.
-   - `KC_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
-   - `KC_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
+**Key variables to review:**
+
+- `KEYCLOAK_URL`: URL of your Keycloak server.
+- `KC_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
+- `KC_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
 
 ### 2. **Run the Configuration Script**
 
-   After verifying your `.env` file, run the following script to configure your Keycloak environment:
+After verifying your `.env` file, run the following script to configure your Keycloak environment:
 
-   ```bash
-   # Import Keycloak configuration
-   export JAVA_HOME="<YOUR JAVA HOME DIR>" && config/import_kc_config.sh
-   ```
+```bash
+# Import Keycloak configuration
+export JAVA_HOME="<YOUR JAVA HOME DIR>" && config/import_kc_config.sh
+```
 
 ## Alternative-2: Manual Configuration Keycloak for Verifiable Credential Issuance
 
@@ -88,6 +108,7 @@ We can also configure Keycloak manually using the kcadm.sh tool. This shall be e
 Refer to the TLDR section for initial setup requirements.
 
 ### Script
+
 In the project directory execute following scripts (tested on debian & ubuntu linux only):
 
 ```bash
@@ -101,12 +122,35 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 ```
 
 ## Requesting Credentials
+
+This project now supports both the `pre-authorized code` and `authorization code` grant types for requesting Verifiable Credentials (VCs). The authorization code flow, enhanced with Proof Key for Code Exchange (PKCE), provides additional security by preventing authorization code interception attacks. The following scripts demonstrate how to request credentials using these flows.
+
 Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl certificate validation.
 
-### Request a credential with key binding
+### Request a Credential with Key Binding (Pre-Authorized Code Flow)
+
 ```bash
 ./3.retrieve_IdentityCredential.sh
 ```
+
+This script:
+
+- Creates a key pair for the wallet.
+- Signs a key proof.
+- Requests an IdentityCredential with key binding using the pre-authorized code flow.
+
+### Request a Credential with Key Binding (Authorization Code Flow with PKCE)
+
+```bash
+./3.configure_auth_code_flow.sh
+```
+
+This script:
+
+- Generates a PKCE code_verifier and code_challenge.
+- Requests an authorization code via the Keycloak authorization endpoint.
+- Exchanges the authorization code for an access token, including the code_verifier.
+- Requests credentials `(IdentityCredential and SteuerberaterCredential)` with key binding.
 
 # Detailed Description
 
@@ -117,6 +161,7 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 Refer to the TLDR section for initial setup requirements.
 
 ### The .env File
+
 All environment variables defined here are to be found in a .env file, sourced ahead of executing any command.
 
 ### Using Keycloak with OID4VCI Support
@@ -124,11 +169,12 @@ All environment variables defined here are to be found in a .env file, sourced a
 The project uses the officially released version of Keycloak with OID4VCI support, and it also provides the option to clone and build a specific branch (e.g., for testing new features before integration).
 
 ### Cloning and Building Keycloak
-The ```setup-kc-oid4vci.sh``` script simplifies the setup process. It either downloads a prebuilt tarball or builds Keycloak from source, depending on the ```KC_USE_UPSTREAM``` value.
 
-  ```bash
-  ./setup-kc-oid4vci.sh
-  ```
+The `setup-kc-oid4vci.sh` script simplifies the setup process. It either downloads a prebuilt tarball or builds Keycloak from source, depending on the `KC_VERSION` value. **You do not need to set `KC_USE_UPSTREAM` manually.**
+
+```bash
+./setup-kc-oid4vci.sh
+```
 
 This script:
 
@@ -141,8 +187,7 @@ tar xzf "$TAR_FILE" -C "$TOOLS_DIR" || { echo "Could not unpack Keycloak tarball
 echo "Keycloak unpacked to $KC_INSTALL_DIR."
 ```
 
-```$TAR_FILE```: The path to the Keycloak tarball, either the upstream tarball (if using the official Keycloak release) or the custom build (if building from source).
-
+`$TAR_FILE`: The path to the Keycloak tarball, either the upstream tarball (if using the official Keycloak release) or the custom build (if building from source).
 
 ### Generating SSL Keys for Keycloak
 
@@ -150,7 +195,8 @@ In this documentation, we run Keycloak with SSL enabled. This ensures consistent
 
 The following script, `generate-kc-certs.sh`, automates the process of creating a self-signed certificate for Keycloak. It then imports the certificate's public key into a truststore, which can be used by the Keycloak Admin CLI to establish a trusted connection.
 
-The cert config file can be found at: ```cert-config.txt```
+The cert config file can be found at: `cert-config.txt`
+
 ```bash
 #!/bin/bash
 # Source environment variables
@@ -164,11 +210,12 @@ keytool -importcert -trustcacerts -noprompt -alias localhost -file "${KC_SERVER_
 
 ### Keycloak Startup with SSL
 
-After setting up Keycloak and generating SSL keys, you can start Keycloak with OID4VCI features enabled. Use the ```0.start-kc-oid4vci.sh``` script:
+After setting up Keycloak and generating SSL keys, you can start Keycloak with OID4VCI features enabled. Use the `0.start-kc-oid4vci.sh` script:
 
 This script:
+
 - Shuts down any running Keycloak instance.
-- Prepares Keycloak by running the setup script ```(setup-kc-oid4vci.sh)```.
+- Prepares Keycloak by running the setup script `(setup-kc-oid4vci.sh)`.
 - Starts the database container if not already running (Used for local development).
 - Launches Keycloak with SSL, database connection, and OID4VCI support.
 
@@ -182,6 +229,7 @@ export KC_BOOTSTRAP_ADMIN_USERNAME=$KC_BOOTSTRAP_ADMIN_USERNAME && export KC_BOO
 For external deployments, **ensure you update the Keycloak admin password** to a more secure value.
 
 Recall the start and database commands in `.env` file are:
+
 ```bash
 KC_START="start --hostname-strict=false --https-port=$KEYCLOAK_HTTPS_PORT --https-certificate-file=$KC_SERVER_CERT --https-certificate-key-file=$KC_SERVER_KEY"
 KC_DB_OPTS="--db postgres --db-url jdbc:postgresql://localhost:$KC_DB_EXPOSED_PORT/$KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
@@ -194,13 +242,16 @@ KC_DB_OPTS="--db postgres --db-url jdbc:postgresql://localhost:$KC_DB_EXPOSED_PO
 Refer to the TLDR section for initial setup requirements.
 
 ### All-in-One Deployment
-All the steps outlined below can be executed by running the script ```1.oid4vci_test_deployment.sh```.
+
+All the steps outlined below can be executed by running the script `1.oid4vci_test_deployment.sh`.
 
 ### Keycloak Admin CLI
-Although Keycloak provides various integrated ways to manage configurations, we use the ```kcadm.sh``` CLI tool. This approach allows readers to work directly in a shell for quick results. For more complex deployments, consider using [keycloak-config-cli](https://github.com/adorsys/keycloak-config-cli).
+
+Although Keycloak provides various integrated ways to manage configurations, we use the `kcadm.sh` CLI tool. This approach allows readers to work directly in a shell for quick results. For more complex deployments, consider using [keycloak-config-cli](https://github.com/adorsys/keycloak-config-cli).
 
 ### Accessing the Keycloak admin interface with SSL
-The following lines will allow you to configure a truststore for used by ```kcadm.sh``` and obtain and administrator access token to perform administrative tasks.
+
+The following lines will allow you to configure a truststore for used by `kcadm.sh` and obtain and administrator access token to perform administrative tasks.
 
 ```bash
 # Set a trust store for kcadm.sh
@@ -223,11 +274,13 @@ $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.issuerD
 ```
 
 ### Configuring a Keycloak ECDSA Signing Key for Verifiable Credentials
+
 Just like a regular bearer token, Keycloak issues VCs. These can be in various formats, such as SD-JWT (JSON documents). Keycloak can sign VCs using its native RSA key pair or, as required by some pilot programs, an Elliptic Curve (EC) key pair. In the latter case, we'll generate the EC key and add it to Keycloak's configuration.
 
 **1. Generating an ECDSA Key:**
 
 We'll use the `keytool` command (part of the Java Development Kit) to create an ECDSA key pair:
+
 ```bash
 keytool \
   -genkeypair \
@@ -266,12 +319,13 @@ Next, we'll create a JSON file that describes the key to Keycloak. This file wil
 ```
 
 **Key points:**
-* `providerId`: "java-keystore" refers to the Keycloak Java KeyStore key provider.
-* `algorithm`: "ES256" specifies the ECDSA algorithm with SHA-256.
+
+- `providerId`: "java-keystore" refers to the Keycloak Java KeyStore key provider.
+- `algorithm`: "ES256" specifies the ECDSA algorithm with SHA-256.
 
 **3. Adding the Key to Keycloak:**
 
-In order to fill up this template in a shell environment, we need a tool like ```jq```, that can manipulate json files on the
+In order to fill up this template in a shell environment, we need a tool like `jq`, that can manipulate json files on the
 command line (as mentioned in the prerequisites).
 
 ```bash
@@ -283,17 +337,17 @@ cat $WORK_DIR/issuer_key_ecdsa.json | \
   --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
   --arg keyAlias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" \
   --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
-  '.config.keystore = [$keystore] | 
+  '.config.keystore = [$keystore] |
    .config.keystorePassword = [$keystorePassword] |
-   .config.keystoreType = [$keystoreType] | 
-   .config.keyAlias = [$keyAlias] | 
+   .config.keystoreType = [$keystoreType] |
+   .config.keyAlias = [$keyAlias] |
    .config.keyPassword = [$keyPassword]' \
-  > $TARGET_DIR/issuer_key_ecdsa-tmp.json 
+  > $TARGET_DIR/issuer_key_ecdsa-tmp.json
 ```
 
 **4. Adding the Key to the Keycloak Realm:**
 
-The following Bash command adds an EC key to the Keycloak realm specified in the ```.env``` file and configures it to produce JWS ES256 signatures (ECDSA on curve P-256):
+The following Bash command adds an EC key to the Keycloak realm specified in the `.env` file and configures it to produce JWS ES256 signatures (ECDSA on curve P-256):
 
 ```bash
 # Register the EC-key with Keycloak
@@ -375,10 +429,7 @@ Clients that require access to Verifiable Credentials must have the appropriate 
 ```json
 {
   "clientId": "openid4vc-rest-api",
-  "optionalClientScopes": [
-    "stbk_westfalen_lippe",
-    "other scopes"
-  ]
+  "optionalClientScopes": ["stbk_westfalen_lippe", "other scopes"]
 }
 ```
 
@@ -386,9 +437,9 @@ Clients that require access to Verifiable Credentials must have the appropriate 
 
 Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) formats, including:
 
-* **LDP_VC:** Linked Data Proof Verifiable Credentials, as defined in the W3C Verifiable Credentials Data Model specification ([https://www.w3.org/TR/vc-data-model/](https://www.w3.org/TR/vc-data-model/)).
-* **JWT_VC:** JSON Web Token Verifiable Credentials, based on the JWT VC Presentation Profile ([https://identity.foundation/jwt-vc-presentation-profile/](https://identity.foundation/jwt-vc-presentation-profile/)).
-* **SD-JWT:**  Self-Issued OpenID Provider (SIOP) v2 JSON Web Token Verifiable Credentials, as defined in the IETF OAuth SD-JWT VC draft ([https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html)).
+- **LDP_VC:** Linked Data Proof Verifiable Credentials, as defined in the W3C Verifiable Credentials Data Model specification ([https://www.w3.org/TR/vc-data-model/](https://www.w3.org/TR/vc-data-model/)).
+- **JWT_VC:** JSON Web Token Verifiable Credentials, based on the JWT VC Presentation Profile ([https://identity.foundation/jwt-vc-presentation-profile/](https://identity.foundation/jwt-vc-presentation-profile/)).
+- **SD-JWT:** Self-Issued OpenID Provider (SIOP) v2 JSON Web Token Verifiable Credentials, as defined in the IETF OAuth SD-JWT VC draft ([https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html)).
 
 Keycloak automates credential issuance, with a Credential Builder structuring credentials according to the required format and a dedicated Credential Signer handling the signing process. While Credential Builders are configurable, Credential Signers function transparently within the system.
 
@@ -428,9 +479,9 @@ Credential settings are managed at the realm level, where you can define attribu
 
 **Key Configuration Points:**
 
-* **`token_jws_type`:** Specifies the VC format (e.g., "vc+sd-jwt", "jwt_vc").
-* **`hash_algorithm`:** Defines the hashing algorithm (e.g., "sha-256").
-* **`signing_algorithm`:** Determines the signing algorithm (e.g., "ES256").
+- **`token_jws_type`:** Specifies the VC format (e.g., "vc+sd-jwt", "jwt_vc").
+- **`hash_algorithm`:** Defines the hashing algorithm (e.g., "sha-256").
+- **`signing_algorithm`:** Determines the signing algorithm (e.g., "ES256").
 
 **Credential Signing:**
 
@@ -442,23 +493,22 @@ Signing is now handled automatically based on the configured signing key, which 
 
 This endpoint is **mandatory** and describes the issuer's capabilities, including supported credential types, formats, cryptographic binding methods, and display information. It also provides the URLs for other essential endpoints like the `credential_endpoint`, `batch_credential_endpoint`, and `deferred_credential_endpoint`. The current keycloak implementation supports only the credential endpoint.
 
-* URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-credential-issuer`
-* e.g: `https://localhost:8443/realms/master/.well-known/openid-credential-issuer`
+- URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-credential-issuer`
+- e.g: `https://localhost:8443/realms/master/.well-known/openid-credential-issuer`
 
 ### OpenID Configuration Endpoint
 
 This endpoint is **mandatory** in OpenID Connect and provides general metadata about the issuer's OpenID Connect configuration, such as supported scopes, response types, and grant types. While not specific to OID4VCI, it's essential for the overall OpenID Connect flow that underpins VC issuance.
 
-* URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-configuration`
-* e.g.: `https://localhost:8443/realms/master/.well-known/openid-configuration`
+- URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/openid-configuration`
+- e.g.: `https://localhost:8443/realms/master/.well-known/openid-configuration`
 
 ### JWT Issuer Endpoint
 
 This endpoint is **optional** and provides metadata specifically about the issuer's JWT-based VCs. It includes information about supported algorithms, key IDs, and other details relevant to JWT-based VCs.
 
-* URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/jwt-vc-issuer`
-* e.g: `https://localhost:8443/realms/master/.well-known/jwt-vc-issuer`
-
+- URL: `https://<your-keycloak-host>/realms/<your-realm>/.well-known/jwt-vc-issuer`
+- e.g: `https://localhost:8443/realms/master/.well-known/jwt-vc-issuer`
 
 ## Creating User and User key Materials
 
@@ -472,7 +522,13 @@ Certain credential types require cryptographic binding to the user's identity. T
 
 ## Requesting Verifiable Credentials
 
-For these examples, we will be using the **pre-authorized_code** flow.
+Keycloak supports two grant types for requesting VCs:
 
-* The script `3.retrieve_IdentityCredential.sh` will create a key pair for the wallet, sign a key proof and use it to request an IdentityCredential with key binding.
-* We are missing an example without key binding
+- Pre-authorized Code Flow: Suitable for scenarios where the issuer pre-approves the credential issuance.
+- Authorization Code Flow with PKCE: Provides enhanced security through PKCE, requiring user authentication and authorization code exchange.
+
+For examples, see the “Requesting Credentials” section above, which covers:
+
+- Pre-authorized code flow with key binding `(3.retrieve_IdentityCredential.sh)`.
+- Authorization code flow with PKCE and key binding `(3.configure_auth_code_flow.sh)`.
+- We are missing an example without key binding

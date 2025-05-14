@@ -3,7 +3,7 @@
     "name": "stbk_westfalen_lippe",
     "protocol": "openid-connect",
     "attributes": {
-      "include.in.token.scope": "false",
+      "include.in.token.scope": "true",
       "display.on.consent.screen": "false"
     },
     "protocolMappers": [
@@ -141,7 +141,7 @@
     "name": "identity_credential",
     "protocol": "openid-connect",
     "attributes": {
-      "include.in.token.scope": "false",
+      "include.in.token.scope": "true",
       "display.on.consent.screen": "false"
     },
     "protocolMappers": [
