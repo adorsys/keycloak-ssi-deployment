@@ -2,3 +2,4 @@ signing_service-tmp.json
 target
 /.idea/
 keycloak-chart/**/*.env
+keycloak-chart/**/*.tgz

@@ -44,26 +44,23 @@ keycloak:
       mountPath: /opt/keycloak/env
 
 # Postgresql Configuration
-postgres:
-  enabled: false
-  image:
-    repository: postgres
-    tag: latest
-    pullPolicy: IfNotPresent
-  replicas: 1
+postgresql:
+  enabled: true
+  auth:
+    database: keycloakdb
+    username: datevadmin
+    existingSecret: keycloak-secret
+    secretKeys:
+      adminPasswordKey: KC_DB_PASSWORD
+      userPasswordKey: KC_DB_PASSWORD
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: high-performance
   service:
-    name: postgres-service
-    type: ClusterIP
-    port: 5432
-  volumes:
-    - name: db-data
-      emptyDir: {}
-  volumeMounts:
-    - mountPath: /var/lib/postgresql/data
-      name: db-data
-  env:
-    POSTGRES_DB: kc_ssi_db
-    POSTGRES_USER: datevadmin
+    ports:
+      postgresql: 5432
 
 # External secrets
 externalSecret:
