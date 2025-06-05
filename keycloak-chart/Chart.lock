@@ -2,5 +2,8 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 16.7.8
-digest: sha256:3da4e0676b2feae321c9a127b942b7144074b7690a9cddb8afc59329f24f3fe7
-generated: "2025-06-02T15:10:23.171056447+01:00"
+- name: app-template
+  repository: https://bjw-s-labs.github.io/helm-charts
+  version: 4.0.1
+digest: sha256:42070ee8b7c6045d15ee07708cbe7a65ed6a42f4183b554cbe5f4022a7c66ee6
+generated: "2025-06-05T09:29:53.094488543+01:00"
