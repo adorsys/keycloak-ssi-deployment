@@ -15,15 +15,40 @@ app-template:
       enabled: true
       type: deployment
       replicas: 1
+      initContainers:
+        wait-for-configmap:
+          image:
+            repository: bitnami/kubectl
+            tag: latest
+            pullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until kubectl get configmap keycloak-env-config -n datev-wallet; do
+                echo "Waiting for keycloak-env-config..."; sleep 2;
+              done
+        wait-for-postgres:
+          image:
+            repository: bitnami/kubectl
+            tag: latest
+            pullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until kubectl get svc keycloak-postgresql -n datev-wallet; do
+                echo "Waiting for PostgreSQL service..."; sleep 2;
+              done
+              until kubectl exec -n datev-wallet keycloak-postgresql-0 -- pg_isready -U datevadmin -d keycloakdb; do
+                echo "Waiting for PostgreSQL to be ready..."; sleep 2;
+              done
       containers:
         main:
           image:
             repository: ghcr.io/adorsys/keycloak-ssi-deployment
             tag: 1.0.0
             pullPolicy: Always
-          envFrom:
-            - configMapRef:
-                name: keycloak-env-config
 
   # Persistence for ConfigMap volume
   persistence:
@@ -32,8 +57,9 @@ app-template:
       type: configMap
       name: keycloak-env-config
       globalMounts:
-        - path: /opt/keycloak/env
-          subPath: ".env"
+        - path: /opt/keycloak/env/.env
+          subPath: .env
+          readOnly: true
 
   # ConfigMap for environment variables
   configMaps:
@@ -100,6 +126,7 @@ postgresql:
       enabled: true
       size: 8Gi
       storageClass: high-performance
+      # storageClass: standard # minikube (local test)
   service:
     ports:
       postgresql: 5432
@@ -119,10 +146,6 @@ externalSecret:
 # Job to create config map
 metadata:
   name: download-env-file
-  namespace: argocd
-  annotations:
-    hook: PreSync
-    hookDeletePolicy: HookSucceeded
 
 volumeMounts:
   name: tmp-volume
@@ -131,7 +154,12 @@ volumeMounts:
 awsCli:
   image: amazon/aws-cli
   s3Bucket: keycloakenv
-  envFilePath: "/tmp/.env"
+  envFilePath: /tmp/.env
+  secretName: awssm-secret
+  region: eu-central-1
+  accessKeyID: access-key
+  secretAccessKey: secret-key
+  sessionToken: session-token
 
 kubectl:
   image: bitnami/kubectl
@@ -142,6 +170,6 @@ placeholder:
 
 job:
   restartPolicy: OnFailure
-  serviceAccountName: argocd-server
+  serviceAccountName: default # ensure service account has relevant RBAC permissions
 
 awsSecretName: datev-wallet-secrets
