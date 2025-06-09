@@ -14,24 +14,6 @@ spec:
           - "-c"
           - |
             aws s3 cp s3://{{ .Values.awsCli.s3Bucket }}/.env {{ .Values.awsCli.envFilePath }}
-        env:
-          - name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.awsCli.secretName }}
-                key: {{ .Values.awsCli.accessKeyID }}
-          - name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.awsCli.secretName }}
-                key: {{ .Values.awsCli.secretAccessKey }}
-          - name: AWS_SESSION_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.awsCli.secretName }}
-                key: {{ .Values.awsCli.sessionToken }}
-          - name: AWS_DEFAULT_REGION
-            value: {{ .Values.awsCli.region }}
         volumeMounts:
           - name: {{ .Values.volumeMounts.name }}
             mountPath: {{ .Values.volumeMounts.mountPath }}

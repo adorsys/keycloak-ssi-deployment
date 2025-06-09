@@ -155,11 +155,6 @@ awsCli:
   image: amazon/aws-cli
   s3Bucket: keycloakenv
   envFilePath: /tmp/.env
-  secretName: awssm-secret
-  region: eu-central-1
-  accessKeyID: access-key
-  secretAccessKey: secret-key
-  sessionToken: session-token
 
 kubectl:
   image: bitnami/kubectl
