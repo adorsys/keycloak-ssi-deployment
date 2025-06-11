@@ -2,10 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Values.metadata.name }}
-  namespace: {{ .Values.metadata.namespace }}
-  annotations:
-    argocd.argoproj.io/hook: {{ .Values.metadata.annotations.hook }}
-    argocd.argoproj.io/hook-delete-policy: {{ .Values.metadata.annotations.hookDeletePolicy }}
+  namespace: {{ .Release.Namespace }}
 spec:
   template:
     spec:
@@ -28,7 +25,14 @@ spec:
           - "-c"
           - |
             sleep {{ .Values.kubectl.sleepDuration }}
-            kubectl create configmap keycloak-env-config --from-file=/tmp/.env --namespace=datev-wallet --dry-run=client -o yaml | kubectl apply -f -
+            echo "Creating configmap..."
+            kubectl create configmap keycloak-env-config --from-file={{ .Values.awsCli.envFilePath }} --namespace={{ .Values.metadata.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+            if [ $? -eq 0 ]; then
+              echo "Configmap created successfully"
+            else
+              echo "Failed to create configmap"
+              exit 1
+            fi
         volumeMounts:
           - name: {{ .Values.volumeMounts.name }}
             mountPath: {{ .Values.volumeMounts.mountPath }}
