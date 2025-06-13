@@ -51,6 +51,10 @@ app-template:
             repository: ghcr.io/adorsys/keycloak-ssi-deployment
             tag: 1.0.0
             pullPolicy: Always
+          ports:
+            - name: https
+              containerPort: 8443
+              protocol: TCP
 
   # Persistence for ConfigMap volume
   persistence:
