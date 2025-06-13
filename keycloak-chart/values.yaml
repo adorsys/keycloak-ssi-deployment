@@ -54,7 +54,6 @@ app-template:
           ports:
             - name: https
               containerPort: 8443
-              protocol: TCP
 
   # Persistence for ConfigMap volume
   persistence:
