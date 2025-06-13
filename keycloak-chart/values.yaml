@@ -165,6 +165,6 @@ placeholder:
 
 job:
   restartPolicy: OnFailure
-  serviceAccountName: default # ensure service account has relevant RBAC permissions
+  serviceAccountName: argocd-server # ensure service account has relevant RBAC permissions
 
 awsSecretName: datev-wallet-secrets
