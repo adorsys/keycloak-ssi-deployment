@@ -2,16 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Values.metadata.name }}
-  namespace: {{ .Values.metadata.namespace }}
-  {{- with .Values.metadata.annotations }}
-  annotations:
-    {{- if .hook }}
-    argocd.argoproj.io/hook: {{ .hook }}
-    {{- end }}
-    {{- if .hookDeletePolicy }}
-    argocd.argoproj.io/hook-delete-policy: {{ .hookDeletePolicy }}
-    {{- end }}
-  {{- end }}
+  namespace: {{ .Release.Namespace }}
 spec:
   template:
     spec:
@@ -23,6 +14,24 @@ spec:
           - "-c"
           - |
             aws s3 cp s3://{{ .Values.awsCli.s3Bucket }}/.env {{ .Values.awsCli.envFilePath }}
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.awsCli.secretName }}
+                key: {{ .Values.awsCli.accessKeyID }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.awsCli.secretName }}
+                key: {{ .Values.awsCli.secretAccessKey }}
+          - name: AWS_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.awsCli.secretName }}
+                key: {{ .Values.awsCli.sessionToken }}
+          - name: AWS_DEFAULT_REGION
+            value: {{ .Values.awsCli.region }}
         volumeMounts:
           - name: {{ .Values.volumeMounts.name }}
             mountPath: {{ .Values.volumeMounts.mountPath }}
@@ -35,7 +44,7 @@ spec:
           - |
             sleep {{ .Values.kubectl.sleepDuration }}
             echo "Creating configmap..."
-            kubectl create configmap keycloak-env-config --from-file={{ .Values.awsCli.envFilePath }} --namespace={{ .Values.metadata.namespace }} --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap keycloak-env-config --from-file={{ .Values.awsCli.envFilePath }} --namespace={{ .Release.Namespace }} --dry-run=client -o yaml | kubectl apply -f -
             if [ $? -eq 0 ]; then
               echo "Configmap created successfully"
             else

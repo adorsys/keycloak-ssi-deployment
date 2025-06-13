@@ -15,6 +15,8 @@ app-template:
       enabled: true
       type: deployment
       replicas: 1
+      serviceAccount:
+        name: keycloak-job-sa
       initContainers:
         wait-for-configmap:
           image:
@@ -146,11 +148,6 @@ externalSecret:
 # Job to create config map
 metadata:
   name: download-env-file
-  namespace: argocd
-  annotations:
-    hook: PreSync
-    hookDeletePolicy: HookSucceeded
-    
 
 volumeMounts:
   name: tmp-volume
@@ -160,6 +157,11 @@ awsCli:
   image: amazon/aws-cli
   s3Bucket: keycloakenv
   envFilePath: /tmp/.env
+  region: eu-central-1
+  secretName: awssm-secret
+  accessKeyID: AWS_ACCESS_KEY_ID
+  secretAccessKey: AWS_SECRET_ACCESS_KEY
+  sessionToken: AWS_SESSION_TOKEN
 
 kubectl:
   image: bitnami/kubectl
@@ -170,6 +172,24 @@ placeholder:
 
 job:
   restartPolicy: OnFailure
-  serviceAccountName: argocd-server # ensure service account has relevant RBAC permissions
+  serviceAccountName: keycloak-job-sa
+  rbac:
+    roleName: keycloak-job-role
+    roleBindingName: keycloak-job-rolebinding
+    roleAnnotations: {}
+    roleBindingAnnotations: {}
+    rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["create", "get", "update", "delete", "patch"]
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["pods/exec"]
+      verbs: ["create"]
 
 awsSecretName: datev-wallet-secrets
