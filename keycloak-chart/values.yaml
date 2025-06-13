@@ -150,6 +150,7 @@ metadata:
   annotations:
     hook: PreSync
     hookDeletePolicy: HookSucceeded
+    
 
 volumeMounts:
   name: tmp-volume
