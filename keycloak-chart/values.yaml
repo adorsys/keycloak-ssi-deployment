@@ -147,6 +147,9 @@ externalSecret:
 metadata:
   name: download-env-file
   namespace: argocd
+  annotations:
+    hook: PreSync
+    hookDeletePolicy: HookSucceeded
 
 volumeMounts:
   name: tmp-volume

@@ -3,6 +3,15 @@ kind: Job
 metadata:
   name: {{ .Values.metadata.name }}
   namespace: {{ .Values.metadata.namespace }}
+  {{- with .Values.metadata.annotations }}
+  annotations:
+    {{- if .hook }}
+    argocd.argoproj.io/hook: {{ .hook }}
+    {{- end }}
+    {{- if .hookDeletePolicy }}
+    argocd.argoproj.io/hook-delete-policy: {{ .hookDeletePolicy }}
+    {{- end }}
+  {{- end }}
 spec:
   template:
     spec:
