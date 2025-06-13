@@ -146,6 +146,7 @@ externalSecret:
 # Job to create config map
 metadata:
   name: download-env-file
+  namespace: argocd
 
 volumeMounts:
   name: tmp-volume
