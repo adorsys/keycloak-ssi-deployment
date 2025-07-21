@@ -17,4 +17,5 @@ extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = localhost 
+DNS.1 = localhost
+IP.1 = 192.168.49.1
