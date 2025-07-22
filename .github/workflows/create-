@@ -1,0 +1,23 @@
+name: Create PR for Image Updates
+on:
+  push:
+    branches:
+      - image-updates
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh pr create \
+            --base main \
+            --head image-updates \
+            --title "Automated image updates" \
+            --body "This PR contains automated updates to image versions." \
+            || echo "PR already exists or cannot be created"
