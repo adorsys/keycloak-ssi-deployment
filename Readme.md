@@ -532,3 +532,72 @@ For examples, see the “Requesting Credentials” section above, which covers:
 - Pre-authorized code flow with key binding `(3.retrieve_IdentityCredential.sh)`.
 - Authorization code flow with PKCE and key binding `(3.configure_auth_code_flow.sh)`.
 - We are missing an example without key binding
+
+## Verifiable Credential Configuration (Updated)
+
+**As of the latest version, Verifiable Credentials (VCs) are no longer configured at the realm level.**
+
+### Client Scope-Based Configuration
+
+Each Verifiable Credential type is now represented as a dedicated Client Scope. All configuration for a credential—including its metadata, supported claims, and protocol mappers—is defined within the corresponding client scope. This approach enables fine-grained control and aligns with the OID4VCI best practices.
+
+#### Example: Client Scope for a Verifiable Credential
+
+```json
+{
+  "name": "identity_credential",
+  "protocol": "oid4vc",
+  "attributes": {
+    "include.in.token.scope": "true",
+    "vc.issuer_did": "did:web:vc.example.com",
+    "vc.credential_configuration_id": "identity_credential",
+    "vc.credential_identifier": "identity_credential",
+    "vc.format": "vc+sd-jwt",
+    "vc.expiry_in_seconds": 31536000,
+    "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
+    "vc.supported_credential_types": "identity_credential",
+    "vc.credential_contexts": "https://credentials.example.com/identity_credential",
+    "vc.cryptographic_binding_methods_supported": "jwk",
+    "vc.proof_signing_alg_values_supported": "ES256,ES384",
+    "vc.display": "[{\"name\": \"Identity Credential\"}]",
+    "vc.sd_jwt.number_of_decoys": "2",
+    "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+    "vc.credential_build_config.hash_algorithm": "sha-256",
+    "vc.credential_build_config.token_jws_type": "vc+sd-jwt",
+    "vc.include_in_metadata": "true"
+  },
+  "protocolMappers": [
+    {
+      "name": "given_name-mapper",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "given_name",
+        "userAttribute": "firstName",
+        "vc.mandatory": "false",
+        "vc.display": "[{\"name\":\"Given Name\",\"locale\":\"en\"}]"
+      }
+    }
+    // ... other mappers ...
+  ]
+}
+```
+
+#### Assigning Client Scopes to Clients
+
+To enable issuance of a credential, assign the corresponding client scope to your OpenID Connect client (ideally as optional):
+
+```json
+{
+  "clientId": "openid4vc-rest-api",
+  "optionalClientScopes": ["identity_credential", "stbk_westfalen_lippe"]
+}
+```
+
+#### Migration Note
+
+- **Remove all realm-level VC configuration** (such as `verifiable-credentials-config.json`).
+- **Define all credential types as client scopes** in `client-scope-config.json`.
+- **Assign client scopes to clients** as needed.
+
+For more details, see the `client-scope-config.json` in this repository.
