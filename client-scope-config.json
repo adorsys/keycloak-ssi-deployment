@@ -4,7 +4,7 @@
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "vc.issuer_did": "https://localhost:8443/realms/oid4vci",
+      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.credential_configuration_id": "identity_credential",
       "vc.credential_identifier": "identity_credential",
       "vc.format": "vc+sd-jwt",
@@ -82,7 +82,7 @@
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "vc.issuer_did": "https://localhost:8443/realms/oid4vci",
+      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.credential_configuration_id": "stbk_westfalen_lippe",
       "vc.credential_identifier": "stbk_westfalen_lippe",
       "vc.format": "vc+sd-jwt",
