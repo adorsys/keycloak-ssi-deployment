@@ -5,8 +5,8 @@
     "attributes": {
       "include.in.token.scope": "true",
       "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
-      "vc.credential_configuration_id": "identity_credential",
-      "vc.credential_identifier": "identity_credential",
+      "vc.credential_configuration_id": "IdentityCredential",
+      "vc.credential_identifier": "IdentityCredential",
       "vc.format": "vc+sd-jwt",
       "vc.expiry_in_seconds": 31536000,
       "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
@@ -60,6 +60,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
+          "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
           "valueSource": "COMPUTE",
           "supportedCredentialTypes": "identity_credential"
@@ -83,8 +84,8 @@
     "attributes": {
       "include.in.token.scope": "true",
       "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
-      "vc.credential_configuration_id": "stbk_westfalen_lippe",
-      "vc.credential_identifier": "stbk_westfalen_lippe",
+      "vc.credential_configuration_id": "SteuerberaterCredential",
+      "vc.credential_identifier": "SteuerberaterCredential",
       "vc.format": "vc+sd-jwt",
       "vc.expiry_in_seconds": 31536000,
       "vc.verifiable_credential_type": "stbk_westfalen_lippe",
@@ -195,6 +196,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
+          "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
           "valueSource": "COMPUTE",
           "supportedCredentialTypes": "stbk_westfalen_lippe"
