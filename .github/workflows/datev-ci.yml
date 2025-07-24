@@ -3,7 +3,7 @@ name: Build and Push Docker Image For Datev Environment
 on:
   push:
     branches:
-      - "refactor-scripts"
+      - "main"
 env:
   IMAGE_NAME: datev-keycloak-oid4vc
   REGISTRY: ghcr.io
