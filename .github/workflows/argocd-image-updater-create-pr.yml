@@ -1,0 +1,29 @@
+on:
+  push:
+    branches:
+      - image-updates
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Expose commit data
+        uses: rlespinasse/git-commit-data-action@v1
+
+      - name: Create Pull Request
+        uses: diillson/auto-pull-request@v1.0.1
+        with:
+          source_branch: 'image-updates'
+          destination_branch: 'main'
+          pr_title: '${{ env.GIT_COMMIT_MESSAGE_SUBJECT }}'
+          pr_body: |
+            ${{ env.GIT_COMMIT_MESSAGE_SUBJECT }}
+
+            ${{ env.GIT_COMMIT_MESSAGE_BODY }}
+
+          pr_label: 'auto-pr'
+          pr_reviewer: 'Awambeng'
+          pr_allow_empty: true
+          github_token: ${{ secrets.GH_PAT }}
