@@ -1,13 +1,16 @@
+name: ArgoCD Image Updater Auto PR
+
 on:
   push:
     branches:
-      - image-updates
+      - image-update
 
 jobs:
   pull-request:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Expose commit data
         uses: rlespinasse/git-commit-data-action@v1
@@ -15,16 +18,15 @@ jobs:
       - name: Create Pull Request
         uses: diillson/auto-pull-request@v1.0.1
         with:
-          source_branch: 'image-updates'
+          source_branch: 'image-update'
           destination_branch: 'main'
-          pr_title: '${{ env.GIT_COMMIT_MESSAGE_SUBJECT }}'
+          pr_title: ${{ env.GIT_COMMIT_MESSAGE_SUBJECT }}
           pr_body: |
-            ${{ env.GIT_COMMIT_MESSAGE_SUBJECT }}
+            This pull request updates container images for the application, as detected by Argo CD Image Updater.
 
+            **Changes:**
             ${{ env.GIT_COMMIT_MESSAGE_BODY }}
 
           pr_label: 'auto-pr'
           pr_reviewer: 'Awambeng'
-          pr_allow_empty: true
           github_token: ${{ secrets.GH_PAT }}
-          
