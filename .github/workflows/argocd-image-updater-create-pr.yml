@@ -30,3 +30,4 @@ jobs:
           pr_label: 'auto-pr'
           pr_reviewer: 'Awambeng'
           github_token: ${{ secrets.GH_PAT }}
+
