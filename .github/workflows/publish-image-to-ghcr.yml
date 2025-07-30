@@ -15,6 +15,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    if: ${{ github.event.pusher.email != 'ci@adorsys.com' && !contains(github.event.head_commit.message, 'Merge pull request') && !contains(github.event.head_commit.message, 'from ADORSYS-GIS/image-updates') }}
     permissions:
       contents: read
       packages: write
