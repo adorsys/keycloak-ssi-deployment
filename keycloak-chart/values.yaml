@@ -4,11 +4,9 @@ app-template:
     namespaceOverride: datev-wallet
     labels:
       app: keycloak
-
   defaultPodOptions:
     imagePullSecrets:
-      - name: ghcr-pull-secret
-
+    - name: ghcr-pull-secret
   # Keycloak configuration
   controllers:
     main:
@@ -24,37 +22,36 @@ app-template:
             tag: latest
             pullPolicy: IfNotPresent
           command:
-            - sh
-            - -c
-            - |
-              until kubectl get configmap keycloak-env-config -n datev-wallet; do
-                echo "Waiting for keycloak-env-config..."; sleep 2;
-              done
+          - sh
+          - -c
+          - |
+            until kubectl get configmap keycloak-env-config -n datev-wallet; do
+              echo "Waiting for keycloak-env-config..."; sleep 2;
+            done
         wait-for-postgres:
           image:
             repository: bitnami/kubectl
             tag: latest
             pullPolicy: IfNotPresent
           command:
-            - sh
-            - -c
-            - |
-              until kubectl get svc keycloak-postgresql -n datev-wallet; do
-                echo "Waiting for PostgreSQL service..."; sleep 2;
-              done
-              until kubectl exec -n datev-wallet keycloak-postgresql-0 -- pg_isready -U datevadmin -d keycloakdb; do
-                echo "Waiting for PostgreSQL to be ready..."; sleep 2;
-              done
+          - sh
+          - -c
+          - |
+            until kubectl get svc keycloak-postgresql -n datev-wallet; do
+              echo "Waiting for PostgreSQL service..."; sleep 2;
+            done
+            until kubectl exec -n datev-wallet keycloak-postgresql-0 -- pg_isready -U datevadmin -d keycloakdb; do
+              echo "Waiting for PostgreSQL to be ready..."; sleep 2;
+            done
       containers:
         main:
           image:
             repository: ghcr.io/adorsys/keycloak-ssi-deployment
-            tag: latest
+            tag: latest@sha256:99fea021695c98e2a7597806072e6d4e4756fa9c5038e184f31838a660ed8e7e
             pullPolicy: Always
           ports:
-            - name: https
-              containerPort: 8443
-
+          - name: https
+            containerPort: 8443
   # Persistence for ConfigMap volume
   persistence:
     env-volume:
@@ -62,17 +59,15 @@ app-template:
       type: configMap
       name: keycloak-env-config
       globalMounts:
-        - path: /opt/keycloak/env/.env
-          subPath: .env
-          readOnly: true
-
+      - path: /opt/keycloak/env/.env
+        subPath: .env
+        readOnly: true
   # ConfigMap for environment variables
   configMaps:
     keycloak-env-config:
       enabled: true
       data:
         .env: ""
-
   # Secrets (referenced but managed by ExternalSecret)
   secrets:
     keycloak-secret:
@@ -80,7 +75,6 @@ app-template:
       stringData:
         KC_DB_PASSWORD: ""
         KC_BOOTSTRAP_ADMIN_PASSWORD: ""
-
   # Service configuration
   service:
     main:
@@ -94,7 +88,6 @@ app-template:
           port: 8443
           targetPort: 8443
           protocol: HTTPS
-
   # Ingress configuration
   ingress:
     main:
@@ -106,16 +99,15 @@ app-template:
         nginx.ingress.kubernetes.io/ssl-passthrough: "true"
         cert-manager.io/cluster-issuer: letsencrypt-prod
       hosts:
-        - host: keycloak.eudi-adorsys.com
-          paths:
-            - path: /
-              pathType: Prefix
+      - host: keycloak.eudi-adorsys.com
+        paths:
+        - path: /
+          pathType: Prefix
       tls:
-        - secretName: eudi-adorsys-tls
-          hosts:
-            - "*.eudi-adorsys.com"
-            - "eudi-adorsys.com"
-
+      - secretName: eudi-adorsys-tls
+        hosts:
+        - "*.eudi-adorsys.com"
+        - "eudi-adorsys.com"
 # Postgresql Configuration
 postgresql:
   enabled: true
@@ -135,7 +127,6 @@ postgresql:
   service:
     ports:
       postgresql: 5432
-
 # External secrets
 externalSecret:
   metadata:
@@ -147,15 +138,12 @@ externalSecret:
     target:
       name: keycloak-secret
       creationPolicy: Owner
-
 # Job to create config map
 metadata:
   name: download-env-file
-
 volumeMounts:
   name: tmp-volume
   mountPath: /tmp
-
 awsCli:
   image: amazon/aws-cli
   s3Bucket: keycloakenv
@@ -165,14 +153,11 @@ awsCli:
   accessKeyID: AWS_ACCESS_KEY_ID
   secretAccessKey: AWS_SECRET_ACCESS_KEY
   sessionToken: AWS_SESSION_TOKEN
-
 kubectl:
   image: bitnami/kubectl
   sleepDuration: 5
-
 placeholder:
   image: busybox
-
 job:
   restartPolicy: OnFailure
   serviceAccountName: keycloak-job-sa
@@ -194,5 +179,4 @@ job:
     - apiGroups: [""]
       resources: ["pods/exec"]
       verbs: ["create"]
-
 awsSecretName: datev-wallet-secrets
