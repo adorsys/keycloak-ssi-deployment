@@ -1,0 +1,33 @@
+name: ArgoCD Image Updater Auto PR
+
+on:
+  push:
+    branches:
+      - image-updates
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Expose commit data
+        uses: rlespinasse/git-commit-data-action@v1
+
+      - name: Create Pull Request
+        uses: diillson/auto-pull-request@v1.0.1
+        with:
+          source_branch: 'image-updates'
+          destination_branch: 'main'
+          pr_title: 'chore: update wallet-vc image'
+          pr_body: |
+            This pull request updates container images for the application, as detected by Argo CD Image Updater.
+
+            **Changes:**
+            ${{ env.GIT_COMMIT_MESSAGE_BODY }}
+
+          pr_label: 'auto-pr'
+          pr_reviewer: 'Awambeng'
+          github_token: ${{ secrets.GH_PAT }}
+ 
