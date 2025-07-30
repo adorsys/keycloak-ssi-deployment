@@ -5,29 +5,47 @@ on:
     branches:
       - image-updates
 
+env:
+  GH_PAT: ${{ secrets.GH_PAT }}
+
 jobs:
-  pull-request:
+  create-pr:
+    name: Create Pull Request
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ env.GH_PAT }}
 
-      - name: Expose commit data
-        uses: rlespinasse/git-commit-data-action@v1
+      - name: Extract commit message
+        id: split-message
+        run: |
+          FULL_MESSAGE="$(git log -1 --pretty=%B)"
+          TITLE="$(echo "$FULL_MESSAGE" | head -n 1)"
+          BODY="$(echo "$FULL_MESSAGE" | tail -n +2)"
+
+          {
+            echo "title<<EOF"
+            echo "$TITLE"
+            echo "EOF"
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         uses: diillson/auto-pull-request@v1.0.1
         with:
           source_branch: 'image-updates'
           destination_branch: 'main'
-          pr_title: 'chore: update wallet-vc image'
+          pr_title: ${{ steps.split-message.outputs.title }}
           pr_body: |
-            This pull request updates container images for the application, as detected by Argo CD Image Updater.
+            This pull request updates container images for the application, as detected by **Argo CD Image Updater**.
 
             **Changes:**
-            ${{ env.GIT_COMMIT_MESSAGE_BODY }}
-
+            ${{ steps.split-message.outputs.body }}
           pr_label: 'auto-pr'
           pr_reviewer: 'Awambeng'
-          github_token: ${{ secrets.GH_PAT }}
- 
+          github_token: ${{ env.GH_PAT }}
