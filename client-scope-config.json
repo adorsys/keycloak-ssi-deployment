@@ -1,20 +1,30 @@
 [
   {
-    "name": "stbk_westfalen_lippe",
-    "protocol": "openid-connect",
+    "name": "SteuerberaterCredential",
+    "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "display.on.consent.screen": "false"
+      "display.on.consent.screen": "false",
+      "vc.proof_signing_alg_values_supported": "ES256",
+      "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status"
     },
     "protocolMappers": [
+      {
+        "name": "username-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "username",
+          "userAttribute": "username"
+        }
+      },
       {
         "name": "academic_title-mapper-bsk",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "academic_title",
-          "staticValue": "N/A",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "academic_title",
+          "staticValue": "N/A"
         }
       },
       {
@@ -22,9 +32,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "subjectProperty": "family_name",
-          "userAttribute": "lastName",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "family_name",
+          "userAttribute": "lastName"
         }
       },
       {
@@ -32,9 +41,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "subjectProperty": "given_name",
-          "userAttribute": "firstName",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "given_name",
+          "userAttribute": "firstName"
         }
       },
       {
@@ -42,9 +50,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "date_of_birth",
-          "staticValue": "01.01.1990",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "date_of_birth",
+          "staticValue": "01.01.1990"
         }
       },
       {
@@ -52,9 +59,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "member_id",
-          "staticValue": "123",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "member_id",
+          "staticValue": "123"
         }
       },
       {
@@ -62,9 +68,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "address_country",
-          "staticValue": "Germany",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "address_country",
+          "staticValue": "Germany"
         }
       },
       {
@@ -72,9 +77,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "address_locality",
-          "staticValue": "Berlin",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "address_locality",
+          "staticValue": "Berlin"
         }
       },
       {
@@ -82,9 +86,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "address_postal_code",
-          "staticValue": "12345",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "address_postal_code",
+          "staticValue": "12345"
         }
       },
       {
@@ -92,9 +95,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-static-claim-mapper",
         "config": {
-          "subjectProperty": "address_street_address",
-          "staticValue": "Alexanderstraße 9",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "address_street_address",
+          "staticValue": "Alexanderstraße 9"
         }
       },
       {
@@ -102,27 +104,23 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-target-role-mapper",
         "config": {
-          "subjectProperty": "roles",
-          "clientId": "openid4vc-rest-api",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "roles",
+          "clientId": "openid4vc-rest-api"
         }
       },
       {
         "name": "id-mapper-bsk",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-subject-id-mapper",
-        "config": {
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
-        }
+        "protocolMapper": "oid4vc-subject-id-mapper"
       },
       {
         "name": "iat-oid4vc-issued-at-time-claim-mapper-bsk",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
+          "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "valueSource": "COMPUTE"
         }
       },
       {
@@ -130,30 +128,45 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
-          "subjectProperty": "nbf",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "claim.name": "nbf",
+          "valueSource": "COMPUTE"
         }
+      },
+      {
+        "name": "status-list-claim-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-status-list-claim-mapper",
+        "config": {}
       }
     ]
   },
   {
-    "name": "identity_credential",
-    "protocol": "openid-connect",
+    "name": "IdentityCredential",
+    "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "display.on.consent.screen": "false"
+      "display.on.consent.screen": "false",
+      "vc.proof_signing_alg_values_supported": "ES256",
+      "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status"
     },
     "protocolMappers": [
+      {
+        "name": "username-mapper",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "username",
+          "userAttribute": "username"
+        }
+      },
       {
         "id": "given_name-mapper-001",
         "name": "given_name-mapper",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "subjectProperty": "given_name",
-          "userAttribute": "firstName",
-          "supportedCredentialTypes": "identity_credential"
+          "claim.name": "given_name",
+          "userAttribute": "firstName"
         }
       },
       {
@@ -162,9 +175,8 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "subjectProperty": "family_name",
-          "userAttribute": "lastName",
-          "supportedCredentialTypes": "identity_credential"
+          "claim.name": "family_name",
+          "userAttribute": "lastName"
         }
       },
       {
@@ -172,10 +184,16 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
+          "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "identity_credential"
+          "valueSource": "COMPUTE"
         }
+      },
+      {
+        "name": "status-list-claim-mapper",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-status-list-claim-mapper",
+        "config": {}
       }
     ]
   }

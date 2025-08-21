@@ -67,12 +67,7 @@ fi
 # Function to request credential
 request_credential() {
     local credential_id=$1
-    local credential_scope
-    case "$credential_id" in
-        "IdentityCredential") credential_scope="identity_credential" ;;
-        "SteuerberaterCredential") credential_scope="stbk_westfalen_lippe" ;;
-        *) exit_with_error "Unknown credential ID: $credential_id" ;;
-    esac
+    local credential_scope="$credential_id"
 
     local scopes="openid $credential_scope"
     log_message "=== Requesting credential: ${credential_id} ==="

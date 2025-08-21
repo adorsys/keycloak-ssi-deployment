@@ -11,9 +11,14 @@
     "clientAuthenticatorType": "client-secret",
     "secret": "",
     "redirectUris": [
-      "http://back.localhost.com/*"
+      "http://front.localhost.com/*",
+      "http://back.localhost.com/*",
+      "http://fe.eudiw-issuer.kube/*",
+      "http://be.eudiw-issuer.kube/*"
     ],
     "webOrigins": [
+      "http://fe.eudiw-issuer.kube/*",
+      "http://be.eudiw-issuer.kube/*"
     ],
     "notBefore": 0,
     "bearerOnly": false,
@@ -29,7 +34,7 @@
       "client.secret.creation.time": "1719785014",
       "client.introspection.response.allow.jwt.claim.enabled": "false",
       "login_theme": "keycloak",
-      "post.logout.redirect.uris": "http://front.localhost.com",
+      "post.logout.redirect.uris": "http://fe.eudiw-issuer.kube/*##http://be.eudiw-issuer.kube/*",
       "oauth2.device.authorization.grant.enabled": "false",
       "use.jwks.url": "false",
       "backchannel.logout.revoke.offline.tokens": "false",
@@ -43,7 +48,8 @@
       "require.pushed.authorization.requests": "false",
       "acr.loa.map": "{}",
       "display.on.consent.screen": "false",
-      "token.response.type.bearer.lower-case": "false"
+      "token.response.type.bearer.lower-case": "false",
+      "oid4vci.enabled": "true"
     },
     "authenticationFlowBindingOverrides": {},
     "fullScopeAllowed": true,
@@ -61,8 +67,8 @@
       "phone",
       "offline_access",
       "microprofile-jwt",
-      "stbk_westfalen_lippe",
-      "identity_credential"
+      "SteuerberaterCredential",
+      "IdentityCredential"
     ],
     "access": {
       "view": true,
