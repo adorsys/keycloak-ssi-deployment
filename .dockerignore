@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Scripts and configs not needed in container
+*.sh
+config/
+keycloak-chart/
+target/
+
+# Environment files
+.env
+load_env.sh
+
+# Test files
+*.json
+*.txt
+*.pkcs12
+
+# AWS and other configs
+.aws/
+.github/
+
+# Docker files
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db 
