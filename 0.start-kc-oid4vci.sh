@@ -42,6 +42,10 @@ if [ -z "${KC_DB_OPTS}" ]; then
     KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 fi
 
+# Inject providers
+mkdir -p $KC_INSTALL_DIR/providers
+cp $WORK_DIR/providers/*.jar $KC_INSTALL_DIR/providers
+
 # Start keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources

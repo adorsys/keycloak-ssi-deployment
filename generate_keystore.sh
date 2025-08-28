@@ -12,6 +12,7 @@ keytool \
     -genkeypair \
     -keyalg EC \
     -keysize 256 \
+    -validity 3650 \
     -keystore $KEYCLOAK_KEYSTORE_FILE \
     -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
     -alias $KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS \
@@ -23,6 +24,7 @@ keytool \
     -genkeypair \
     -keyalg RSA \
     -keysize 3072 \
+    -validity 3650 \
     -keystore $KEYCLOAK_KEYSTORE_FILE \
     -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
     -alias $KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS \
@@ -34,6 +36,7 @@ keytool \
     -genkeypair \
     -keyalg RSA \
     -keysize 3072 \
+    -validity 3650 \
     -keystore $KEYCLOAK_KEYSTORE_FILE \
     -storepass $KEYCLOAK_KEYSTORE_PASSWORD \
     -alias $KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS \

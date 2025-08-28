@@ -62,8 +62,8 @@
       "phone",
       "offline_access",
       "microprofile-jwt",
-      "stbk_westfalen_lippe",
-      "identity_credential"
+      "SteuerberaterCredential",
+      "IdentityCredential"
     ],
     "access": {
       "view": true,

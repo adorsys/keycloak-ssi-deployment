@@ -1,6 +1,6 @@
 [
   {
-    "name": "identity_credential",
+    "name": "IdentityCredential",
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
@@ -16,7 +16,7 @@
       "vc.proof_signing_alg_values_supported": "ES256,ES384",
       "vc.display": "[{\"name\": \"Identity Credential\"}]",
       "vc.sd_jwt.number_of_decoys": "2",
-      "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+      "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
       "vc.credential_build_config.hash_algorithm": "sha-256",
       "vc.credential_build_config.token_jws_type": "vc+sd-jwt",
       "vc.include_in_metadata": "true"
@@ -62,8 +62,7 @@
         "config": {
           "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "identity_credential"
+          "valueSource": "COMPUTE"
         }
       },
       {
@@ -72,14 +71,28 @@
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
           "claim.name": "nbf",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "identity_credential"
+          "valueSource": "COMPUTE"
         }
+      },
+      {
+        "name": "username-mapper",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "username",
+          "userAttribute": "username"
+        }
+      },
+      {
+        "name": "status-list-claim-mapper",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-status-list-claim-mapper",
+        "config": {}
       }
     ]
   },
   {
-    "name": "stbk_westfalen_lippe",
+    "name": "SteuerberaterCredential",
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
@@ -95,7 +108,7 @@
       "vc.proof_signing_alg_values_supported": "ES256",
       "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
       "vc.sd_jwt.number_of_decoys": "2",
-      "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+      "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
       "vc.credential_build_config.hash_algorithm": "sha-256",
       "vc.credential_build_config.token_jws_type": "vc+sd-jwt",
       "vc.include_in_metadata": "true"
@@ -198,8 +211,7 @@
         "config": {
           "claim.name": "iat",
           "truncateToTimeUnit": "HOURS",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "valueSource": "COMPUTE"
         }
       },
       {
@@ -208,9 +220,23 @@
         "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
         "config": {
           "claim.name": "nbf",
-          "valueSource": "COMPUTE",
-          "supportedCredentialTypes": "stbk_westfalen_lippe"
+          "valueSource": "COMPUTE"
         }
+      },
+      {
+        "name": "username-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "username",
+          "userAttribute": "username"
+        }
+      },
+      {
+        "name": "status-list-claim-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-status-list-claim-mapper",
+        "config": {}
       }
     ]
   }
