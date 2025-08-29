@@ -57,6 +57,11 @@ fi
 
 echo -e "Pre-Authorized Code: $PRE_AUTHORIZED_CODE \n"
 
+# Retrieve the c_nonce from the keycloak nonce endpoint
+C_NONCE=$(curl -k -s -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce | jq -r '.c_nonce')
+
+echo "C_NONCE: $C_NONCE"
+
 # Obtain the credential
 # See: https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-token-request
 CREDENTIAL_BEARER_TOKEN=$(curl -k -s $KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token \
@@ -88,7 +93,12 @@ echo -e "Credential Access Token: $CREDENTIAL_ACCESS_TOKEN \n"
 . ./generate_key_proof.sh
 
 # Prepare request payload
-REQ_BODY=$(cat $WORK_DIR/credential_request_body.json | jq --arg credential_identifier "IdentityCredential" --arg proof_jwt "$USER_KEY_PROOF" '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt')
+REQ_BODY=$(jq \
+  --arg credential_identifier "IdentityCredential" \
+  --arg proof_jwt "$USER_KEY_PROOF" \
+  '.credential_identifier = $credential_identifier | .proofs.jwt = [$proof_jwt]' \
+  "$WORK_DIR/credential_request_body.json")
+
 
 echo "REQ_BODY: " $REQ_BODY
 

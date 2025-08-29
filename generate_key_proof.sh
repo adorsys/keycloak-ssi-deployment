@@ -11,8 +11,16 @@ fi
 
 # The proof timestamp
 iat=$(date +%s)
-# Compute the sha256 of the credential access token and use it as a c_nonce.
-nonce=$(echo -n "$CREDENTIAL_ACCESS_TOKEN" | openssl dgst -sha256 -binary | openssl base64 | tr -d '=' | tr '/+' '_-')
+
+# Use the c_nonce from the Keycloak nonce endpoint as the nonce value
+if [ -z "$C_NONCE" ] || [ "$C_NONCE" = "null" ]; then
+    echo "Error: C_NONCE (challenge nonce) is missing."
+    echo "Ensure that the c_nonce was retrieved from the Keycloak nonce endpoint before running this script."
+    exit 1
+fi
+
+nonce="$C_NONCE"
+
 aud=$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM
 cat $WORK_DIR/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
 

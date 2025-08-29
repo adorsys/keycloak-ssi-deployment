@@ -389,7 +389,7 @@ Each Verifiable Credential type is now represented as a dedicated Client Scope. 
     "vc.issuer_did": "did:web:vc.example.com",
     "vc.credential_configuration_id": "identity_credential",
     "vc.credential_identifier": "identity_credential",
-    "vc.format": "vc+sd-jwt",
+    "vc.format": "dc+sd-jwt",
     "vc.expiry_in_seconds": 31536000,
     "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
     "vc.supported_credential_types": "identity_credential",
@@ -400,7 +400,7 @@ Each Verifiable Credential type is now represented as a dedicated Client Scope. 
     "vc.sd_jwt.number_of_decoys": "2",
     "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
     "vc.credential_build_config.hash_algorithm": "sha-256",
-    "vc.credential_build_config.token_jws_type": "vc+sd-jwt",
+    "vc.credential_build_config.token_jws_type": "dc+sd-jwt",
     "vc.include_in_metadata": "true"
   },
   "protocolMappers": [

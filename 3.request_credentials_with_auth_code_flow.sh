@@ -110,13 +110,18 @@ request_credential() {
     log_message "Token scopes:"
     echo "$token_response" | jq '.scope'
 
+    # Retrieve the c_nonce from the keycloak nonce endpoint
+    C_NONCE=$(curl -k -s -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce | jq -r '.c_nonce')
+
+    echo "C_NONCE: $C_NONCE"
+
     export CREDENTIAL_ACCESS_TOKEN="$access_token"
     log_message "Generating key proof..."
     source ./generate_key_proof.sh || exit_with_error "Failed to generate key proof"
 
     local req_body
     req_body=$(jq --arg credential_identifier "$credential_id" --arg proof_jwt "$USER_KEY_PROOF" \
-        '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt' < "$WORK_DIR/credential_request_body.json")
+        '.credential_identifier = $credential_identifier | .proofs.jwt = [ $proof_jwt ]' < "$WORK_DIR/credential_request_body.json")
 
     log_message "Request body prepared: $req_body"
 
