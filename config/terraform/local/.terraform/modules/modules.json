@@ -1,0 +1,14 @@
+{
+  "Modules": [
+    {
+      "Key": "",
+      "Source": "",
+      "Dir": "."
+    },
+    {
+      "Key": "stage",
+      "Source": "../modules/keycloak",
+      "Dir": "../modules/keycloak"
+    }
+  ]
+}

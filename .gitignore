@@ -3,3 +3,4 @@ target
 /.idea/
 keycloak-chart/**/*.env
 keycloak-chart/**/*.tgz
+/config/terraform/local/.terraform/providers/*

@@ -1,0 +1,10 @@
+{
+  "name": "hmac-generated-hs512",
+  "providerId": "hmac-generated",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "priority": ["100"],
+    "algorithm": ["HS512"]
+  }
+}

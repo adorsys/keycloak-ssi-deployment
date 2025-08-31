@@ -1,0 +1,18 @@
+{
+  "name": "rsa-encryption-key",
+  "providerId": "java-keystore",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "keystorePassword": ["store_key_password"],
+    "keyAlias": ["rsa_enc_key"],
+    "keyUse": ["enc"],
+    "keystoreType": ["PKCS12"],
+    "keyPassword": ["store_key_password"],
+    "active": ["true"],
+    "keystore": ["../../kc_keystore.pkcs12"],
+    "priority": ["0"],
+    "enabled": ["true"],
+    "algorithm": ["RSA-OAEP"]
+  }
+}

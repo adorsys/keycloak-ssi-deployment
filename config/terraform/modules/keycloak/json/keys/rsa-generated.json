@@ -1,0 +1,10 @@
+{
+  "name": "rsa-generated",
+  "providerId": "rsa-generated",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "active": ["false"],
+    "priority": ["100"]
+  }
+}

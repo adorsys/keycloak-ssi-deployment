@@ -1,0 +1,11 @@
+{
+  "name": "rsa-enc-generated",
+  "providerId": "rsa-enc-generated",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "active": ["false"],
+    "priority": ["100"],
+    "algorithm": ["RSA-OAEP"]
+  }
+}
