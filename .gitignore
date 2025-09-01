@@ -4,3 +4,4 @@ target
 keycloak-chart/**/*.env
 keycloak-chart/**/*.tgz
 *.tmp.sh
+*.terraform
