@@ -25,7 +25,7 @@ generate_pkce() {
 
     local code_challenge
     code_challenge=$(echo -n "$code_verifier" | openssl dgst -sha256 -binary |
-        openssl base64 | tr -d '=+' | tr '/+' '_-' | tr -d '\n')
+        openssl base64 | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 
     echo "$code_verifier" "$code_challenge"
 }
