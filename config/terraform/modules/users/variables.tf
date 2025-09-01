@@ -1,3 +1,8 @@
+variable "realm_id" {
+  description = "Keycloak realm ID"
+  type        = string
+}
+
 variable "username" {
   description = "User name"
   type        = string

@@ -1,0 +1,154 @@
+{
+  "name": "SteuerberaterCredential",
+  "description": "",
+  "protocol": "oid4vc",
+  "attributes": {
+    "vc.issuer_did": "https://localhost:8443/realms/${realm_name}",
+    "vc.credential_configuration_id": "SteuerberaterCredential",
+    "vc.credential_contexts": "stbk_westfalen_lippe",
+    "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+    "vc.proof_signing_alg_values_supported": "ES256",
+    "vc.credential_build_config.hash_algorithm": "sha-256",
+    "vc.supported_credential_types": "stbk_westfalen_lippe",
+    "vc.format": "vc+sd-jwt",
+    "include.in.token.scope": "true",
+    "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
+    "vc.cryptographic_binding_methods_supported": "jwk",
+    "vc.expiry_in_seconds": "31536000",
+    "vc.verifiable_credential_type": "stbk_westfalen_lippe",
+    "vc.include_in_metadata": "true",
+    "vc.credential_build_config.token_jws_type": "vc+sd-jwt",
+    "vc.sd_jwt.number_of_decoys": "2",
+    "vc.credential_identifier": "SteuerberaterCredential"
+  },
+  "protocolMappers": [
+    {
+      "name": "nbf-oid4vc-issued-at-time-claim-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+      "config": {
+        "claim.name": "nbf",
+        "valueSource": "COMPUTE",
+        "supportedCredentialTypes": "stbk_westfalen_lippe"
+      }
+    },
+    {
+      "name": "address_postal_code-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "address_postal_code",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Wohnnort PLZ\"},{\"locale\":\"en-US\",\"name\":\"Postcode\"},{\"locale\":\"fr-FR\",\"name\":\"Code Postal\"}]",
+        "userAttribute": "address_postal_code"
+      }
+    },
+    {
+      "name": "given_name-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "given_name",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Vornamen\"},{\"locale\":\"en-US\",\"name\":\"Given names\"},{\"locale\":\"fr-FR\",\"name\":\"Prènomes\"}]",
+        "userAttribute": "firstName"
+      }
+    },
+    {
+      "name": "address_country-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "address_country",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Staat\"},{\"locale\":\"en-US\",\"name\":\"Country\"},{\"locale\":\"fr-FR\",\"name\":\"Pays\"}]",
+        "userAttribute": "address_country"
+      }
+    },
+    {
+      "name": "academic_title-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-static-claim-mapper",
+      "config": {
+        "claim.name": "academic_title",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Titel\"},{\"locale\":\"en-US\",\"name\":\"Title\"},{\"locale\":\"fr-FR\",\"name\":\"Titre\"}]",
+        "staticValue": "N/A"
+      }
+    },
+    {
+      "name": "address_street_address-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "address_street_address",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Wohnnort Straße\"},{\"locale\":\"en-US\",\"name\":\"Street\"},{\"locale\":\"fr-FR\",\"name\":\"Rue\"}]",
+        "userAttribute": "address_street_address"
+      }
+    },
+    {
+      "name": "iat-oid4vc-issued-at-time-claim-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+      "config": {
+        "truncateToTimeUnit": "HOURS",
+        "supportedCredentialTypes": "stbk_westfalen_lippe",
+        "claim.name": "iat",
+        "valueSource": "COMPUTE"
+      }
+    },
+    {
+      "name": "family_name-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "family_name",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Name\"},{\"locale\":\"en-US\",\"name\":\"Surname\"},{\"locale\":\"fr-FR\",\"name\":\"Nom\"}]",
+        "userAttribute": "lastName"
+      }
+    },
+    {
+      "name": "username-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "consentRequired": false,
+      "config": {
+        "claim.name": "username",
+        "userAttribute": "username"
+      }
+    },
+    {
+      "name": "status-list-claim-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-status-list-claim-mapper",
+      "consentRequired": false,
+      "config": {}
+    },
+    {
+      "name": "member_id-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "member_id",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"},{\"locale\":\"fr-FR\",\"name\":\"Member ID\"}]",
+        "userAttribute": "member_id"
+      }
+    },
+    {
+      "name": "date_of_birth-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "date_of_birth",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtstag\"},{\"locale\":\"en-US\",\"name\":\"Date of birth\"},{\"locale\":\"fr-FR\",\"name\":\"Date de naissance\"}]",
+        "userAttribute": "birthdate"
+      }
+    },
+    {
+      "name": "address_locality-mapper-bsk",
+      "protocol": "oid4vc",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
+      "config": {
+        "claim.name": "address_locality",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Wohnort Stadt\"},{\"locale\":\"en-US\",\"name\":\"City\"},{\"locale\":\"fr-FR\",\"name\":\"Ville\"}]",
+        "userAttribute": "address_locality"
+      }
+    }
+  ]
+}

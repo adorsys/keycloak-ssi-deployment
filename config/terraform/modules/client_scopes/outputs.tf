@@ -1,7 +1,4 @@
-output "identity_credential_scope_id" {
-  value = keycloak_openid_client_scope.identity_credential.id
-}
-
-output "steuerberater_credential_scope_id" {
-  value = keycloak_openid_client_scope.steuerberater_credential.id
+output "client_scopes_applied" {
+  description = "Whether the OID4VC client scopes have been applied"
+  value       = null_resource.apply_custom_oid4vc_client_scopes.id
 }

@@ -1,9 +1,4 @@
-output "rsa_issuer_key_id" {
-  value = keycloak_key_provider.rsa_issuer_key.id
-}
-output "rsa_encryption_key_id" {
-  value = keycloak_key_provider.rsa_encryption_key.id
-}
-output "ecdsa_issuer_key_id" {
-  value = keycloak_key_provider.ecdsa_issuer_key.id
+output "keys_applied" {
+  description = "Whether the OID4VC key components have been applied"
+  value       = null_resource.apply_custom_oid4vc_key_components.id
 }
