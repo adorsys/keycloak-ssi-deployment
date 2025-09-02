@@ -4,4 +4,8 @@ target
 keycloak-chart/**/*.env
 keycloak-chart/**/*.tgz
 *.tmp.sh
-*.terraform
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+

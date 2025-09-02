@@ -1,17 +1,23 @@
 {
   "name": "rsa-issuer-key",
-  "providerId": "java-keystore",
+  "providerId": "rsa-generated",
   "providerType": "org.keycloak.keys.KeyProvider",
   "parentId": "oid4vc-vci",
   "config": {
-    "keystorePassword": ["store_key_password"],
-    "keyAlias": ["rsa_sig_key"],
-    "keyPassword": ["store_key_password"],
-    "keystoreType": ["PKCS12"],
-    "active": ["true"],
-    "keystore": ["../../kc_keystore.pkcs12"],
-    "priority": ["0"],
-    "enabled": ["true"],
-    "algorithm": ["RS256"]
+    "keySize": [
+      "2048"
+    ],
+    "active": [
+      "true"
+    ],
+    "priority": [
+      "0"
+    ],
+    "enabled": [
+      "true"
+    ],
+    "algorithm": [
+      "RS256"
+    ]
   }
 }

@@ -11,19 +11,10 @@ variable "realm_name" {
 variable "admin_password" {
   description = "Keycloak admin password"
   type        = string
+  sensitive   = true
 }
 
 variable "keycloak_url" {
   description = "Keycloak base URL"
-  type        = string
-}
-
-variable "keystore_password" {
-  description = "Password for Keycloak keystore"
-  type        = string
-}
-
-variable "keystore_path" {
-  description = "Path to Keycloak keystore file"
   type        = string
 }
