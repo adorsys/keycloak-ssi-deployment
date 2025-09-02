@@ -18,6 +18,9 @@
     ],
     "enabled": [
       "true"
+    ],
+    "algorithm": [
+      "ES256"
     ]
   }
 }

@@ -3,7 +3,7 @@ name: Build and Push Docker Image For Datev OID4VP Auth Environment
 on:
   push:
     branches:
-      - datev/develop
+      - datev-oid4vp-auth-artifact
   workflow_dispatch:
 
 env:

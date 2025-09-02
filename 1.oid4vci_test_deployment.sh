@@ -209,7 +209,7 @@ if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$r
   exit 1  # Exit with an error code
 fi
 
-# Server is up and OID4VCI feature with 'SteuerberaterCredential' and 'IdentityCredential' (from client scopes) seems installed
+# Server is up and OID4VCI feature with 'SteuerberaterCredential' and 'IdentityCredential' seems installed
 echo "Keycloak server is running with OID4VCI feature and credentials 'SteuerberaterCredential, IdentityCredential' configured."
 
 echo "Deployment script completed."

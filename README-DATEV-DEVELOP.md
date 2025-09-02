@@ -56,13 +56,11 @@ docker run -d \
 | `KEYCLOAK_ADMIN`          | Admin username | `admin` |
 | `KEYCLOAK_ADMIN_PASSWORD` | Admin password | `admin` |
 
-**Note**: The OID4VP Auth and OID4VCI features are already built into the image and don't need to be specified as environment variables.
-
 ## CI/CD
 
-The GitHub Actions workflow (`datev-oid4vp-auth-artifact.yml`) automatically:
+The GitHub Actions workflow (`datev-oid4vp-auth-artifact.yml`) is triggered manually and:
 
-- Builds on pushes to `datev/develop` branch
+- Builds the project when manually executed
 - Pushes images to GHCR with branch-commit SHA tagging
 - Enables deployment automation
 

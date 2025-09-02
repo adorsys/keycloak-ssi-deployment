@@ -271,7 +271,7 @@ To set the issuer DID, add or update the `vc.issuer_did` attribute in the releva
 
 ```json
 {
-  "name": "identity_credential",
+  "name": "IdentityCredential",
   "protocol": "oid4vc",
   "attributes": {
     "vc.issuer_did": "did:web:vc.example.com"
@@ -382,13 +382,13 @@ Each Verifiable Credential type is now represented as a dedicated Client Scope. 
 
 ```json
 {
-  "name": "identity_credential",
+  "name": "IdentityCredential",
   "protocol": "oid4vc",
   "attributes": {
     "include.in.token.scope": "true",
     "vc.issuer_did": "did:web:vc.example.com",
-    "vc.credential_configuration_id": "identity_credential",
-    "vc.credential_identifier": "identity_credential",
+    "vc.credential_configuration_id": "IdentityCredential",
+    "vc.credential_identifier": "IdentityCredential",
     "vc.format": "dc+sd-jwt",
     "vc.expiry_in_seconds": 31536000,
     "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
@@ -437,13 +437,13 @@ To enable issuance of a credential, assign the corresponding client scope to you
 }
 ```
 
-- You can assign multiple credential types to a client by including multiple client scopes.
+- A client can request multiple credential types by being assigned the corresponding client scopes.
 - The `oid4vci.enabled` attribute is required for the client to be recognized as eligible to request Verifiable Credentials via OID4VCI.
 
 **Migration Note:**
 
 - Remove all realm-level VC configuration (such as `verifiable-credentials-config.json`).
-- Remove any credential builder configuration.
+- Remove any credential builder configuration, as it is loaded automatically by Keycloak.
 - Define all credential types as client scopes in `client-scope-config.json`.
 - Assign client scopes to clients as needed.
 
@@ -459,7 +459,9 @@ Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) f
 
 Keycloak automates credential issuance, with a Credential Builder structuring credentials according to the required format and a dedicated Credential Signer handling the signing process. While Credential Builders are configurable, Credential Signers function transparently within the system.
 
-All configuration for credential formats and issuance is now handled at the client scope level. There is no need to configure credential builders or credential settings at the realm level.
+### Credential Builder Configuration
+
+All configuration for credential formats and issuance is now handled at the client scope level. Credential builders are still used but are loaded automatically at Keycloak startup, so manual configuration is no longer required.
 
 **Credential Signing:**
 Credential signing is still performed automatically by Keycloak during credential issuance. The signing algorithm and related settings are now specified in the client scope attributes (such as `vc.proof_signing_alg_values_supported` or similar). No separate credential signing configuration is required at the realm level.
