@@ -5,6 +5,7 @@ This directory contains Terraform configuration files for deploying and configur
 ## Overview
 
 The Terraform configuration automates the setup of a Keycloak realm with:
+
 - **Realm Configuration**: Creates a dedicated realm for OID4VCI operations
 - **User Management**: Sets up test users with predefined credentials
 - **Client Scopes**: Configures credential-specific client scopes for different credential types
@@ -47,16 +48,17 @@ config/terraform/
 
 The following variables can be customized in `variables.tf`:
 
-| Variable | Description | Default Value |
-|----------|-------------|---------------|
-| `keycloak_url` | Keycloak base URL | `http://localhost:8080` |
-| `admin_password` | Keycloak admin password | `admin` |
-| `realm` | Keycloak realm name | `oid4vc-vci` |
-| `client_secret` | Client secret for OID4VCI REST API | `uArydomqOymeF0tBrtipkPYujNNUuDlt` |
+| Variable         | Description                        | Default Value                      |
+| ---------------- | ---------------------------------- | ---------------------------------- |
+| `keycloak_url`   | Keycloak base URL                  | `https://localhost:8443`           |
+| `admin_password` | Keycloak admin password            | `admin`                            |
+| `realm`          | Keycloak realm name                | `oid4vc-vci`                       |
+| `client_secret`  | Client secret for OID4VCI REST API | `uArydomqOymeF0tBrtipkPYujNNUuDlt` |
 
 ### Key Configuration
 
 The keys module imports three types of cryptographic keys:
+
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
@@ -100,7 +102,7 @@ After successful deployment, you can verify:
 To remove all created resources:
 
 ```bash
-terraform destroy
+terraform destroy -auto-approve
 ```
 
 ## Key Features
@@ -108,6 +110,7 @@ terraform destroy
 ### Automatic Key Disabling
 
 The configuration automatically disables certain default Keycloak keys:
+
 - **RSA-OAEP**: Default RSA encryption key
 - **RS256**: Default RSA signing key
 
@@ -116,6 +119,7 @@ This ensures only the custom imported keys are active for OID4VCI operations.
 ### Credential Types Supported
 
 The configuration supports two main credential types:
+
 - **SteuerberaterCredential**: Tax advisor credentials
 - **IdentityCredential**: Identity verification credentials
 
@@ -161,4 +165,3 @@ For production environments:
 3. **Network Security**: Restrict access to Keycloak admin interface
 4. **Monitoring**: Implement proper logging and monitoring
 5. **Backup**: Regular backups of Keycloak data and Terraform state
-

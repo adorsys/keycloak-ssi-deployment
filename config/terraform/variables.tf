@@ -1,7 +1,7 @@
 variable "keycloak_url" {
   description = "Keycloak base URL"
   type        = string
-  default     = "http://localhost:8080"
+  default     = "https://localhost:8443"
 }
 
 variable "admin_password" {
