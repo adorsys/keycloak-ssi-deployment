@@ -2,19 +2,14 @@
 .git
 .gitignore
 
-# Documentation
+# Docs
 README.md
 *.md
 
-# Scripts and configs not needed in container
-*.sh
-config/
-keycloak-chart/
+# Target folders not needed in container
 target/
-
-# Environment files
-.env
-load_env.sh
+keycloak-chart/
+config/
 
 # Test files
 *.json
@@ -25,10 +20,8 @@ load_env.sh
 .aws/
 .github/
 
-# Docker files
-Dockerfile*
+# Docker compose (optional)
 docker-compose.yml
-.dockerignore
 
 # IDE files
 .vscode/
@@ -38,4 +31,4 @@ docker-compose.yml
 
 # OS files
 .DS_Store
-Thumbs.db 
+Thumbs.db
