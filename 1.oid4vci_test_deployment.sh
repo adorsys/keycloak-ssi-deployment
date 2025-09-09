@@ -164,22 +164,16 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
-echo "Creating Credential Builder component..."
-CREDENTIAL_BUILDER_CONFIG=$(cat "$WORK_DIR/credential-builder.json")
-echo "$CREDENTIAL_BUILDER_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { 
-  echo 'Could not create Credential Builder component' 
+# Update realm attributes
+echo "Updating realm with custom attributes..."
+REALM_ATTRIBUTES_CONFIG=$(cat $WORK_DIR/realm-attributes.json)
+echo "$REALM_ATTRIBUTES_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || {
+  echo 'Realm update with attributes failed'
   exit 1
 }
 
-# Update realm configuration with VC credentials
-echo "Updating realm with VC credentials configuration..."
-VC_CREDENTIALS_CONFIG=$(cat $WORK_DIR/verifiable-credentials-config.json)
-echo "$VC_CREDENTIALS_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || { 
-  echo 'Realm update with VC credentials failed' 
-  exit 1
-}
-
-echo "Creating OID4VCI client scopes..."
+echo "Creating OID4VCI credential client scopes..."
+# Creating OID4VCI credential client scopes (each scope represents a verifiable credential type)...
 # Read the JSON file into a variable
 CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json")
 # Loop through each scope in the JSON array
@@ -187,6 +181,7 @@ echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
 done
 
+# Creating the OID4VCI REST API client and assigning credential client scopes...
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 echo "Configuring OPENID4VCI-REST-API client..."
 CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
@@ -196,7 +191,7 @@ CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
   '.secret += $CLIENT_SECRET |
    .redirectUris += [$ISSUER_BACKEND_URL + "/*", "https://localhost:8443/callback"] |
    .webOrigins += [$ISSUER_BACKEND_URL, "https://localhost:8443"] |
-   .attributes["post.logout.redirect.uris"] +=("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)')
+   .attributes["post.logout.redirect.uris"] += ("##" + $ISSUER_FRONTEND_URL + "/*##" + $ISSUER_FRONTEND_URL)')
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
@@ -205,16 +200,11 @@ echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM 
 # Clear the CONFIG variable
 unset CONFIG
 
-# Add realm attribute issuerDid
-echo "Updating realm attributes for issuerDid..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
-
 # Increase lifespan of preauth code
 echo "Updating realm attributes for preAuthorizedCodeLifespanS..."
 $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.preAuthorizedCodeLifespanS=120  || { echo 'Could not set preAuthorizedCodeLifespanS' ; exit 1; }
 
-
-# Check server status and oid4vc-vci feature
+# Check server status and that credential configurations are exposed via client scopes
 response=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer)
 
 if ! jq -e '."credential_configurations_supported"."SteuerberaterCredential"' <<< "$response" > /dev/null; then
@@ -227,7 +217,7 @@ if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$r
   exit 1  # Exit with an error code
 fi
 
-# Server is up and OID4VCI feature with 'SteuerberaterCredential' seems installed
+# Server is up and OID4VCI feature with 'SteuerberaterCredential' and 'IdentityCredential' seems installed
 echo "Keycloak server is running with OID4VCI feature and credentials 'SteuerberaterCredential, IdentityCredential' configured."
 
 echo "Deployment script completed."

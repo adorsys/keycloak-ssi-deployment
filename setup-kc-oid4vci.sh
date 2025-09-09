@@ -35,9 +35,11 @@ download_tarball() {
 
 # Function to clone the custom Keycloak repository and build it if necessary
 clone_and_build_keycloak() {
+    # Use KC_REPO_URL if set, otherwise default to official repo
+    REPO_URL="${KC_REPO_URL:-https://github.com/adorsys/keycloak-oid4vc.git}"
     if [ ! -d "$TARGET_DIR/$KC_OID4VCI" ]; then
-        echo "Cloning custom Keycloak repository..."
-        cd $TARGET_DIR && git clone --depth 1 --branch $KC_TARGET_BRANCH https://github.com/adorsys/keycloak-oid4vc.git $TARGET_DIR/$KC_OID4VCI || {
+        echo "Cloning Keycloak repository from $REPO_URL..."
+        cd $TARGET_DIR && git clone --depth 1 --branch $KC_TARGET_BRANCH "$REPO_URL" $TARGET_DIR/$KC_OID4VCI || {
             echo "Could not clone the repository";
             exit 1;
         }

@@ -261,16 +261,22 @@ echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
 ```
 
-### Setting the Issuer Identifier (DID)
+### Issuer Identifier (DID)
 
 In the decentralized identity ecosystem, a Decentralized Identifier (DID) serves as a unique identifier that resolves to a DID Document. This document contains information such as public keys and service endpoints for the associated entity. As a VC issuer, Keycloak requires a DID to identify itself. Other parties may dereference the DID Document (or its associated endpoint) to retrieve the cryptographic material needed to validate credentials issued by Keycloak.
 
-The following batch command sets the `issuerDid` attribute for your realm using the value configured in your `.env` file:
+**Issuer DID is now set by default.**
 
-```bash
-# Add realm attribute issuerDid
-echo "Updating realm attributes for issuerDid..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.issuerDid=$ISSUER_DID || { echo 'Could not set issuer did' ; exit 1; }
+To override the default issuer DID, add or modify the `vc.issuer_did` attribute in the relevant client scope configuration. For example:
+
+```json
+{
+  "name": "IdentityCredential",
+  "protocol": "oid4vc",
+  "attributes": {
+    "vc.issuer_did": "did:web:vc.example.com"
+  }
+}
 ```
 
 ### Configuring a Keycloak ECDSA Signing Key for Verifiable Credentials
@@ -357,83 +363,83 @@ $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < $TAR
 
 ### Defining VCs in Keycloak
 
-Keycloak's strength as an identity provider naturally extends to its role as a VC issuer. VCs, like tokens, are digitally signed pieces of information, but they go beyond authentication to grant specific rights or attributes. By leveraging Keycloak's established infrastructure, organizations can benefit from its extensive experience in managing and securing identity-related data, including the crucial signing keys used for VCs.
+**As of the latest version, Verifiable Credentials (VCs) are no longer configured at the realm level.**
 
-#### VCs as Tokens
+#### Client Scope-Based Configuration
 
-In Keycloak, the structure of a VC closely resembles that of a token. Both are essentially claims about an entity (a user, organization, etc.), packaged in a structured format and digitally signed for authenticity.
+Each Verifiable Credential type is now represented as a dedicated Client Scope. All configuration for a credential including its metadata, supported claims, and protocol mappers is defined within the corresponding client scope. This approach enables fine-grained control and aligns with OID4VCI best practices.
 
-#### Protocol Mappers: Shaping VC Content
-
-Just as Keycloak's protocol mappers determine the information included in a token, they play a vital role in shaping the content of VCs. These mappers are responsible for:
-
-1. **Retrieving:** Fetching data from Keycloak's user database or external sources.
-2. **Formatting:** Transforming the data into the appropriate format for the VC.
-3. **Adding:** Including the formatted data as claims within the VC.
-
-#### Realm Configuration
-
-The realm attributes define available Verifiable Credentials (VCs) and their configurations: Here's an example of a realm configuration:
+**Example: Client Scope for a Verifiable Credential**
 
 ```json
 {
-  "realm": "oid4vc-vci",
-  "enabled": true,
+  "name": "IdentityCredential",
+  "protocol": "oid4vc",
   "attributes": {
-    "vc.IdentityCredential.expiry_in_s": 31536000,
-    "vc.IdentityCredential.format": "vc+sd-jwt",
-    "vc.IdentityCredential.scope": "identity_credential",
-    "// ...": "other VC configurations for additional credential types"
-  }
-}
-```
-
-#### Client Scopes
-
-Client scopes contain protocol mappers that define how credential claims are structured. These scopes are assigned to clients that need access to specific credentials.
-
-**Example of a client scope configuration:**
-
-```bash
-{
-  "name": "stbk_westfalen_lippe",
-  "protocol": "openid-connect",
-  "attributes": {
-    "include.in.token.scope": "false",
-    "display.on.consent.screen": "false"
+    "include.in.token.scope": "true",
+    "vc.credential_configuration_id": "IdentityCredential",
+    "vc.credential_identifier": "IdentityCredential",
+    "vc.format": "dc+sd-jwt",
+    "vc.expiry_in_seconds": 31536000,
+    "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
+    "vc.supported_credential_types": "identity_credential",
+    "vc.credential_contexts": "https://credentials.example.com/identity_credential",
+    "vc.cryptographic_binding_methods_supported": "jwk",
+    "vc.proof_signing_alg_values_supported": "ES256,ES384",
+    "vc.display": "[{\"name\": \"Identity Credential\"}]",
+    "vc.sd_jwt.number_of_decoys": "2",
+    "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+    "vc.credential_build_config.hash_algorithm": "sha-256",
+    "vc.credential_build_config.token_jws_type": "dc+sd-jwt",
+    "vc.include_in_metadata": "true"
   },
   "protocolMappers": [
     {
-      "name": "academic_title-mapper-bsk",
+      "name": "given_name-mapper",
       "protocol": "oid4vc",
-      "protocolMapper": "oid4vc-static-claim-mapper",
+      "protocolMapper": "oid4vc-user-attribute-mapper",
       "config": {
-        "subjectProperty": "academic_title",
-        "staticValue": "N/A",
-        "supportedCredentialTypes": "stbk_westfalen_lippe"
+        "claim.name": "given_name",
+        "userAttribute": "firstName",
+        "vc.mandatory": "false",
+        "vc.display": "[{\"name\":\"Given Name\",\"locale\":\"en\"}]"
       }
-    },
-    {
-      // ... (protocol mapper definitions)
     }
+    // ... other mappers ...
   ]
 }
 ```
 
-#### Assigning Scopes to Clients
+- All credential-specific metadata, supported claims, and display information are now set in the client scope's `attributes`.
+- Protocol mappers within the client scope define how user or static data is mapped into the credential claims.
 
-Clients that require access to Verifiable Credentials must have the appropriate scopes assigned to them. Instead of defining credential attributes within the client configuration, a client is linked to the necessary scopes.
+**Assigning Client Scopes to Clients**
 
-**Example: Client Configuration with Assigned Scopes**
+To enable issuance of a credential, assign the corresponding client scope to your OpenID Connect client (ideally as optional). **Additionally, the client must have the attribute `"oid4vci.enabled": "true"` in its attributes to be able to request credentials.**
 
 ```json
 {
   "clientId": "openid4vc-rest-api",
-  "optionalClientScopes": ["stbk_westfalen_lippe", "other scopes"]
+  "optionalClientScopes": ["identity_credential", "stbk_westfalen_lippe"],
+  "attributes": {
+    "oid4vci.enabled": "true"
+  }
 }
 ```
 
-## Verifiable Credential Formats and Credential Builders
+- A client can request multiple credential types by being assigned the corresponding client scopes.
+- The `oid4vci.enabled` attribute is required for the client to be recognized as eligible to request Verifiable Credentials via OID4VCI.
+
+**Migration Note:**
+
+- Remove all realm-level VC configuration (such as `verifiable-credentials-config.json`).
+- Remove any credential builder configuration, as it is loaded automatically by Keycloak.
+- Define all credential types as client scopes in `client-scope-config.json`.
+- Assign client scopes to clients as needed.
+
+For more details, see the `client-scope-config.json` in this repository.
+
+## Verifiable Credential Formats
 
 Keycloak's OID4VCI implementation supports multiple Verifiable Credential (VC) formats, including:
 
@@ -445,47 +451,10 @@ Keycloak automates credential issuance, with a Credential Builder structuring cr
 
 ### Credential Builder Configuration
 
-Each Credential Builder is designed to handle a specific credential format. The providerId property should correspond to the format the builder is intended to support. Below is an example of a Credential Builder configuration:
-
-```json
-{
-  "name": "sd-jwt-credentialbuilder",
-  "providerId": "vc+sd-jwt",
-  "providerType": "org.keycloak.protocol.oid4vc.issuance.credentialbuilder.CredentialBuilder"
-}
-```
-
-#### Realm-Level Credential Configuration
-
-Credential settings are managed at the realm level, where you can define attributes for various credential formats and types. This includes the configuration for building credentials, which can be customized according to the desired parameters.
-
-**Example: Credential Build Configuration**
-
-```json
-{
-  "realm": "oid4vc-vci",
-  "enabled": true,
-  "attributes": {
-    "vc.SteuerberaterCredential.credential_build_config.token_jws_type": "vc+sd-jwt",
-    "vc.SteuerberaterCredential.credential_build_config.hash_algorithm": "sha-256",
-    "vc.SteuerberaterCredential.credential_build_config.visible_claims": "iat,nbf",
-    "vc.SteuerberaterCredential.credential_build_config.decoys": "2",
-    "vc.SteuerberaterCredential.credential_build_config.signing_algorithm": "ES256"
-  }
-}
-```
-
-**Note:** decoys are optional number of decoy claims for privacy enhancement
-
-**Key Configuration Points:**
-
-- **`token_jws_type`:** Specifies the VC format (e.g., "vc+sd-jwt", "jwt_vc").
-- **`hash_algorithm`:** Defines the hashing algorithm (e.g., "sha-256").
-- **`signing_algorithm`:** Determines the signing algorithm (e.g., "ES256").
+All configuration for credential formats and issuance is now handled at the client scope level. Credential builders are still used but are loaded automatically at Keycloak startup, so manual configuration is no longer required.
 
 **Credential Signing:**
-
-Signing is now handled automatically based on the configured signing key, which can be passed as part of the credential attributes. This simplifies the issuance process while ensuring security and compliance.
+Credential signing is still performed automatically by Keycloak during credential issuance. The signing algorithm and related settings are now specified in the client scope attributes (such as `vc.proof_signing_alg_values_supported` or similar). No separate credential signing configuration is required at the realm level.
 
 # Key Endpoints
 

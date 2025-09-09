@@ -25,7 +25,7 @@ generate_pkce() {
 
     local code_challenge
     code_challenge=$(echo -n "$code_verifier" | openssl dgst -sha256 -binary |
-        openssl base64 | tr -d '=+' | tr '/+' '_-' | tr -d '\n')
+        openssl base64 | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 
     echo "$code_verifier" "$code_challenge"
 }
@@ -67,12 +67,7 @@ fi
 # Function to request credential
 request_credential() {
     local credential_id=$1
-    local credential_scope
-    case "$credential_id" in
-        "IdentityCredential") credential_scope="identity_credential" ;;
-        "SteuerberaterCredential") credential_scope="stbk_westfalen_lippe" ;;
-        *) exit_with_error "Unknown credential ID: $credential_id" ;;
-    esac
+    local credential_scope="$credential_id"
 
     local scopes="openid $credential_scope"
     log_message "=== Requesting credential: ${credential_id} ==="
@@ -115,13 +110,18 @@ request_credential() {
     log_message "Token scopes:"
     echo "$token_response" | jq '.scope'
 
+    # Retrieve the c_nonce from the keycloak nonce endpoint
+    C_NONCE=$(curl -k -s -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce | jq -r '.c_nonce')
+
+    echo "C_NONCE: $C_NONCE"
+
     export CREDENTIAL_ACCESS_TOKEN="$access_token"
     log_message "Generating key proof..."
     source ./generate_key_proof.sh || exit_with_error "Failed to generate key proof"
 
     local req_body
     req_body=$(jq --arg credential_identifier "$credential_id" --arg proof_jwt "$USER_KEY_PROOF" \
-        '.credential_identifier = $credential_identifier | .proof.jwt = $proof_jwt' < "$WORK_DIR/credential_request_body.json")
+        '.credential_identifier = $credential_identifier | .proofs.jwt = [ $proof_jwt ]' < "$WORK_DIR/credential_request_body.json")
 
     log_message "Request body prepared: $req_body"
 

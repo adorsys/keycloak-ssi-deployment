@@ -700,9 +700,9 @@
         "vc.IdentityCredential.cryptographic_binding_methods_supported": "jwk",
         "vc.IdentityCredential.proof_types_supported": "{\"jwt\":{\"proof_signing_alg_values_supported\":[\"ES256\"]}}",
         "vc.IdentityCredential.display.0": "{\"name\": \"Identity Credential\"}",
-        "vc.SteuerberaterCredential.format": "vc+sd-jwt",
+        "vc.SteuerberaterCredential.format": "dc+sd-jwt",
         "vc.SteuerberaterCredential.display.1": "{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
-        "vc.IdentityCredential.format": "vc+sd-jwt",
+        "vc.IdentityCredential.format": "dc+sd-jwt",
         "vc.SteuerberaterCredential.display.0": "{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}",
         "vc.SteuerberaterCredential.expiry_in_s": "31536000"
       },
@@ -1809,13 +1809,13 @@
       {
         "id": "sd-jwt-signing_SteuerberaterCred",
         "name": "sd-jwt-signing-service",
-        "providerId": "vc+sd-jwt",
+        "providerId": "dc+sd-jwt",
         "subComponents": {},
         "config": {
           "algorithmType": ["ES256"],
           "decoys": ["2"],
           "vct": ["stbk_westfalen_lippe"],
-          "tokenType": ["vc+sd-jwt"],
+          "tokenType": ["dc+sd-jwt"],
           "vcConfigId": ["SteuerberaterCredential"],
           "hashAlgorithm": ["sha-256"],
           "visibleClaims": ["iat,nbf"]
@@ -1824,13 +1824,13 @@
       {
         "id": "sd-jwt-signing_IdentityCredential",
         "name": "sd-jwt-signing-service for IdentityCredential",
-        "providerId": "vc+sd-jwt",
+        "providerId": "dc+sd-jwt",
         "subComponents": {},
         "config": {
           "algorithmType": ["ES256"],
           "decoys": ["2"],
           "vct": ["https://credentials.example.com/identity_credential"],
-          "tokenType": ["vc+sd-jwt"],
+          "tokenType": ["dc+sd-jwt"],
           "vcConfigId": ["IdentityCredential"],
           "hashAlgorithm": ["sha-256"],
           "visibleClaims": ["iat,nbf"]
