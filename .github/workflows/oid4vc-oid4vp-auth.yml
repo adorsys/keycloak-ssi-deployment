@@ -1,4 +1,4 @@
-name: Build and Push Docker Image For Datev OID4VP Auth Environment
+name: Build and Push Docker Image For OID4VC_VCI and OID4VP Auth
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 env:
   IMAGE_NAME: datev-oid4vp-auth
   REGISTRY: ghcr.io
-  DOCKERFILE_NAME: Dockerfile.datev-develop
+  DOCKERFILE_NAME: Dockerfile.oid4vc-dev
   BUILD_DOCKERFILE: Dockerfile
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Rename Dockerfile for datev/develop build
+      - name: Rename Dockerfile for branch build
         run: mv ${{ env.DOCKERFILE_NAME }} ${{ env.BUILD_DOCKERFILE }}
 
       - name: Set up Docker Buildx

@@ -4,7 +4,6 @@
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.credential_configuration_id": "IdentityCredential",
       "vc.credential_identifier": "IdentityCredential",
       "vc.format": "dc+sd-jwt",
@@ -80,7 +79,8 @@
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "username",
-          "userAttribute": "username"
+          "userAttribute": "username",
+          "vc.display": "[{\"locale\":\"ar\",\"name\":\"اسم المستخدم\"},{\"locale\":\"de\",\"name\":\"Benutzername\"},{\"locale\":\"en\",\"name\":\"Username\"},{\"locale\":\"es\",\"name\":\"Nombre de usuario\"},{\"locale\":\"fa\",\"name\":\"نام کاربری\"},{\"locale\":\"fi\",\"name\":\"Käyttäjätunnus\"},{\"locale\":\"fr\",\"name\":\"Nom d'utilisateur\"},{\"locale\":\"hi\",\"name\":\"उपयोगकर्ता नाम\"},{\"locale\":\"it\",\"name\":\"Nome utente\"},{\"locale\":\"ja\",\"name\":\"ユーザー名\"},{\"locale\":\"mn\",\"name\":\"Хэрэглэгчийн нэр\"},{\"locale\":\"nl\",\"name\":\"Gebruikersnaam\"},{\"locale\":\"pt\",\"name\":\"Nome de usuário\"},{\"locale\":\"sv\",\"name\":\"Användarnamn\"},{\"locale\":\"ur\",\"name\":\"صارف کا نام\"}]"
         }
       },
       {
@@ -96,7 +96,6 @@
     "protocol": "oid4vc",
     "attributes": {
       "include.in.token.scope": "true",
-      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.credential_configuration_id": "SteuerberaterCredential",
       "vc.credential_identifier": "SteuerberaterCredential",
       "vc.format": "dc+sd-jwt",
@@ -229,7 +228,8 @@
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "username",
-          "userAttribute": "username"
+          "userAttribute": "username",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Benutzername\"},{\"locale\":\"en-US\",\"name\":\"Username\"},{\"locale\":\"fr-FR\",\"name\":\"Nom d'utilisateur\"}]"
         }
       },
       {

@@ -261,13 +261,13 @@ echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
 ```
 
-### Setting the Issuer Identifier (DID)
+### Issuer Identifier (DID)
 
 In the decentralized identity ecosystem, a Decentralized Identifier (DID) serves as a unique identifier that resolves to a DID Document. This document contains information such as public keys and service endpoints for the associated entity. As a VC issuer, Keycloak requires a DID to identify itself. Other parties may dereference the DID Document (or its associated endpoint) to retrieve the cryptographic material needed to validate credentials issued by Keycloak.
 
-**Issuer DID is now configured as a client scope attribute.**
+**Issuer DID is now set by default.**
 
-To set the issuer DID, add or update the `vc.issuer_did` attribute in the relevant client scope configuration. For example:
+To override the default issuer DID, add or modify the `vc.issuer_did` attribute in the relevant client scope configuration. For example:
 
 ```json
 {
@@ -275,18 +275,9 @@ To set the issuer DID, add or update the `vc.issuer_did` attribute in the releva
   "protocol": "oid4vc",
   "attributes": {
     "vc.issuer_did": "did:web:vc.example.com"
-    // ... other attributes ...
-  },
-  "protocolMappers": [
-    // ...
-  ]
+  }
 }
 ```
-
-- The value of `vc.issuer_did` should be your issuer's DID (e.g., `did:web:vc.example.com` or a URL such as `https://localhost:8443/realms/oid4vc-vci`).
-- This attribute must be set for each client scope that represents a Verifiable Credential type.
-
-**Note:** You no longer need to set the issuer DID as a realm attribute or use kcadm.sh to update the realm. All issuer-specific configuration is now managed at the client scope level.
 
 ### Configuring a Keycloak ECDSA Signing Key for Verifiable Credentials
 
@@ -386,7 +377,6 @@ Each Verifiable Credential type is now represented as a dedicated Client Scope. 
   "protocol": "oid4vc",
   "attributes": {
     "include.in.token.scope": "true",
-    "vc.issuer_did": "did:web:vc.example.com",
     "vc.credential_configuration_id": "IdentityCredential",
     "vc.credential_identifier": "IdentityCredential",
     "vc.format": "dc+sd-jwt",

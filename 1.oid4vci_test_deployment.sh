@@ -164,6 +164,14 @@ $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)'
 
+# Update realm attributes
+echo "Updating realm with custom attributes..."
+REALM_ATTRIBUTES_CONFIG=$(cat $WORK_DIR/realm-attributes.json)
+echo "$REALM_ATTRIBUTES_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -o -f - || {
+  echo 'Realm update with attributes failed'
+  exit 1
+}
+
 echo "Creating OID4VCI credential client scopes..."
 # Creating OID4VCI credential client scopes (each scope represents a verifiable credential type)...
 # Read the JSON file into a variable
