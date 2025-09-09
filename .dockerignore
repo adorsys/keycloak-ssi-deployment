@@ -9,12 +9,6 @@ README.md
 # Target folders not needed in container
 target/
 keycloak-chart/
-config/
-
-# Test files
-*.json
-*.txt
-*.pkcs12
 
 # AWS and other configs
 .aws/
