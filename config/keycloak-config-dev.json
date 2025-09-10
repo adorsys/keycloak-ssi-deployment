@@ -161,13 +161,13 @@
       ]
     },
     {
-      "id": "$(env:RANDOM_UUID_KMA)",
+      "id": "a7091d4b-b873-4ebf-aabd-35e2120ed473",
       "name": "KMACredential",
       "protocol": "oid4vc",
       "attributes": {
         "vc.credential_configuration_id": "KMACredential",
         "vc.credential_contexts": "person_vct",
-        "vc.credential_build_config.sd_jwt.visible_claims": "iat,nbf",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
         "vc.proof_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "person_vct",
