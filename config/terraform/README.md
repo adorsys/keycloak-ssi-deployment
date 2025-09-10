@@ -122,7 +122,7 @@ The configuration supports three main credential types:
 
 - **SteuerberaterCredential**: Tax advisor credentials
 - **IdentityCredential**: Identity verification credentials
-- **KMACredential**:
+- **KMACredential**: Credentials for a person’s professional status and chamber membership
 
 ### Pre-authorized Code Lifespan
 
