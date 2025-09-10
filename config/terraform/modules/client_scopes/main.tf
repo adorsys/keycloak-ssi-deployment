@@ -15,13 +15,17 @@ locals {
   steuerberater_credential_json = templatefile("${path.root}/jsons/scopes/client-scope-stbk_westfalen_lippe.json", {
     realm_name = var.realm_name
   })
+
+  kma_credential_json = templatefile("${path.root}/jsons/scopes/client-scope-kma_credential.json", {
+    realm_name = var.realm_name
+  })
 }
 
 resource "null_resource" "apply_custom_oid4vc_client_scopes" {
   depends_on = [var.realm_id]
 
   triggers = {
-    oid4vc_client_scopes_hash = join(",", [local.identity_credential_json, local.steuerberater_credential_json])
+    oid4vc_client_scopes_hash = join(",", [local.identity_credential_json, local.steuerberater_credential_json, local.kma_credential_json])
   }
 
   provisioner "local-exec" {
@@ -47,6 +51,12 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
       
       # Import SteuerberaterCredential scope
       echo '${local.steuerberater_credential_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        --data-binary @-
+
+      # Import KMACredential scope
+      echo '${local.kma_credential_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         --data-binary @-

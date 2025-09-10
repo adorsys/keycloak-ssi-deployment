@@ -200,10 +200,6 @@ echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM 
 # Clear the CONFIG variable
 unset CONFIG
 
-# Increase lifespan of preauth code
-echo "Updating realm attributes for preAuthorizedCodeLifespanS..."
-$KC_INSTALL_DIR/bin/kcadm.sh update realms/$KEYCLOAK_REALM -s attributes.preAuthorizedCodeLifespanS=120  || { echo 'Could not set preAuthorizedCodeLifespanS' ; exit 1; }
-
 # Check server status and that credential configurations are exposed via client scopes
 response=$(curl -k -s $KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer)
 
@@ -217,7 +213,12 @@ if ! jq -e '."credential_configurations_supported"."IdentityCredential"' <<< "$r
   exit 1  # Exit with an error code
 fi
 
-# Server is up and OID4VCI feature with 'SteuerberaterCredential' and 'IdentityCredential' seems installed
-echo "Keycloak server is running with OID4VCI feature and credentials 'SteuerberaterCredential, IdentityCredential' configured."
+if ! jq -e '."credential_configurations_supported"."KMACredential"' <<< "$response" > /dev/null; then
+  echo "Server started but error occurred. 'KMACredential' not found in OID4VCI configuration."
+  exit 1  # Exit with an error code
+fi
+
+# Server is up and OID4VCI feature with 'SteuerberaterCredential', 'IdentityCredential' and 'KMACredential' seems installed
+echo "Keycloak server is running with OID4VCI feature and credentials 'SteuerberaterCredential, IdentityCredential, KMACredential' configured."
 
 echo "Deployment script completed."

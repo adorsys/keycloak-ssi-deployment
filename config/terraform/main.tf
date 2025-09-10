@@ -4,7 +4,8 @@ module "realm" {
     keycloak = keycloak
   }
   realm                         = var.realm
-  pre_authorized_code_lifespanS = "120"
+  pre_authorized_code_lifespanS = var.pre_authorized_code_lifespanS
+  status_list_server_url        = var.status_list_server_url
 }
 
 module "users" {

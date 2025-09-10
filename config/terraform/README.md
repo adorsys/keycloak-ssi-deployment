@@ -118,10 +118,11 @@ This ensures only the custom imported keys are active for OID4VCI operations.
 
 ### Credential Types Supported
 
-The configuration supports two main credential types:
+The configuration supports three main credential types:
 
 - **SteuerberaterCredential**: Tax advisor credentials
 - **IdentityCredential**: Identity verification credentials
+- **KMACredential**:
 
 ### Pre-authorized Code Lifespan
 
