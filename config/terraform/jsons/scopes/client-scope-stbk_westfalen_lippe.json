@@ -13,6 +13,7 @@
     "include.in.token.scope": "true",
     "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
     "vc.cryptographic_binding_methods_supported": "jwk",
+    "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
     "vc.expiry_in_seconds": "31536000",
     "vc.verifiable_credential_type": "stbk_westfalen_lippe",
     "vc.include_in_metadata": "true",
