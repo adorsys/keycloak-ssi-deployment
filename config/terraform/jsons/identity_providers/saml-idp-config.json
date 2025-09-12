@@ -57,91 +57,73 @@
       }
     },
     {
-      "name": "username",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "username",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "username"
-      }
-    },
-    {
       "name": "displayName",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "displayName",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "displayName"
+        "attribute.value": "John Doe",
+        "attribute": "displayName"
       }
     },
     {
       "name": "department",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "department",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "department"
+        "attribute.value": "IT Department",
+        "attribute": "department"
       }
     },
     {
       "name": "organization",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "organization",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "organization"
+        "attribute.value": "Example Organization",
+        "attribute": "organization"
       }
     },
     {
       "name": "title",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "title",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "title"
+        "attribute.value": "Employee",
+        "attribute": "title"
       }
     },
     {
       "name": "phoneNumber",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "phoneNumber",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "phoneNumber"
+        "attribute.value": "+1-555-123-4567",
+        "attribute": "phoneNumber"
       }
     },
     {
       "name": "address",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "address",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "address"
+        "attribute.value": "123 Main St, City, State 12345",
+        "attribute": "address"
       }
     },
     {
       "name": "roles",
       "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
       "config": {
         "syncMode": "INHERIT",
-        "user.attribute": "roles",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "roles"
+        "attribute.value": "user",
+        "attribute": "roles"
       }
     }
   ]
