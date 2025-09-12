@@ -33,15 +33,15 @@ config/terraform/
 ├── provider.tf             # Keycloak provider configuration
 ├── variables.tf            # Input variables
 ├── modules/
-│   ├── realm/             # Realm creation and configuration
-│   ├── users/             # User management
-│   ├── client_scopes/     # Client scope configuration
-│   ├── clients/           # Client configuration
-│   ├── keys/              # Cryptographic key management
-│   └── saml_idp/          # SAML Identity Provider configuration
-└── jsons/                 # JSON configuration files
-    ├── keys/              # Key configuration files
-    ├── scopes/            # Client scope definitions
+│   ├── realm/              # Realm creation and configuration
+│   ├── users/              # User management
+│   ├── client_scopes/      # Client scope configuration
+│   ├── clients/            # Client configuration
+│   ├── keys/               # Cryptographic key management
+│   └── saml_idp/           # SAML Identity Provider configuration
+└── jsons/                  # JSON configuration files
+    ├── keys/               # Key configuration files
+    ├── scopes/             # Client scope definitions
     └── identity_providers/ # Identity provider configurations
 ```
 

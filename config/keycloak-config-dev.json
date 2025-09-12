@@ -105,6 +105,14 @@
           }
         },
         {
+          "id": "id-mapper-identity-001",
+          "name": "id-mapper-identity",
+          "protocol": "oid4vc",
+          "protocolMapper": "oid4vc-subject-id-mapper",
+          "consentRequired": false,
+          "config": {}
+        },
+        {
           "id": "102b0638-6382-44de-ba29-79da000a4471",
           "name": "status-list-claim-mapper",
           "protocol": "oid4vc",
@@ -205,6 +213,14 @@
             "claim.name": "nbf",
             "valueSource": "COMPUTE"
           }
+        },
+        {
+          "id": "id-mapper-kma-001",
+          "name": "id-mapper-kma",
+          "protocol": "oid4vc",
+          "protocolMapper": "oid4vc-subject-id-mapper",
+          "consentRequired": false,
+          "config": {}
         },
         {
           "name": "status-list-claim-mapper-kma",
@@ -452,6 +468,14 @@
           }
         },
         {
+          "id": "id-mapper-bsk-001",
+          "name": "id-mapper-bsk",
+          "protocol": "oid4vc",
+          "protocolMapper": "oid4vc-subject-id-mapper",
+          "consentRequired": false,
+          "config": {}
+        },
+        {
           "id": "bc96abbe-d539-4e4c-a134-4638d8b65f4e",
           "name": "status-list-claim-mapper-bsk",
           "protocol": "oid4vc",
@@ -566,6 +590,152 @@
           }
         }
       ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "saml",
+      "providerId": "saml",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "config": {
+        "postBindingResponse": "true",
+        "xmlSigKeyInfoKeyNameTransformer": "KEY_ID",
+        "idpEntityId": "https://saml.example.com/entityid",
+        "allowCreate": "true",
+        "syncMode": "LEGACY",
+        "singleSignOnServiceUrl": "https://mocksaml.com/api/saml/sso",
+        "wantAuthnRequestsSigned": "true",
+        "validateSignature": "true",
+        "signingCertificate": "MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\nSzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\nMjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\nDAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\nRuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\npwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\nNfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\nAAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\nkhuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\nUjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\nr/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\nm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==",
+        "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+        "entityId": "https://localhost:8443/realms/oid4vc-vci",
+        "signatureAlgorithm": "RSA_SHA256",
+        "metadataDescriptorUrl": "https://mocksaml.com/api/saml/metadata"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "email",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "email",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "email"
+      }
+    },
+    {
+      "name": "firstName",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "firstName",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "firstName"
+      }
+    },
+    {
+      "name": "lastName",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "lastName",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "lastName"
+      }
+    },
+    {
+      "name": "username",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "username",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "username"
+      }
+    },
+    {
+      "name": "displayName",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "displayName",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "displayName"
+      }
+    },
+    {
+      "name": "department",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "department",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "department"
+      }
+    },
+    {
+      "name": "organization",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "organization",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "organization"
+      }
+    },
+    {
+      "name": "title",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "title",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "title"
+      }
+    },
+    {
+      "name": "phoneNumber",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "phoneNumber",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "phoneNumber"
+      }
+    },
+    {
+      "name": "address",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "address",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "address"
+      }
+    },
+    {
+      "name": "roles",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "roles",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "roles"
+      }
     }
   ],
   "components": {

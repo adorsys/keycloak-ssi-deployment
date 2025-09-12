@@ -85,6 +85,12 @@
         }
       },
       {
+        "name": "id-mapper-identity",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
+      },
+      {
         "name": "status-list-claim-mapper",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-status-list-claim-mapper",
@@ -135,6 +141,12 @@
         }
       },
       {
+        "name": "id-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
+      },
+      {
         "name": "status-list-claim-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-status-list-claim-mapper",
@@ -155,9 +167,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "titel",
+          "claim.name": "title",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Titel / Vortitel / Nachtitel\"},{\"locale\":\"en-US\",\"name\":\"Title / Pre-title / Post-title\"}]",
-          "userAttribute": "titel"
+          "userAttribute": "title"
         }
       },
       {
@@ -165,7 +177,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "vorname",
+          "claim.name": "first_name",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Vorname\"},{\"locale\":\"en-US\",\"name\":\"First Name\"}]",
           "userAttribute": "firstName"
         }
@@ -175,7 +187,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "name",
+          "claim.name": "last_name",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Name\"},{\"locale\":\"en-US\",\"name\":\"Surname\"}]",
           "userAttribute": "lastName"
         }
@@ -185,9 +197,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "berufstraegereigenschaft",
+          "claim.name": "professional_status",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Berufsträgereigenschaft\"},{\"locale\":\"en-US\",\"name\":\"Professional Status\"}]",
-          "userAttribute": "berufstraegereigenschaft"
+          "userAttribute": "professional_status"
         }
       },
       {
@@ -195,9 +207,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "kammer",
+          "claim.name": "chamber",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kammer\"},{\"locale\":\"en-US\",\"name\":\"Chamber\"}]",
-          "userAttribute": "kammer"
+          "userAttribute": "chamber"
         }
       },
       {
@@ -205,7 +217,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "geburtsdatum",
+          "claim.name": "date_of_birth",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtsdatum\"},{\"locale\":\"en-US\",\"name\":\"Date of Birth\"}]",
           "userAttribute": "birthdate"
         }
@@ -215,9 +227,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "ausgestellt_am",
+          "claim.name": "issued_on",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Ausgestellt am\"},{\"locale\":\"en-US\",\"name\":\"Issued on\"}]",
-          "userAttribute": "ausgestellt_am"
+          "userAttribute": "issued_on"
         }
       },
       {
@@ -225,7 +237,7 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "mitgliedsnummer",
+          "claim.name": "member_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"}]",
           "userAttribute": "member_id"
         }
@@ -245,9 +257,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "kundennummer",
+          "claim.name": "customer_number",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kundennummer\"},{\"locale\":\"en-US\",\"name\":\"Customer Number\"}]",
-          "userAttribute": "kundennummer"
+          "userAttribute": "customer_number"
         }
       },
       {
@@ -255,9 +267,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "safeid",
+          "claim.name": "safe_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SAFEID\"},{\"locale\":\"en-US\",\"name\":\"SAFEID\"}]",
-          "userAttribute": "safeid"
+          "userAttribute": "safe_id"
         }
       },
       {
@@ -265,9 +277,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "kammerid",
+          "claim.name": "chamber_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerID\"},{\"locale\":\"en-US\",\"name\":\"Chamber ID\"}]",
-          "userAttribute": "kammerid"
+          "userAttribute": "chamber_id"
         }
       },
       {
@@ -275,9 +287,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "kammername",
+          "claim.name": "chamber_name",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerName\"},{\"locale\":\"en-US\",\"name\":\"Chamber Name\"}]",
-          "userAttribute": "kammername"
+          "userAttribute": "chamber_name"
         }
       },
       {
@@ -285,9 +297,9 @@
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
-          "claim.name": "rollenid",
+          "claim.name": "role_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"RollenID\"},{\"locale\":\"en-US\",\"name\":\"Role ID\"}]",
-          "userAttribute": "rollenid"
+          "userAttribute": "role_id"
         }
       },
       {
@@ -443,6 +455,12 @@
           "userAttribute": "username",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Benutzername\"},{\"locale\":\"en-US\",\"name\":\"Username\"},{\"locale\":\"fr-FR\",\"name\":\"Nom d'utilisateur\"}]"
         }
+      },
+      {
+        "name": "id-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
       },
       {
         "name": "status-list-claim-mapper-bsk",

@@ -181,6 +181,19 @@ echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
 done
 
+# Creating SAML Identity Provider...
+echo "Creating SAML Identity Provider..."
+SAML_IDP_CONFIG=$(cat "$WORK_DIR/saml-idp-config.json")
+echo "$SAML_IDP_CONFIG" | jq -c '.identityProviders[]' | while read -r idp; do
+    echo "$idp" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances -r "$KEYCLOAK_REALM" -f - || { echo 'SAML Identity Provider creation failed'; exit 1; }
+done
+
+# Creating SAML Identity Provider Mappers...
+echo "Creating SAML Identity Provider Mappers..."
+echo "$SAML_IDP_CONFIG" | jq -c '.identityProviderMappers[]' | while read -r mapper; do
+    echo "$mapper" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - || { echo 'SAML Identity Provider Mapper creation failed'; exit 1; }
+done
+
 # Creating the OID4VCI REST API client and assigning credential client scopes...
 # Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
 echo "Configuring OPENID4VCI-REST-API client..."
