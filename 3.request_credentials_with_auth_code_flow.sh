@@ -142,5 +142,6 @@ request_credential() {
 # Run credential tests
 request_credential "IdentityCredential"
 request_credential "SteuerberaterCredential"
+request_credential "KMACredential"
 
 log_message "All credential request tests completed successfully."

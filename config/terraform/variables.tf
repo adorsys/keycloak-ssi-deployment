@@ -21,3 +21,15 @@ variable "client_secret" {
   type        = string
   default     = "uArydomqOymeF0tBrtipkPYujNNUuDlt"
 }
+
+variable "pre_authorized_code_lifespanS" {
+  description = "Pre-authorized code lifespan in seconds"
+  type        = string
+  default     = "120"
+}
+
+variable "status_list_server_url" {
+  description = "URL of the status list server"
+  type        = string
+  default     = "https://statuslist.eudi-adorsys.com/"
+}

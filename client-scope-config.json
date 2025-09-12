@@ -14,6 +14,7 @@
       "vc.cryptographic_binding_methods_supported": "jwk",
       "vc.proof_signing_alg_values_supported": "ES256,ES384",
       "vc.display": "[{\"name\": \"Identity Credential\"}]",
+      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.sd_jwt.number_of_decoys": "2",
       "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
       "vc.credential_build_config.hash_algorithm": "sha-256",
@@ -84,10 +85,232 @@
         }
       },
       {
+        "name": "id-mapper-identity",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
+      },
+      {
         "name": "status-list-claim-mapper",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-status-list-claim-mapper",
         "config": {}
+      }
+    ]
+  },
+  {
+    "name": "KMACredential",
+    "protocol": "oid4vc",
+    "attributes": {
+      "include.in.token.scope": "true",
+      "vc.credential_configuration_id": "KMACredential",
+      "vc.credential_identifier": "KMACredential",
+      "vc.format": "dc+sd-jwt",
+      "vc.expiry_in_seconds": 31536000,
+      "vc.verifiable_credential_type": "person_vct",
+      "vc.supported_credential_types": "person_vct",
+      "vc.credential_contexts": "person_vct",
+      "vc.cryptographic_binding_methods_supported": "jwk",
+      "vc.credential_signing_alg_values_supported": "ES256",
+      "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
+      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
+      "vc.sd_jwt.number_of_decoys": "2",
+      "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
+      "vc.credential_build_config.hash_algorithm": "sha-256",
+      "vc.credential_build_config.token_jws_type": "dc+sd-jwt",
+      "vc.include_in_metadata": "true"
+    },
+    "protocolMappers": [
+      {
+        "name": "iat-oid4vc-issued-at-time-claim-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+        "config": {
+          "truncateToTimeUnit": "HOURS",
+          "claim.name": "iat",
+          "valueSource": "COMPUTE"
+        }
+      },
+      {
+        "name": "nbf-oid4vc-issued-at-time-claim-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-issued-at-time-claim-mapper",
+        "config": {
+          "claim.name": "nbf",
+          "valueSource": "COMPUTE"
+        }
+      },
+      {
+        "name": "id-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
+      },
+      {
+        "name": "status-list-claim-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-status-list-claim-mapper",
+        "config": {}
+      },
+      {
+        "name": "person-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-static-claim-mapper",
+        "config": {
+          "claim.name": "person",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person\"},{\"locale\":\"en-US\",\"name\":\"Person\"}]",
+          "staticValue": "Person"
+        }
+      },
+      {
+        "name": "titel-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "title",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Titel / Vortitel / Nachtitel\"},{\"locale\":\"en-US\",\"name\":\"Title / Pre-title / Post-title\"}]",
+          "userAttribute": "title"
+        }
+      },
+      {
+        "name": "vorname-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "first_name",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Vorname\"},{\"locale\":\"en-US\",\"name\":\"First Name\"}]",
+          "userAttribute": "firstName"
+        }
+      },
+      {
+        "name": "name-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "last_name",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Name\"},{\"locale\":\"en-US\",\"name\":\"Surname\"}]",
+          "userAttribute": "lastName"
+        }
+      },
+      {
+        "name": "berufstraegereigenschaft-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "professional_status",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Berufsträgereigenschaft\"},{\"locale\":\"en-US\",\"name\":\"Professional Status\"}]",
+          "userAttribute": "professional_status"
+        }
+      },
+      {
+        "name": "kammer-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "chamber",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kammer\"},{\"locale\":\"en-US\",\"name\":\"Chamber\"}]",
+          "userAttribute": "chamber"
+        }
+      },
+      {
+        "name": "geburtsdatum-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "date_of_birth",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtsdatum\"},{\"locale\":\"en-US\",\"name\":\"Date of Birth\"}]",
+          "userAttribute": "birthdate"
+        }
+      },
+      {
+        "name": "ausgestellt_am-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "issued_on",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Ausgestellt am\"},{\"locale\":\"en-US\",\"name\":\"Issued on\"}]",
+          "userAttribute": "issued_on"
+        }
+      },
+      {
+        "name": "mitgliedsnummer-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "member_id",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"}]",
+          "userAttribute": "member_id"
+        }
+      },
+      {
+        "name": "verifiable_credential_id-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-static-claim-mapper",
+        "config": {
+          "claim.name": "verifiable_credential_id",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"VerifiableCredential-ID\"},{\"locale\":\"en-US\",\"name\":\"VerifiableCredential-ID\"}]",
+          "staticValue": ""
+        }
+      },
+      {
+        "name": "kundennummer-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "customer_number",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kundennummer\"},{\"locale\":\"en-US\",\"name\":\"Customer Number\"}]",
+          "userAttribute": "customer_number"
+        }
+      },
+      {
+        "name": "safeid-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "safe_id",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SAFEID\"},{\"locale\":\"en-US\",\"name\":\"SAFEID\"}]",
+          "userAttribute": "safe_id"
+        }
+      },
+      {
+        "name": "kammerid-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "chamber_id",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerID\"},{\"locale\":\"en-US\",\"name\":\"Chamber ID\"}]",
+          "userAttribute": "chamber_id"
+        }
+      },
+      {
+        "name": "kammername-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "chamber_name",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerName\"},{\"locale\":\"en-US\",\"name\":\"Chamber Name\"}]",
+          "userAttribute": "chamber_name"
+        }
+      },
+      {
+        "name": "rollenid-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "role_id",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"RollenID\"},{\"locale\":\"en-US\",\"name\":\"Role ID\"}]",
+          "userAttribute": "role_id"
+        }
+      },
+      {
+        "name": "username-mapper-kma",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
+        "config": {
+          "claim.name": "username",
+          "userAttribute": "username",
+          "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Benutzername\"},{\"locale\":\"en-US\",\"name\":\"Username\"}]"
+        }
       }
     ]
   },
@@ -106,6 +329,7 @@
       "vc.cryptographic_binding_methods_supported": "jwk",
       "vc.proof_signing_alg_values_supported": "ES256",
       "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
+      "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
       "vc.sd_jwt.number_of_decoys": "2",
       "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
       "vc.credential_build_config.hash_algorithm": "sha-256",
@@ -231,6 +455,12 @@
           "userAttribute": "username",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Benutzername\"},{\"locale\":\"en-US\",\"name\":\"Username\"},{\"locale\":\"fr-FR\",\"name\":\"Nom d'utilisateur\"}]"
         }
+      },
+      {
+        "name": "id-mapper-bsk",
+        "protocol": "oid4vc",
+        "protocolMapper": "oid4vc-subject-id-mapper",
+        "config": {}
       },
       {
         "name": "status-list-claim-mapper-bsk",

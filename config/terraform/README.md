@@ -11,6 +11,7 @@ The Terraform configuration automates the setup of a Keycloak realm with:
 - **Client Scopes**: Configures credential-specific client scopes for different credential types
 - **Client Configuration**: Sets up the OID4VCI REST API client
 - **Key Management**: Imports and configures cryptographic keys for signing and encryption
+- **SAML Identity Provider**: Configures SAML-based identity provider with user attribute mappers
 
 ## Prerequisites
 
@@ -32,14 +33,16 @@ config/terraform/
 ├── provider.tf             # Keycloak provider configuration
 ├── variables.tf            # Input variables
 ├── modules/
-│   ├── realm/             # Realm creation and configuration
-│   ├── users/             # User management
-│   ├── client_scopes/     # Client scope configuration
-│   ├── clients/           # Client configuration
-│   └── keys/              # Cryptographic key management
-└── jsons/                 # JSON configuration files
-    ├── keys/              # Key configuration files
-    └── scopes/            # Client scope definitions
+│   ├── realm/              # Realm creation and configuration
+│   ├── users/              # User management
+│   ├── client_scopes/      # Client scope configuration
+│   ├── clients/            # Client configuration
+│   ├── keys/               # Cryptographic key management
+│   └── saml_idp/           # SAML Identity Provider configuration
+└── jsons/                  # JSON configuration files
+    ├── keys/               # Key configuration files
+    ├── scopes/             # Client scope definitions
+    └── identity_providers/ # Identity provider configurations
 ```
 
 ## Configuration
@@ -62,6 +65,14 @@ The keys module imports three types of cryptographic keys:
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
+
+### SAML Identity Provider Configuration
+
+The saml_idp module imports a SAML-based identity provider with:
+
+- **SAML IdP Configuration**: Complete SAML identity provider setup with signing certificates
+- **User Attribute Mappers**: Automatic mapping of email, firstName, and lastName attributes
+- **Security Settings**: Signature validation, binding configuration, and authentication policies
 
 ## Usage
 
@@ -96,6 +107,7 @@ After successful deployment, you can verify:
 - **Users**: Verify test user `francis` is created
 - **Client Scopes**: Confirm credential scopes are configured
 - **Keys**: Validate cryptographic keys are imported
+- **SAML IdP**: Verify SAML identity provider and mappers are configured
 
 ### 5. Destroy Resources (Optional)
 
@@ -118,10 +130,20 @@ This ensures only the custom imported keys are active for OID4VCI operations.
 
 ### Credential Types Supported
 
-The configuration supports two main credential types:
+The configuration supports three main credential types:
 
 - **SteuerberaterCredential**: Tax advisor credentials
 - **IdentityCredential**: Identity verification credentials
+- **KMACredential**: Credentials for a person's professional status and chamber membership
+
+### SAML Identity Provider Features
+
+The SAML identity provider configuration includes:
+
+- **Mock SAML Provider**: Pre-configured for testing with mocksaml.com
+- **User Attribute Mapping**: Automatic mapping of user attributes (email, firstName, lastName)
+- **Security Configuration**: Signature validation and secure binding settings
+- **Customizable**: Easy to modify for different SAML providers via JSON configuration
 
 ### Pre-authorized Code Lifespan
 
@@ -135,6 +157,7 @@ The realm is configured with a 120-second pre-authorized code lifespan for enhan
 2. **Authentication Failures**: Verify admin credentials in `variables.tf`
 3. **Key Import Failures**: Check if the JSON key files exist and are valid
 4. **Permission Errors**: Ensure the admin user has sufficient privileges
+5. **SAML IdP Issues**: Verify SAML provider configuration and certificate validity
 
 ### Debug Mode
 
