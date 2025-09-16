@@ -51,4 +51,4 @@ cp $WORK_DIR/providers/*.jar $KC_INSTALL_DIR/providers
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
 export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD \
 && cd $KC_INSTALL_DIR \
-&& bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci &
+&& bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth &
