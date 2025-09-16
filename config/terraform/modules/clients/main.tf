@@ -106,6 +106,7 @@ resource "null_resource" "attach_optional_scopes" {
       # Attach the custom scopes
       attach_scope "IdentityCredential"
       attach_scope "SteuerberaterCredential"
+      attach_scope "KMACredential"
 
       echo "All optional scopes attached successfully."
     EOT

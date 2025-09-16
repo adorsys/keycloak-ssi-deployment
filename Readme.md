@@ -150,7 +150,7 @@ This script:
 - Generates a PKCE code_verifier and code_challenge.
 - Requests an authorization code via the Keycloak authorization endpoint.
 - Exchanges the authorization code for an access token, including the code_verifier.
-- Requests credentials `(IdentityCredential and SteuerberaterCredential)` with key binding.
+- Requests credentials `(IdentityCredential, SteuerberaterCredential and KMACredential)` with key binding.
 
 # Detailed Description
 
