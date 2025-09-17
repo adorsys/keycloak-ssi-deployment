@@ -44,7 +44,7 @@
       "attributes": {
         "oid4vci.enabled": "true",
         "client.secret.creation.time": "1719785014",
-        "post.logout.redirect.uris": "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
+        "post.logout.redirect.uris": "http://front.localhost.com##$(env:ISSUER_FRONTEND_URL)/*##$(env:ISSUER_FRONTEND_URL)"
       },
       "optionalClientScopes": [
         "IdentityCredential",
@@ -68,7 +68,7 @@
         "vc.format": "dc+sd-jwt",
         "include.in.token.scope": "true",
         "vc.display": "[{\"name\": \"Identity Credential\"}]",
-        "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
+        "vc.issuer_did": "$(env:ISSUER_DID)",
         "vc.cryptographic_binding_methods_supported": "jwk",
         "vc.expiry_in_seconds": "31536000",
         "vc.verifiable_credential_type": "https://credentials.example.com/identity_credential",
@@ -182,9 +182,9 @@
         "vc.supported_credential_types": "person_vct",
         "vc.format": "dc+sd-jwt",
         "include.in.token.scope": "true",
-        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
         "vc.cryptographic_binding_methods_supported": "jwk",
-        "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
+        "vc.issuer_did": "$(env:ISSUER_DID)",
         "vc.expiry_in_seconds": "31536000",
         "vc.verifiable_credential_type": "person_vct",
         "vc.include_in_metadata": "true",
@@ -420,9 +420,9 @@
         "vc.supported_credential_types": "stbk_westfalen_lippe",
         "vc.format": "dc+sd-jwt",
         "include.in.token.scope": "true",
-        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
         "vc.cryptographic_binding_methods_supported": "jwk",
-        "vc.issuer_did": "https://localhost:8443/realms/oid4vc-vci",
+        "vc.issuer_did": "$(env:ISSUER_DID)",
         "vc.expiry_in_seconds": "31536000",
         "vc.verifiable_credential_type": "stbk_westfalen_lippe",
         "vc.include_in_metadata": "true",
@@ -609,7 +609,7 @@
         "validateSignature": "true",
         "signingCertificate": "MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\nSzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\nMjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\nDAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\nRuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\npwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\nNfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\nAAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\nkhuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\nUjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\nr/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\nm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==",
         "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-        "entityId": "https://localhost:8443/realms/oid4vc-vci",
+        "entityId": "$(env:SAML_ENTITYID)",
         "signatureAlgorithm": "RSA_SHA256",
         "metadataDescriptorUrl": "https://mocksaml.com/api/saml/metadata"
       }
