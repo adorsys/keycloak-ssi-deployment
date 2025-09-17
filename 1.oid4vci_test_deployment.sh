@@ -173,29 +173,42 @@ echo "$REALM_ATTRIBUTES_CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh update realms/$KE
 }
 
 echo "Creating OID4VCI credential client scopes..."
-# Creating OID4VCI credential client scopes (each scope represents a verifiable credential type)...
-# Read the JSON file into a variable
-CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json")
+
+# Load and patch the JSON config
+CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json" | jq \
+  --arg ISSUER_DID "$ISSUER_DID" \
+  'map(.attributes["vc.issuer_did"] = $ISSUER_DID)')
+
 # Loop through each scope in the JSON array
 echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
-    echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - || { echo 'Client scope creation failed'; exit 1; }
+  echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - \
+    || { echo 'Client scope creation failed'; exit 1; }
 done
 
-# Creating SAML Identity Provider...
 echo "Creating SAML Identity Provider..."
-SAML_IDP_CONFIG=$(cat "$WORK_DIR/saml-idp-config.json")
+
+# Replace entityId dynamically
+SAML_IDP_CONFIG=$(cat "$WORK_DIR/saml-idp-config.json" | jq \
+  --arg ENTITY_ID "$ISSUER_DID" '
+  .identityProviders |= map(
+    .config.entityId = $ENTITY_ID
+  )')
+
+# Create the IdP
 echo "$SAML_IDP_CONFIG" | jq -c '.identityProviders[]' | while read -r idp; do
-    echo "$idp" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances -r "$KEYCLOAK_REALM" -f - || { echo 'SAML Identity Provider creation failed'; exit 1; }
+  echo "$idp" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances -r "$KEYCLOAK_REALM" -f - \
+    || { echo 'SAML Identity Provider creation failed'; exit 1; }
 done
 
-# Creating SAML Identity Provider Mappers...
+# Create the mappers
 echo "Creating SAML Identity Provider Mappers..."
 echo "$SAML_IDP_CONFIG" | jq -c '.identityProviderMappers[]' | while read -r mapper; do
-    echo "$mapper" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - || { echo 'SAML Identity Provider Mapper creation failed'; exit 1; }
+  echo "$mapper" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - \
+    || { echo 'SAML Identity Provider Mapper creation failed'; exit 1; }
 done
 
 # Creating the OID4VCI REST API client and assigning credential client scopes...
-# Passing openid4vc-rest-api.json to jq to fill it with the secret before exporting config to keycloak
+# Passing openid4vc-rest-api.json to jq to fill it with the secret and other parameters before exporting config to keycloak
 echo "Configuring OPENID4VCI-REST-API client..."
 CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
   --arg CLIENT_SECRET "$CLIENT_SECRET" \

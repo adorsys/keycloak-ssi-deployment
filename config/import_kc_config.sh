@@ -54,6 +54,8 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \
      -DISSUER_BACKEND_URL="$ISSUER_BACKEND_URL" \
      -DISSUER_FRONTEND_URL="$ISSUER_FRONTEND_URL" \
+     -DISSUER_DID="$ISSUER_DID" \
+     -DSAML_ENTITYID="$ISSUER_DID" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
      --import.var-substitution.enabled=true \
