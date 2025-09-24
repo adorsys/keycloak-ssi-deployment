@@ -10,7 +10,7 @@
 # - This is expected and helps identify configuration issues in Keycloak
 
 # Configuration
-NGROK_URL="https://dde77e644fcd.ngrok-free.app"
+NGROK_URL="https://6accaf27bb70.ngrok-free.app"
 KEYCLOAK_REALM_URL="$NGROK_URL/realms/oid4vc-vci"
 TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
 
