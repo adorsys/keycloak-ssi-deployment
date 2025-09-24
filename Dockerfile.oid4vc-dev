@@ -1,0 +1,37 @@
+# Multi-stage build for Keycloak with OID4VCI from datev/develop branch
+FROM maven:3.8.4-openjdk-17-slim AS builder
+
+ARG KC_BRANCH=datev/develop
+ARG KC_REPO=https://github.com/adorsys/keycloak-oid4vc.git
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --branch ${KC_BRANCH} ${KC_REPO} keycloak-oid4vc
+
+WORKDIR /build/keycloak-oid4vc
+RUN ./mvnw clean install -DskipTests -Dquarkus.package.type=tar.gz
+
+# Runtime stage
+FROM openjdk:17-jdk-slim
+
+# Create non-privileged user with fixed UID/GID 1000
+RUN groupadd -g 1000 keycloak && \
+    useradd -u 1000 -g 1000 -r -s /sbin/nologin keycloak
+
+ENV KEYCLOAK_HOME=/opt/keycloak
+WORKDIR $KEYCLOAK_HOME
+
+# Copy and extract Keycloak
+COPY --from=builder /build/keycloak-oid4vc/quarkus/dist/target/keycloak-*.tar.gz /tmp/keycloak.tar.gz
+RUN tar -xzf /tmp/keycloak.tar.gz -C $KEYCLOAK_HOME --strip-components=1 \
+    && rm /tmp/keycloak.tar.gz \
+    && chown -R 1000:1000 $KEYCLOAK_HOME
+
+USER keycloak
+
+EXPOSE 8080
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start-dev", "--features=oid4vc-vpauth,oid4vc-vci"]

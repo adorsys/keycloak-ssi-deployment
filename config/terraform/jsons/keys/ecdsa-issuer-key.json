@@ -1,0 +1,26 @@
+{
+  "name": "ecdsa-issuer-key",
+  "providerId": "ecdsa-generated",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "ecGenerateCertificate": [
+      "true"
+    ],
+    "ecdsaEllipticCurveKey": [
+      "P-256"
+    ],
+    "active": [
+      "true"
+    ],
+    "priority": [
+      "0"
+    ],
+    "enabled": [
+      "true"
+    ],
+    "algorithm": [
+      "ES256"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "rsa-issuer-key",
+  "providerId": "rsa-generated",
+  "providerType": "org.keycloak.keys.KeyProvider",
+  "parentId": "oid4vc-vci",
+  "config": {
+    "keySize": [
+      "2048"
+    ],
+    "active": [
+      "true"
+    ],
+    "priority": [
+      "0"
+    ],
+    "enabled": [
+      "true"
+    ],
+    "algorithm": [
+      "RS256"
+    ]
+  }
+}
