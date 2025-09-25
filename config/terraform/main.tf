@@ -33,11 +33,13 @@ module "clients" {
   providers = {
     keycloak = keycloak
   }
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = var.admin_password
-  keycloak_url   = var.keycloak_url
-  client_secret  = var.client_secret
+  realm_id        = module.realm.realm_id
+  realm_name      = var.realm
+  admin_password  = var.admin_password
+  keycloak_url    = var.keycloak_url
+  client_secret   = var.client_secret
+  test_client_url = var.test_client_url
+  sdjwt_vct       = var.sdjwt_vct
 
   depends_on = [module.realm, module.client_scopes]
 }

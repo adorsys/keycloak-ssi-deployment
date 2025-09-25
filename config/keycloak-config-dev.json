@@ -27,6 +27,31 @@
   ],
   "clients": [
     {
+      "clientId": "oid4vc-demo-public",
+      "rootUrl": "$(env:TEST_CLIENT_URL)",
+      "baseUrl": "$(env:TEST_CLIENT_URL)",
+      "enabled": true,
+      "redirectUris": [
+        "$(env:TEST_CLIENT_URL)/*"
+      ],
+      "webOrigins": [
+        "$(env:TEST_CLIENT_URL)"
+      ],
+      "standardFlowEnabled": true,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oid4vci.enabled": "true",
+        "post.logout.redirect.uris": "$(env:TEST_CLIENT_URL)##$(env:TEST_CLIENT_URL)/*"
+      },
+      "optionalClientScopes": [
+        "IdentityCredential",
+        "SteuerberaterCredential",
+        "KMACredential"
+      ]
+    },
+    {
       "id": "4c486109-a4ab-4207-9028-65d4364459dd",
       "clientId": "openid4vc-rest-api",
       "clientAuthenticatorType": "client-secret",

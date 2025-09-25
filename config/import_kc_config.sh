@@ -56,6 +56,7 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
      -DISSUER_FRONTEND_URL="$ISSUER_FRONTEND_URL" \
      -DISSUER_DID="$ISSUER_DID" \
      -DSAML_ENTITYID="$ISSUER_DID" \
+     -DTEST_CLIENT_URL="$TEST_CLIENT_URL" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
      --import.var-substitution.enabled=true \
@@ -65,5 +66,9 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
      --keycloak.ssl-verify=false \
      --logging.level.root=info \
      --import.files.locations="$KC_REALM_FILE" || { echo "Failed to run the JAR file"; exit 1; }
+
+# After import, update sd-jwt authenticator
+echo "Ensuring sd-jwt authenticator VCT is configured"
+. ./update_sdjwt_vct.sh
 
 echo "Script completed successfully."
