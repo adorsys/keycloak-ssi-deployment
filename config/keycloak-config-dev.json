@@ -27,6 +27,31 @@
   ],
   "clients": [
     {
+      "clientId": "oid4vc-demo-public",
+      "rootUrl": "$(env:TEST_CLIENT_URL)",
+      "baseUrl": "$(env:TEST_CLIENT_URL)",
+      "enabled": true,
+      "redirectUris": [
+        "$(env:TEST_CLIENT_URL)/*"
+      ],
+      "webOrigins": [
+        "$(env:TEST_CLIENT_URL)"
+      ],
+      "standardFlowEnabled": true,
+      "publicClient": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oid4vci.enabled": "true",
+        "post.logout.redirect.uris": "$(env:TEST_CLIENT_URL)##$(env:TEST_CLIENT_URL)/*"
+      },
+      "optionalClientScopes": [
+        "IdentityCredential",
+        "SteuerberaterCredential",
+        "KMACredential"
+      ]
+    },
+    {
       "id": "4c486109-a4ab-4207-9028-65d4364459dd",
       "clientId": "openid4vc-rest-api",
       "clientAuthenticatorType": "client-secret",
@@ -63,6 +88,7 @@
         "vc.credential_contexts": "https://credentials.example.com/identity_credential",
         "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
         "vc.proof_signing_alg_values_supported": "ES256,ES384",
+        "vc.credential_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "identity_credential",
         "vc.format": "dc+sd-jwt",
@@ -178,6 +204,7 @@
         "vc.credential_contexts": "person_vct",
         "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
         "vc.proof_signing_alg_values_supported": "ES256",
+        "vc.credential_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "person_vct",
         "vc.format": "dc+sd-jwt",
@@ -416,6 +443,7 @@
         "vc.credential_contexts": "stbk_westfalen_lippe",
         "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
         "vc.proof_signing_alg_values_supported": "ES256",
+        "vc.credential_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "stbk_westfalen_lippe",
         "vc.format": "dc+sd-jwt",

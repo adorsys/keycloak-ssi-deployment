@@ -1,0 +1,30 @@
+{
+  "clientId": "oid4vc-demo-public",
+  "rootUrl": "$(env:TEST_CLIENT_URL)",
+  "baseUrl": "$(env:TEST_CLIENT_URL)",
+  "enabled": true,
+  "redirectUris": [],
+  "webOrigins": [],
+  "publicClient": true,
+  "frontchannelLogout": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "oid4vci.enabled": "true",
+    "post.logout.redirect.uris": ""
+  },
+  "authenticationFlowBindingOverrides": {},
+  "fullScopeAllowed": true,
+  "defaultClientScopes": [
+    "web-origins",
+    "acr",
+    "roles",
+    "profile",
+    "basic",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "SteuerberaterCredential",
+    "IdentityCredential",
+    "KMACredential"
+  ]
+}

@@ -33,3 +33,15 @@ variable "status_list_server_url" {
   type        = string
   default     = "https://statuslist.eudi-adorsys.com/"
 }
+
+variable "test_client_url" {
+  description = "Base URL for test-client"
+  type        = string
+  default     = "http://localhost:4200"
+}
+
+variable "sdjwt_vct" {
+  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+  type        = string
+  default     = "stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct"
+}

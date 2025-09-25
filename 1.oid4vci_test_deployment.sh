@@ -223,6 +223,17 @@ CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
 echo "Creating OPENID4VC-REST-API client..."
 echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
 
+# Create oid4vc-demo-public client from JSON template
+echo "Creating oid4vc-demo-public client..."
+PUBLIC_CLIENT=$(cat "$WORK_DIR/oid4vc-demo-public.json" | jq \
+  --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
+  '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")')
+
+echo "$PUBLIC_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'oid4vc-demo-public client may already exist' ; exit 1; }
+
+echo "Ensuring sd-jwt authenticator VCT is configured"
+cd "$WORK_DIR" && ./update_sdjwt_vct.sh || echo "Skipping sd-jwt VCT update (not critical)"
+
 # Clear the CONFIG variable
 unset CONFIG
 
