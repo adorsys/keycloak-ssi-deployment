@@ -47,7 +47,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/adorsys/keycloak-ssi-deployment
-            tag: latest@sha256:ada457af5d0a39eaa554a1331da4943d5dc6d96cbe7d76fea3eb82cfae74c048
+            tag: latest@sha256:609b6526384becbb1a95a0c5f896f56cd88d712eff202a573cb4db2d21969d06
             pullPolicy: Always
           ports:
           - name: https
