@@ -45,6 +45,15 @@
         "oid4vci.enabled": "true",
         "post.logout.redirect.uris": "$(env:TEST_CLIENT_URL)##$(env:TEST_CLIENT_URL)/*"
       },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "basic",
+        "email"
+      ],
       "optionalClientScopes": [
         "IdentityCredential",
         "SteuerberaterCredential",
