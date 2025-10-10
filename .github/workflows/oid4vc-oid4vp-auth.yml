@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "BRANCH=$(echo ${GITHUB_REF##*/} | tr '[:upper:]' '[:lower:]' | sed 's#/#-#g')" >> $GITHUB_ENV
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          echo "RANDOM_SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)" >> $GITHUB_ENV
+          echo "RANDOM_SUFFIX=$(openssl rand -hex 3)" >> $GITHUB_ENV
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
