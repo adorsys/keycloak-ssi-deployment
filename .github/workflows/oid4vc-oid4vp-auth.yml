@@ -52,6 +52,7 @@ jobs:
         run: |
           echo "BRANCH=$(echo ${GITHUB_REF##*/} | tr '[:upper:]' '[:lower:]' | sed 's#/#-#g')" >> $GITHUB_ENV
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "RANDOM_SUFFIX=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 6 | head -n 1)" >> $GITHUB_ENV
 
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
@@ -61,7 +62,7 @@ jobs:
           builder: ${{ steps.builder.outputs.name }}
           push: true
           tags: |
-            ghcr.io/adorsys/${{ env.IMAGE_NAME }}:${{ env.BRANCH }}-${{ env.SHORT_SHA }}
+            ghcr.io/adorsys/${{ env.IMAGE_NAME }}:${{ env.BRANCH }}-${{ env.SHORT_SHA }}-${{ env.RANDOM_SUFFIX }}
           build-args: |
             KC_BRANCH=datev/develop
           cache-from: type=local,src=/tmp/.buildx-cache
