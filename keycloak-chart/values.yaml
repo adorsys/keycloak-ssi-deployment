@@ -1,7 +1,7 @@
 app-template:
   global:
-  security:
-    allowInsecureImages: true
+    security:
+      allowInsecureImages: true
     fullnameOverride: keycloak
     namespaceOverride: datev-wallet
     labels:
