@@ -1,7 +1,3 @@
-global:
-  security:
-    allowInsecureImages: true
-
 app-template:
   global:
     fullnameOverride: keycloak
@@ -22,8 +18,8 @@ app-template:
       initContainers:
         wait-for-configmap:
           image:
-            repository: bitnami/kubectl
-            tag: latest
+            repository: portainer/kubectl-shell
+            tag: 2.33.2
             pullPolicy: IfNotPresent
           command:
           - sh
@@ -34,17 +30,17 @@ app-template:
             done
         wait-for-postgres:
           image:
-            repository: bitnami/kubectl
-            tag: latest
+            repository: portainer/kubectl-shell
+            tag: 2.33.2
             pullPolicy: IfNotPresent
           command:
           - sh
           - -c
           - |
-            until kubectl get svc keycloak-postgresql -n datev-wallet; do
+            until kubectl get svc keycloak-postgres -n datev-wallet; do
               echo "Waiting for PostgreSQL service..."; sleep 2;
             done
-            until kubectl exec -n datev-wallet keycloak-postgresql-0 -- pg_isready -U datevadmin -d keycloakdb; do
+            until kubectl exec -n datev-wallet keycloak-postgres-0 -- pg_isready -U datevadmin -d keycloakdb; do
               echo "Waiting for PostgreSQL to be ready..."; sleep 2;
             done
       containers:
@@ -112,29 +108,26 @@ app-template:
         hosts:
         - "*.eudi-adorsys.com"
         - "eudi-adorsys.com"
-# Postgresql Configuration
-postgresql:
+# Postgres Configuration
+postgres:
   enabled: true
   image:
     registry: docker.io
-    repository: bitnamilegacy/postgresql
-    tag: 17.4.0-debian-12-r2
+    repository: postgres
+    tag: "17.6"
   auth:
     database: keycloakdb
     username: datevadmin
     existingSecret: keycloak-secret
     secretKeys:
-      adminPasswordKey: KC_DB_PASSWORD
-      userPasswordKey: KC_DB_PASSWORD
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-      storageClass: high-performance
-      # storageClass: standard # minikube (local test)
+      passwordKey: KC_DB_PASSWORD
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: high-performance
   service:
-    ports:
-      postgresql: 5432
+    type: ClusterIP
+    port: 5432
 # External secrets
 externalSecret:
   metadata:
