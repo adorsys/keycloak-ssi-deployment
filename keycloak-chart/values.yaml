@@ -110,11 +110,6 @@ app-template:
         - "eudi-adorsys.com"
 # Postgres Configuration
 postgres:
-  enabled: true
-  image:
-    registry: docker.io
-    repository: postgres
-    tag: "17.6"
   auth:
     database: keycloakdb
     username: datevadmin
