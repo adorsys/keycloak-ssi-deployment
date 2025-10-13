@@ -201,7 +201,7 @@
         "config": {
           "claim.name": "professional_status",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Berufsträgereigenschaft\"},{\"locale\":\"en-US\",\"name\":\"Professional Status\"}]",
-          "staticValue": "professional_status"
+          "userAttribute": "professional_status"
         }
       },
       {
