@@ -114,7 +114,7 @@
       "vc.cryptographic_binding_methods_supported": "jwk",
       "vc.proof_signing_alg_values_supported": "ES256",
       "vc.credential_signing_alg_values_supported": "ES256",
-      "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
+      "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SteuerberaterIdentität\",\"logo\":{\"uri\":\"https://steuerberaterplattform-bstbk.de/typo3conf/ext/webtemp/Resources/Public/Images/logo-stb-plattform.jpg\",\"alt_text\":\"SteuerberaterIdentität\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"SteuerberaterIdentität\",\"logo\":{\"uri\":\"https://steuerberaterplattform-bstbk.de/typo3conf/ext/webtemp/Resources/Public/Images/logo-stb-plattform.jpg\",\"alt_text\":\"SteuerberaterIdentität\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
       "vc.issuer_did": "",
       "vc.sd_jwt.number_of_decoys": "2",
       "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
@@ -165,7 +165,7 @@
         }
       },
       {
-        "name": "titel-mapper-kma",
+        "name": "title-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -175,7 +175,7 @@
         }
       },
       {
-        "name": "vorname-mapper-kma",
+        "name": "first-name-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -185,7 +185,7 @@
         }
       },
       {
-        "name": "name-mapper-kma",
+        "name": "last-name-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -195,7 +195,7 @@
         }
       },
       {
-        "name": "berufstraegereigenschaft-mapper-kma",
+        "name": "professional-status-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -205,7 +205,7 @@
         }
       },
       {
-        "name": "kammer-mapper-kma",
+        "name": "chamber-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -215,17 +215,17 @@
         }
       },
       {
-        "name": "geburtsdatum-mapper-kma",
+        "name": "date-of-birth-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "date_of_birth",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtsdatum\"},{\"locale\":\"en-US\",\"name\":\"Date of Birth\"}]",
-          "userAttribute": "birthdate"
+          "userAttribute": "date_of_birth"
         }
       },
       {
-        "name": "ausgestellt_am-mapper-kma",
+        "name": "issued-on-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -235,7 +235,7 @@
         }
       },
       {
-        "name": "mitgliedsnummer-mapper-kma",
+        "name": "member-id-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -255,7 +255,7 @@
         }
       },
       {
-        "name": "kundennummer-mapper-kma",
+        "name": "customer-number-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -265,7 +265,7 @@
         }
       },
       {
-        "name": "safeid-mapper-kma",
+        "name": "safe-id-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -275,7 +275,7 @@
         }
       },
       {
-        "name": "kammerid-mapper-kma",
+        "name": "chamber-id-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -285,7 +285,7 @@
         }
       },
       {
-        "name": "kammername-mapper-kma",
+        "name": "chamber-name-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
@@ -295,7 +295,7 @@
         }
       },
       {
-        "name": "rollenid-mapper-kma",
+        "name": "role-id-mapper-kma",
         "protocol": "oid4vc",
         "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
