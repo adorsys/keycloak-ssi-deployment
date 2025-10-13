@@ -197,31 +197,31 @@
       {
         "name": "professional-status-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "professional_status",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Berufsträgereigenschaft\"},{\"locale\":\"en-US\",\"name\":\"Professional Status\"}]",
-          "staticValue": "Professional"
+          "staticValue": "professional_status"
         }
       },
       {
         "name": "chamber-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "chamber",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kammer\"},{\"locale\":\"en-US\",\"name\":\"Chamber\"}]",
-          "staticValue": "Unknown Chamber"
+          "userAttribute": "chamber"
         }
       },
       {
         "name": "date-of-birth-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "date_of_birth",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtsdatum\"},{\"locale\":\"en-US\",\"name\":\"Date of Birth\"}]",
-          "staticValue": "1970-01-01"
+          "userAttribute": "date_of_birth"
         }
       },
       {
@@ -237,11 +237,11 @@
       {
         "name": "member-id-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "member_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"}]",
-          "staticValue": "000000"
+          "userAttribute": "member_id"
         }
       },
       {
@@ -257,51 +257,51 @@
       {
         "name": "customer-number-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "customer_number",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kundennummer\"},{\"locale\":\"en-US\",\"name\":\"Customer Number\"}]",
-          "staticValue": "000000"
+          "userAttribute": "customer_number"
         }
       },
       {
         "name": "safe-id-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "safe_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SAFEID\"},{\"locale\":\"en-US\",\"name\":\"SAFEID\"}]",
-          "staticValue": "SAFE-000000"
+          "userAttribute": "safe_id"
         }
       },
       {
         "name": "chamber-id-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "chamber_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerID\"},{\"locale\":\"en-US\",\"name\":\"Chamber ID\"}]",
-          "staticValue": "CH-000000"
+          "userAttribute": "chamber_id"
         }
       },
       {
         "name": "chamber-name-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "chamber_name",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerName\"},{\"locale\":\"en-US\",\"name\":\"Chamber Name\"}]",
-          "staticValue": "Unknown Chamber"
+          "userAttribute": "chamber_name"
         }
       },
       {
         "name": "role-id-mapper-kma",
         "protocol": "oid4vc",
-        "protocolMapper": "oid4vc-static-claim-mapper",
+        "protocolMapper": "oid4vc-user-attribute-mapper",
         "config": {
           "claim.name": "role_id",
           "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"RollenID\"},{\"locale\":\"en-US\",\"name\":\"Role ID\"}]",
-          "staticValue": "ROLE-000000"
+          "userAttribute": "role_id"
         }
       },
       {

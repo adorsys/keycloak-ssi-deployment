@@ -125,6 +125,96 @@
         "attribute.value": "user",
         "attribute": "roles"
       }
+    },
+    {
+      "name": "professional_status",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "Professional",
+        "attribute": "professional_status"
+      }
+    },
+    {
+      "name": "chamber",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "Unknown Chamber",
+        "attribute": "chamber"
+      }
+    },
+    {
+      "name": "date_of_birth",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "1970-01-01",
+        "attribute": "date_of_birth"
+      }
+    },
+    {
+      "name": "member_id",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "000000",
+        "attribute": "member_id"
+      }
+    },
+    {
+      "name": "customer_number",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "000000",
+        "attribute": "customer_number"
+      }
+    },
+    {
+      "name": "safe_id",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "SAFE-000000",
+        "attribute": "safe_id"
+      }
+    },
+    {
+      "name": "chamber_id",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "CH-000000",
+        "attribute": "chamber_id"
+      }
+    },
+    {
+      "name": "chamber_name",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "Unknown Chamber",
+        "attribute": "chamber_name"
+      }
+    },
+    {
+      "name": "role_id",
+      "identityProviderAlias": "saml",
+      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "attribute.value": "ROLE-000000",
+        "attribute": "role_id"
+      }
     }
   ]
 }
