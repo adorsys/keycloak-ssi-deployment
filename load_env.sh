@@ -1,6 +1,8 @@
 #!/bin/bash
 
 CONFIG_FILE="./config/config.yaml"
+LOCAL_CONFIG_FILE="./config/config-local.yaml"
+TEMP_CONFIG_FILE=$(mktemp)
 
 # Check if yq is installed
 if ! command -v yq &> /dev/null
@@ -15,7 +17,7 @@ fi
 get_config_value() {
     local yaml_path=$1
     local env_var_name=$2
-    local value=$(yq e "$yaml_path" "$CONFIG_FILE")
+    local value=$(yq e "$yaml_path" "$TEMP_CONFIG_FILE")
     
     # Handle null/empty values
     if [[ "$value" == "null" || -z "$value" ]]; then
@@ -38,7 +40,40 @@ get_config_value() {
     fi
 }
 
-# --- Load Configuration ---
+
+# Function to inject an environment variable into the YAML tree if it exists
+# Usage: inject_secret <yaml_path> <env_var_name>
+inject_secret() {
+    local yaml_path=$1
+    local env_var_name=$2
+    local secret_value="${!env_var_name}"
+
+    if [ -n "$secret_value" ]; then
+        echo "Injecting secret from environment variable $env_var_name into $yaml_path" >&2
+        # Use yq to update the temporary config file
+        yq e "$yaml_path = \"$secret_value\"" -i "$TEMP_CONFIG_FILE"
+    fi
+}
+
+# --- Configuration Setup ---
+
+# 1. Merge config-local.yaml over config.yaml if it exists
+if [ -f "$LOCAL_CONFIG_FILE" ]; then
+    echo "Merging $LOCAL_CONFIG_FILE over $CONFIG_FILE" >&2
+    yq e "load(\"$CONFIG_FILE\") * load(\"$LOCAL_CONFIG_FILE\")" > "$TEMP_CONFIG_FILE"
+else
+    echo "Using $CONFIG_FILE as primary configuration" >&2
+    cp "$CONFIG_FILE" "$TEMP_CONFIG_FILE"
+fi
+
+# 2. Inject sensitive secrets from environment variables into the merged configuration
+inject_secret ".keycloak.bootstrap.admin.password" "KC_BOOTSTRAP_ADMIN_PASSWORD"
+inject_secret ".database.password" "KC_DB_PASSWORD"
+inject_secret ".users.francis.password" "USER_FRANCIS_PASSWORD"
+inject_secret ".users.francis.keystore.password" "FRANCIS_KEYSTORE_PASSWORD"
+inject_secret ".client.openid4vc_rest_api.secret" "CLIENT_SECRET"
+
+# 3. Load all configuration values into environment variables
 
 # Work directories
 get_config_value ".work.dir" "WORK_DIR"
@@ -119,3 +154,6 @@ get_config_value ".keycloak.admin_addr" "KEYCLOAK_URL" # KEYCLOAK_URL uses KEYCL
 if [ -z "$ISSUER_DID" ]; then
     export ISSUER_DID="${KEYCLOAK_EXTERNAL_ADDR}/realms/${KEYCLOAK_REALM}"
 fi
+
+# Clean up temporary file on exit
+trap "rm -f $TEMP_CONFIG_FILE" EXIT

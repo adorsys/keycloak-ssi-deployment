@@ -171,8 +171,12 @@ Refer to the TLDR section for initial setup requirements.
 
 This project uses a centralized, hierarchical configuration defined in `config/config.yaml`. All scripts load configuration values from this YAML file using `load_env.sh`.
 
-**Override Mechanism:**
-The `load_env.sh` script is designed to respect existing environment variables. If a variable (e.g., `KC_VERSION`) is already set in the environment (e.g., via a `.env` file or shell export), the value from `config/config.yaml` will be ignored. This allows for easy local overrides without modifying the main configuration file.
+**Configuration Hierarchy:**
+The configuration is loaded in the following order, with later steps overriding earlier ones:
+1. **`config/config.yaml`**: Defines all default configuration values.
+2. **`config/config-local.yaml` (Optional)**: If this file exists, it is merged over `config/config.yaml`. This is the preferred way to manage local, non-sensitive overrides without committing changes to the main configuration file.
+3. **Environment Variables (Secrets Injection)**: Sensitive environment variables (e.g., `KC_BOOTSTRAP_ADMIN_PASSWORD`, `CLIENT_SECRET`) are injected directly into the YAML tree, overriding any values set in the YAML files.
+4. **Environment Variables (Final Export Override)**: All configuration values are exported as environment variables (e.g., `.keycloak.realm` becomes `KEYCLOAK_REALM`). If an environment variable is already set (e.g., via a `.env` file or shell export), the value from the YAML configuration is ignored. This provides the highest level of override control.
 
 ### Using Keycloak with OID4VCI Support
 
