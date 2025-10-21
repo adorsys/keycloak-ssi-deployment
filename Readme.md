@@ -15,7 +15,7 @@ Before proceeding, ensure you have the following tools installed on your system:
 - **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
 - **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
 - **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide.
-- **.env File:** Review the `.env` file to ensure all the necessary environment variables are correctly set up.
+- **Configuration:** Review the primary configuration file at `config/config.yaml`. This file defines all default settings. Environment variables (e.g., from a `.env` file) can be used to override any setting defined in the YAML file.
 
 **Verification:** You can verify that the tools are working by running:
 
@@ -34,18 +34,25 @@ You can set up Keycloak in one of two ways, based on your requirements:
 
 ### Configuring the Setup Method
 
-**You no longer need to set `KC_USE_UPSTREAM` in your `.env` file.**
+**Configuration System**
 
-The setup method is now handled automatically by the `setup-kc-oid4vci.sh` script based on the value of the `KC_VERSION` variable in your `.env` file:
+This project uses a hierarchical configuration system based on `config/config.yaml`. All scripts load configuration values from this file first.
+
+**Environment Variable Overrides:**
+Any configuration value can be overridden by setting a corresponding environment variable. For example, the YAML path `.keycloak.version` corresponds to the environment variable `KC_VERSION`. If `KC_VERSION` is set in your environment (e.g., via a `.env` file), it will override the value in `config/config.yaml`.
+
+**Configuring the Setup Method**
+
+The setup method is handled automatically by the `setup-kc-oid4vci.sh` script based on the value of the `KC_VERSION` variable:
 
 - If `KC_VERSION` is not `999.0.0-SNAPSHOT`, the script will use the official Keycloak tarball (upstream).
 - If `KC_VERSION` is `999.0.0-SNAPSHOT`, the script will clone and build the custom Keycloak branch.
 
-**To control which method is used, simply set the `KC_VERSION` variable in your `.env` file.**
+**To control which method is used, modify the `keycloak.version` entry in `config/config.yaml` or set the `KC_VERSION` environment variable.**
 
 ### Option 1: Using the Keycloak Tarball
 
-Set `KC_VERSION` to the desired official Keycloak version (e.g., `26.0.7`) in your `.env` file and run:
+Set `keycloak.version` to the desired official Keycloak version (e.g., `26.0.7`) in `config/config.yaml` (or set `KC_VERSION` environment variable) and run:
 
 ```bash
 ./0.start-kc-oid4vci.sh
@@ -58,7 +65,7 @@ This will:
 
 ### Option 2: Cloning a Specific Branch
 
-Set keycloak version and the desired branch in your `.env` file, for example:
+Set keycloak version and the desired branch in `config/config.yaml` (or via environment variables), for example:
 
 ```bash
 KC_VERSION=999.0.0-SNAPSHOT
@@ -80,9 +87,9 @@ This will:
 
 To set up Keycloak for Verifiable Credential Issuance, we use a script that utilizes the **Keycloak Config CLI** tool. This script imports the necessary configurations into a dedicated realm.
 
-### 1. **Check the `.env` File**
+### 1. **Check the Configuration**
 
-Before running the configuration script, ensure your `.env` file is set up correctly. This file contains important environment variables that connect the script to your Keycloak server.
+Before running the configuration script, ensure your configuration is set up correctly in `config/config.yaml`. This file defines the necessary values that connect the script to your Keycloak server.
 
 **Key variables to review:**
 
@@ -160,9 +167,12 @@ This script:
 
 Refer to the TLDR section for initial setup requirements.
 
-### The .env File
+### Configuration System (`config/config.yaml` and Overrides)
 
-All environment variables defined here are to be found in a .env file, sourced ahead of executing any command.
+This project uses a centralized, hierarchical configuration defined in `config/config.yaml`. All scripts load configuration values from this YAML file using `load_env.sh`.
+
+**Override Mechanism:**
+The `load_env.sh` script is designed to respect existing environment variables. If a variable (e.g., `KC_VERSION`) is already set in the environment (e.g., via a `.env` file or shell export), the value from `config/config.yaml` will be ignored. This allows for easy local overrides without modifying the main configuration file.
 
 ### Using Keycloak with OID4VCI Support
 

@@ -1,0 +1,64 @@
+# YAML configuration for Keycloak SSI Deployment
+
+work:
+  dir: "$(pwd)"
+  target_dir: "$(pwd)/target"
+
+tools:
+  dir: "$(pwd)/target/tools"
+
+keycloak:
+  target_branch: "datev/develop"
+  version: "999.0.0-SNAPSHOT"
+  oid4vci: "keycloak_datev/develop"
+  tarball: "$(pwd)/target/keycloak-999.0.0-SNAPSHOT.tar.gz"
+  bootstrap:
+    admin:
+      username: "admin"
+      password: "admin"
+  realm: "oid4vc-vci"
+  keystore:
+    file: "$(pwd)/target/kc_keystore.pkcs12"
+    type: "PKCS12"
+    password: "store_key_password"
+    aliases:
+      ecdsa: "ecdsa_key"
+      rsa_sig: "rsa_sig_key"
+      rsa_enc: "rsa_enc_key"
+      hmac_sig: "hmac_sig_key"
+      aes_enc: "aes_enc_key"
+  install_dir: "$(pwd)/target/tools/keycloak-999.0.0-SNAPSHOT"
+  repo_url: "https://github.com/adorsys/keycloak-oid4vc.git"
+  external_addr: "https://localhost:8443"
+  admin_addr: "https://localhost:8443"
+  start_command: "start --hostname-strict=false --https-port=8443 --https-certificate-file=$(pwd)/target/keycloak-server.crt.pem --https-certificate-key-file=$(pwd)/target/keycloak-server.key.pem --log-level=debug"
+
+database:
+  exposed_port: 5432
+  name: "keycloak"
+  username: "postgres"
+  password: "postgres"
+
+users:
+  francis:
+    name: "francis"
+    password: "francis"
+    keystore:
+      file: "$(pwd)/target/francis_kc_keystore.pkcs12"
+      password: "francis_store_key_password"
+      type: "PKCS12"
+      aliases:
+        ecdsa: "ecdsa_key"
+
+client:
+  openid4vc_rest_api:
+    secret: "uArydomqOymeF0tBrtipkPYujNNUuDlt"
+
+issuer:
+  did: "https://localhost:8443/realms/oid4vc-vci"
+  backend_url: "https://issuer.eudi-adorsys.com/services"
+  frontend_url: "https://issuer.eudi-adorsys.com"
+
+test:
+  client_url: "http://localhost:4200"
+  
