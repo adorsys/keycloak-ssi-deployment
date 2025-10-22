@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common environment variables
-source load_env.sh
+. scripts/utils/load_env.sh
 
 # Function to log messages with consistent formatting and spacing
 log_message() {
@@ -30,8 +30,8 @@ generate_pkce() {
     echo "$code_verifier" "$code_challenge"
 }
 
-log_message "Waiting for Keycloak at ${KEYCLOAK_ADMIN_ADDR}..."
-until curl -s -k "${KEYCLOAK_ADMIN_ADDR}/health" > /dev/null; do
+log_message "Waiting for Keycloak at ${KEYCLOAK_URL}..."
+until pgrep -f "keycloak" > /dev/null; do
     sleep 5
 done
 log_message "Keycloak is running."
@@ -41,10 +41,10 @@ log_message "Configuring Keycloak admin credentials..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
 
 # Check if admin credentials are already configured
-if ! $KC_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
+if ! $KC_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_URL" --realm master > /dev/null 2>&1; then
     log_message "No existing admin credentials found. Configuring new credentials..."
     $KC_INSTALL_DIR/bin/kcadm.sh config credentials \
-        --server "$KEYCLOAK_ADMIN_ADDR" \
+        --server "$KEYCLOAK_URL" \
         --realm master \
         --user "$KC_BOOTSTRAP_ADMIN_USERNAME" \
         --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" || exit_with_error "Failed to configure Keycloak admin credentials"
@@ -79,7 +79,7 @@ request_credential() {
     read code_verifier code_challenge <<< "$(generate_pkce)"
     log_message "PKCE: code_verifier=$code_verifier code_challenge=$code_challenge"
 
-    local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
+    local auth_url="${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=${CALLBACK_URL}&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
 
     log_message "Manual step required: Open this URL in your browser and login as 'francis'. Paste the 'code' param from the redirect URL."
     echo "$auth_url"
@@ -91,12 +91,12 @@ request_credential() {
 
     log_message "Exchanging authorization code for token..."
     local token_response
-    token_response=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
+    token_response=$(curl -s -k -X POST "${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
         -d "grant_type=authorization_code" \
         -d "code=${auth_code}" \
         -d "client_id=openid4vc-rest-api" \
         -d "client_secret=${CLIENT_SECRET}" \
-        -d "redirect_uri=https://localhost:8443/callback" \
+        -d "redirect_uri=${CALLBACK_URL}" \
         -d "code_verifier=${code_verifier}")
 
     local access_token
@@ -111,7 +111,7 @@ request_credential() {
     echo "$token_response" | jq '.scope'
 
     # Retrieve the c_nonce from the keycloak nonce endpoint
-    C_NONCE=$(curl -k -s -X POST $KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce | jq -r '.c_nonce')
+    C_NONCE=$(curl -k -s -X POST $KEYCLOAK_URL/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce | jq -r '.c_nonce')
 
     echo "C_NONCE: $C_NONCE"
 
@@ -121,13 +121,13 @@ request_credential() {
 
     local req_body
     req_body=$(jq --arg credential_identifier "$credential_id" --arg proof_jwt "$USER_KEY_PROOF" \
-        '.credential_identifier = $credential_identifier | .proofs.jwt = [ $proof_jwt ]' < "$WORK_DIR/credential_request_body.json")
+        '.credential_identifier = $credential_identifier | .proofs.jwt = [$proof_jwt]' < "$WORK_DIR/credential_request_body.json")
 
     log_message "Request body prepared: $req_body"
 
     log_message "Requesting credential..."
     local credential
-    credential=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential" \
+    credential=$(curl -s -k -X POST "${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential" \
         -H "Authorization: Bearer ${access_token}" \
         -H "Content-Type: application/json" \
         -d "$req_body" | jq .)
@@ -139,9 +139,22 @@ request_credential() {
     log_message "Credential successfully issued: $credential"
 }
 
-# Run credential tests
-request_credential "IdentityCredential"
-request_credential "SteuerberaterCredential"
-request_credential "KMACredential"
+# Check if credential type is provided
+if [ $# -eq 0 ]; then
+    exit_with_error "Credential type is required. Supported types: IdentityCredential, SteuerberaterCredential, KMACredential"
+fi
 
-log_message "All credential request tests completed successfully."
+CREDENTIAL_TYPE="$1"
+
+# Validate credential type
+case "$CREDENTIAL_TYPE" in
+    "IdentityCredential"|"SteuerberaterCredential"|"KMACredential")
+        log_message "Requesting credential type: $CREDENTIAL_TYPE"
+        request_credential "$CREDENTIAL_TYPE"
+        ;;
+    *)
+        exit_with_error "Invalid credential type '$CREDENTIAL_TYPE'. Supported types: IdentityCredential, SteuerberaterCredential, KMACredential"
+        ;;
+esac
+
+log_message "Credential request for $CREDENTIAL_TYPE completed successfully."

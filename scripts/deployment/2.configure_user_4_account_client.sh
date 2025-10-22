@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
 # Get admin token using environment variables for credentials
 echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
-$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_URL --realm master --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
 
 # Read the direct access property of the openid4vc-rest-api client
 echo "Reading direct access property of the openid4vc-rest-api client..."
@@ -31,7 +31,7 @@ $KC_INSTALL_DIR/bin/kcadm.sh set-password -r $KEYCLOAK_REALM --username $USER_FR
 # Prepare user key proof header if not existent
 if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
   echo "Generating keypar for user ..."
-  . ./generate_user_key.sh
+  . scripts/utils/generate_user_key.sh
 fi
 
 echo "Script execution completed."

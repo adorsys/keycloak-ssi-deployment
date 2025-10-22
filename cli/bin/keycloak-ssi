@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Keycloak SSI CLI Tool
+# Professional CLI interface for Keycloak SSI deployment and management
+#
+
+set -euo pipefail
+
+# Source common functions
+source "$(dirname "${BASH_SOURCE[0]}")/../lib/common.sh"
+
+# Main CLI function
+main() {
+    local command="${1:-}"
+    
+    case "$command" in
+        "setup"|"deploy"|"configure"|"credentials"|"infrastructure"|"uninstall"|"help"|"--help"|"-h")
+            "$CLI_ROOT/commands/$command.sh" "${@:2}"
+            ;;
+        "")
+            show_help
+            ;;
+        *)
+            echo "Error: Unknown command '$command'"
+            echo "Run 'keycloak-ssi help' for available commands"
+            exit 1
+            ;;
+    esac
+}
+
+# Show help information
+show_help() {
+    cat << EOF
+Keycloak SSI CLI Tool
+
+A professional CLI tool for deploying and managing Keycloak with SSI capabilities.
+
+USAGE:
+    keycloak-ssi <command> [options]
+
+COMMANDS:
+    setup           Set up Keycloak with OID4VCI capabilities
+    deploy          Deploy and configure Keycloak
+    configure       Configure Keycloak realm and clients
+    credentials     Manage verifiable credentials
+    infrastructure  Manage infrastructure (Docker, Kubernetes, Terraform)
+    uninstall       Uninstall the CLI tool
+    help            Show this help message
+
+EXAMPLES:
+    keycloak-ssi setup --version 26.0.7
+    keycloak-ssi deploy --config dev
+    keycloak-ssi configure --realm oid4vc-vci
+    keycloak-ssi credentials request --type identity
+    keycloak-ssi infrastructure docker --build
+
+For more information, run: keycloak-ssi <command> --help
+EOF
+}
+
+# Run main function with all arguments
+main "$@"

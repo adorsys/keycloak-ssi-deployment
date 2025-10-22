@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-source load_env.sh
+. scripts/utils/load_env.sh
 
 if [ -f "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" ]; then
   echo "Config cli jar file exists..."
@@ -48,7 +48,7 @@ fi
 # When running locally, let the option keycloak.ssl-verify be false otherwise let it be true.
 echo "Running the JAR file..."
 java -DCLIENT_SECRET="$CLIENT_SECRET" \
-     -DKEYCLOAK_EXTERNAL_ADDR="$KEYCLOAK_EXTERNAL_ADDR" \
+     -DKEYCLOAK_URL="$KEYCLOAK_URL" \
      -DKEYCLOAK_KEYSTORE_PASSWORD="$KEYCLOAK_KEYSTORE_PASSWORD" \
      -DKC_KEYSTORE_PATH="$KC_KEYSTORE_PATH" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \
@@ -69,6 +69,6 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
 
 # After import, update sd-jwt authenticator
 echo "Ensuring sd-jwt authenticator VCT is configured"
-. ./update_sdjwt_vct.sh
+. scripts/utils/update_sdjwt_vct.sh
 
 echo "Script completed successfully."

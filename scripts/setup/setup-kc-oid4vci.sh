@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
 # Function to ensure directory existence
 ensure_directory_exists() {
@@ -112,7 +112,7 @@ cd "$WORK_DIR" || { echo "Could not return to working directory"; exit 1; }
 
 if [ ! -f "$KC_TRUST_STORE" ]; then
     echo "Generating SSl keys..." && \
-    source $WORK_DIR/generate-kc-certs.sh
+    source $WORK_DIR/scripts/utils/generate-kc-certs.sh
 fi
 
 # Generate or reuse keystore file
@@ -123,7 +123,7 @@ if [ -f "$WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME" ]; then
     echo "Keystore $WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME exists, will be reused..."
     cp "$WORK_DIR/$KEYCLOAK_KEYSTORE_FILE_BASENAME" "$KEYCLOAK_KEYSTORE_FILE"
 else
-    ./generate_keystore.sh || { echo "Failed to generate keystore"; exit 1; }
+    scripts/utils/generate_keystore.sh || { echo "Failed to generate keystore"; exit 1; }
 fi
 
 echo "Setup completed successfully."

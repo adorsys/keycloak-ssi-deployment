@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
 # Shutdown keycloak if any
 # Determine OS platform and shutdown Keycloak if running
@@ -20,7 +20,7 @@ case "$OS" in
 esac
 
 # Download, unpack, and prepare Keycloak for start-up.
-./setup-kc-oid4vci.sh
+scripts/setup/setup-kc-oid4vci.sh
 
 # Check the proper docker compose command
 # Detect Docker Compose command
@@ -38,17 +38,22 @@ echo "$DOCKER_COMPOSE_COMMAND is installed."
 # Start database container
 if [ -z "${KC_DB_OPTS}" ]; then
     echo "Starting database container..."
-    $DOCKER_COMPOSE_COMMAND up -d db || { echo 'Could not start database container' ; exit 1; }
+    $DOCKER_COMPOSE_COMMAND -f infrastructure/docker/docker-compose.yml up -d db || { echo 'Could not start database container' ; exit 1; }
     KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
 fi
 
 # Inject providers
-mkdir -p $KC_INSTALL_DIR/providers
-cp $WORK_DIR/providers/*.jar $KC_INSTALL_DIR/providers
+if [ -d "$WORK_DIR/providers" ] && [ -n "$(find "$WORK_DIR/providers" -maxdepth 1 -name '*.jar' -print -quit)" ]; then
+    echo "Injecting custom providers..."
+    mkdir -p "$KC_INSTALL_DIR/providers"
+    cp $WORK_DIR/providers/*.jar $KC_INSTALL_DIR/providers
+else
+    echo "No custom providers found to inject."
+fi
 
 # Start keycloak with OID4VCI feature
 ####
 # Use org.keycloak.quarkus._private.IDELauncher if you want to debug through keycloak sources
 export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD \
 && cd $KC_INSTALL_DIR \
-&& bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth &
+&& bin/kc.sh $KC_START_CMD $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth &

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
 # Check if keystore exists and delete if it does
 if [ ! -f "$FRANCIS_KEYSTORE_FILE" ]; then
@@ -32,4 +32,4 @@ x_b64=$(echo $x_hex | xxd -r -p | openssl base64 -e -A | tr '+/' '-_' | tr -d '=
 y_b64=$(echo $y_hex | xxd -r -p | openssl base64 -e -A | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 
 # prepare the user key proof header
-cat $WORK_DIR/user_key_proof_header.json | jq --arg x "$x_b64" --arg y "$y_b64" '.jwk.x = $x | .jwk.y = $y' > $TARGET_DIR/user_key_proof_header.json
+cat config/keys/user_key_proof_header.json | jq --arg x "$x_b64" --arg y "$y_b64" '.jwk.x = $x | .jwk.y = $y' > $TARGET_DIR/user_key_proof_header.json

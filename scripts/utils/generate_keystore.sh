@@ -1,10 +1,16 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
-# Generate a keypairs into a PKCS12 keystore using java. 
+# Generate a keypairs into a PKCS12 keystore using java.
 # We prefer an external file, as content will be shared among servers.
+
+# Exit if the keystore file already exists.
+if [ -f "$KEYCLOAK_KEYSTORE_FILE" ]; then
+    echo "Keystore file already exists at $KEYCLOAK_KEYSTORE_FILE. Skipping generation."
+    exit 0
+fi
 
 echo "Generating $KEYCLOAK_KEYSTORE_FILE..."
 

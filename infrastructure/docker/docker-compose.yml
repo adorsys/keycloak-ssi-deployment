@@ -1,9 +1,6 @@
-version: "3.8"
-
 services:
   db:
     image: postgres
-    env_file: .env
     environment:
       - POSTGRES_USER=${KC_DB_USERNAME}
       - POSTGRES_PASSWORD=${KC_DB_PASSWORD}
@@ -15,7 +12,6 @@ services:
   app:
     build:
       context: .
-    env_file: .env
     environment:
       - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
     depends_on:

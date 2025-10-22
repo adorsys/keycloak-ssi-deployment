@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source common env variables
-. load_env.sh
+. scripts/utils/load_env.sh
 
 # Stop if CREDENTIAL_ACCESS_TOKEN is not retrieved
 if [ -z "$CREDENTIAL_ACCESS_TOKEN" ]; then
@@ -21,8 +21,8 @@ fi
 
 nonce="$C_NONCE"
 
-aud=$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM
-cat $WORK_DIR/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
+aud=$KEYCLOAK_URL/realms/$KEYCLOAK_REALM
+cat config/keys/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
 
 KEY_PROOF_HEADER_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_header.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 KEY_PROOF_PAYLOAD_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_payload.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
