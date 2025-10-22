@@ -47,7 +47,7 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
      --import.var-substitution.enabled=true \
-     --keycloak.url="$KEYCLOAK_URL" \
+     --keycloak.url="$KEYCLOAK_ADMIN_ADDR" \
      --keycloak.user="$KC_BOOTSTRAP_ADMIN_USERNAME" \
      --keycloak.password="$KC_BOOTSTRAP_ADMIN_PASSWORD" \
      --keycloak.ssl-verify=false \

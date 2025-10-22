@@ -28,7 +28,7 @@ Before running this Terraform configuration, ensure you have:
 The configuration is organized into modular components:
 
 ```
-config/terraform/
+infrastructure/terraform/
 ├── main.tf                 # Main configuration file
 ├── provider.tf             # Keycloak provider configuration
 ├── variables.tf            # Input variables
@@ -79,7 +79,7 @@ The saml_idp module imports a SAML-based identity provider with:
 ### 1. Initialize Terraform
 
 ```bash
-cd config/terraform
+cd infrastructure/terraform
 terraform init
 ```
 

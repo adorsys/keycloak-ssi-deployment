@@ -1,33 +1,47 @@
-# Use a base image with Java 17 and Maven installed
+# ==========================================
+# Stage 1: Build Stage
+# ==========================================
 FROM maven:3.8.4-openjdk-17-slim AS builder
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Install Git, apt-utils and other dependencies
-RUN apt-get update && apt-get install -y git apt-utils
+# Install required dependencies
+RUN apt-get update && apt-get install -y git apt-utils curl jq && apt-get clean
 
-# Copy necessary files for building and starting keycloak
-COPY generate-kc-certs.sh .env setup-kc-oid4vci.sh load_env.sh cert-config.txt kc_keystore.pkcs12 ./
+# Copy environment file first (so setup scripts can source it)
+COPY .env ./
 
-# Download, unpack, and prepare Keycloak
-RUN ./setup-kc-oid4vci.sh
+# Copy necessary setup and utility scripts
+COPY src/setup/setup-kc-oid4vci.sh load_env.sh src/utils/crypto/cert-config.txt src/utils/crypto/kc_keystore.pkcs12 ./
 
-# Base image for the runtime stage
+# Copy additional utility scripts used by setup
+COPY src/utils/crypto/generate-kc-certs.sh src/utils/crypto/generate_keystore.sh src/utils/crypto/generate_user_key.sh ./utils/
+RUN chmod +x ./utils/*.sh
+
+# Run setup to prepare Keycloak OID4VCI environment
+RUN chmod +x setup-kc-oid4vci.sh && ./setup-kc-oid4vci.sh
+
+# ==========================================
+# Stage 2: Runtime Stage
+# ==========================================
 FROM openjdk:17-jdk-slim
 
-# Set the working directory
+# Set working directory
 WORKDIR /opt/keycloak
 
-# Copy the built Keycloak deployment from the build stage
+# Copy the built Keycloak target from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
 
-# Copy the environment variable file from the build stage
+# Copy the .env file to runtime
 COPY --from=builder /app/.env /opt/keycloak/
 
-# Copy the custom entrypoint script to the container and make it executable
+# Copy entrypoint script and make it executable
 COPY entrypoint.sh /opt/keycloak/entrypoint.sh
 RUN chmod +x /opt/keycloak/entrypoint.sh
 
-# Set the entry point
+# Expose Keycloak default ports
+EXPOSE 8443
+
+# Set entrypoint
 ENTRYPOINT ["sh", "/opt/keycloak/entrypoint.sh"]

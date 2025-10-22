@@ -65,7 +65,7 @@ fi
 # ---------------------------------------------------------------------------
 log "Obtaining admin token / configuring kcadm..."
 "$KCADM" config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
-"$KCADM" config credentials --server "$KEYCLOAK_URL" --realm master \
+"$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
     --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
 
 # ---------------------------------------------------------------------------
@@ -244,7 +244,7 @@ fi
 # Validate OID4VCI configuration
 # ---------------------------------------------------------------------------
 log "Validating OID4VCI configuration exposure..."
-response=$(curl -ks "$KEYCLOAK_URL/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
+response=$(curl -ks "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
 if [[ -z "$response" ]]; then
   error "No response from Keycloak OIDC credential issuer endpoint."
 fi
