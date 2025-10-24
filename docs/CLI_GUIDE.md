@@ -1,120 +1,63 @@
-# Keycloak SSI CLI Guide
+# Keycloak SSI CLI Cheat Sheet
 
-A simple command-line tool for deploying and testing Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance) features.
+```
+      __ __                __            __      __________ ____
+     / //_/__  __  _______/ /___  ____ _/ /__   / ___/ ___//  _/
+    / ,< / _ \/ / / / ___/ / __ \/ __ `/ //_/   \__ \\__ \ / /
+   / /| /  __/ /_/ / /__/ / /_/ / /_/ / ,<     ___/ /__/ // /
+  /_/ |_\___/\__, /\___/_/\____/\__,_/_/|_|   /____/____/___/
+            /____/
+```
 
-## Installation
+CLI Tool • Deployment • Configuration • Testing
+
+---
+
+## Usage
 
 ```bash
-# Install CLI to system PATH
-./keycloak-ssi install
-
-# Verify installation
-keycloak-ssi help
+keycloak-ssi <command> [options]
 ```
+
+---
 
 ## Commands
 
-### `keycloak-ssi setup`
+| Command                                    | Purpose                                        | Script Called                                                                                                             |
+| ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `install`                                  | Install CLI to system PATH                     | -                                                                                                                         |
+| `uninstall`                                | Remove CLI from system PATH                    | -                                                                                                                         |
+| `setup`                                    | Build and start Keycloak with OID4VCI          | `src/setup/0.start-kc-oid4vci.sh`                                                                                         |
+| `config`                                   | Configure realm, keys, clients, and test users | `src/setup/1.oid4vci_test_deployment.sh`, `src/setup/2.configure_user_4_account_client.sh`                                |
+| `test <preauth/authcode> <CredentialType>` | Test credential issuance flows                 | `src/credentials/request_credential.sh` (preauth), `src/credentials/request_credential_with_auth_code_flow.sh` (authcode) |
+| `import`                                   | Import a pre-configured realm                  | `src/utils/import_kc_config.sh`                                                                                           |
+| `stop`                                     | Stop running Keycloak                          | `src/utils/helper.sh` (stop_keycloak function)                                                                            |
+| `help`                                     | Show this help message                         | -                                                                                                                         |
 
-**Purpose**: Build and start Keycloak with OID4VCI features  
-**Scripts called**: `src/setup/0.start-kc-oid4vci.sh`  
-**Time**: 5-10 minutes (first run)  
-**What it does**:
+---
 
-- Downloads/builds Keycloak from source
-- Generates certificates and keystore
-- Starts Keycloak server on port 8443
-
-### `keycloak-ssi config`
-
-**Purpose**: Configure realm, clients, key providers and users
-**Scripts called**:
-
-- `src/setup/1.oid4vci_test_deployment.sh`
-- `src/setup/2.configure_user_4_account_client.sh`  
-  **What it does**:
-- Creates test realm with OID4VCI configuration
-- Sets up key providers (EC, RSA)
-- Creates test client and user (francis/password)
-- Configures credential types
-
-### `keycloak-ssi test <flow> <credential>`
-
-**Purpose**: Test credential issuance flows  
-**Flows**: `preauth` or `authcode`  
-**Credentials**: `IdentityCredential`, `SteuerberaterCredential`, and `KMACredential`.  
-**Scripts called**:
-
-- `preauth`: `src/credentials/request_credential.sh`
-- `authcode`: `src/credentials/request_credential_with_auth_code_flow.sh`  
-  **What it does**:
-- Tests pre-authorized code flow (simpler)
-- Tests authorization code + PKCE flow (OAuth2 standard)
-
-### `keycloak-ssi import`
-
-**Purpose**: Import ready realm configuration  
-**Scripts called**: `src/utils/import_kc_config.sh`  
-**What it does**: Imports pre-configured realm from JSON file
-
-### `keycloak-ssi stop`
-
-**Purpose**: Stop running Keycloak  
-**Scripts called**: `src/utils/helper.sh` (stop_keycloak function)  
-**What it does**: Gracefully stops Keycloak server
-
-## Quick Start
+## Quick Start Example
 
 ```bash
-# 1. Setup Keycloak (first time only)
+# Install CLI
+./keycloak-ssi install
+
+# Setup Keycloak (first run)
 keycloak-ssi setup
 
-# 2. Configure realm and users
+# Configure realm & test user
 keycloak-ssi config
 
-# 3. Test credential flows
+# Test credential flows
 keycloak-ssi test preauth IdentityCredential
 keycloak-ssi test authcode IdentityCredential
 
-# 4. Stop when done
+# Import a ready realm
+keycloak-ssi import
+
+# Stop Keycloak
 keycloak-ssi stop
+
+# Remove CLI
+keycloak-ssi uninstall
 ```
-
-## Environment
-
-The CLI automatically loads environment variables from:
-
-- `load_env.sh` - Main configuration
-- `src/utils/helper.sh` - Helper functions
-
-Key variables:
-
-- `KEYCLOAK_ADMIN_ADDR`: https://localhost:8443
-- `KEYCLOAK_URL`: https://localhost:8443
-- `USER_FRANCIS_PASSWORD`: Test user password
-
-## Troubleshooting
-
-**"Keycloak is not running"**: Run `keycloak-ssi setup` first  
-**"command not found"**: Run `./keycloak-ssi install` and reload shell  
-**Build fails**: Check Java/Maven installation  
-**Port conflicts**: Ensure port 8443 is available
-
-## Script Architecture
-
-```
-src/
-├── setup/
-│   ├── 0.start-kc-oid4vci.sh                     # Build & start Keycloak
-│   ├── 1.oid4vci_test_deployment.sh              # Configure realm & keys
-│   └── 2.configure_user_4_account_client.sh      # Create users & clients
-├── credentials/
-│   ├── request_credential.sh                     # Pre-authorized flow
-│   └── request_credential_with_auth_code_flow.sh # Auth code flow
-└── utils/
-    ├── helper.sh                                 # Common functions
-    └── import_kc_config.sh                       # Import configuration
-```
-
-Each command calls the appropriate scripts in sequence to achieve the desired functionality.
-

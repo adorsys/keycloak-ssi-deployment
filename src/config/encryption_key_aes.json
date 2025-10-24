@@ -20,7 +20,7 @@
       "$KEYCLOAK_KEYSTORE_PASSWORD"
     ],
     "active": ["true"],
-    "priority": ["0"],
+    "priority": ["200"],
     "enabled": ["true"],
     "algorithm": ["AES"],
     "kid": ["UUID-HERE"]    

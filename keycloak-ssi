@@ -246,29 +246,41 @@ cmd_stop() {
 
 cmd_install() {
     log "Installing keycloak-ssi CLI to system PATH..."
-    
+
     # Determine install directory
     local install_dir="/usr/local/bin"
     if [[ ! -w "$install_dir" ]]; then
         install_dir="$HOME/.local/bin"
         mkdir -p "$install_dir"
     fi
-    
-    # Remove existing file/symlink if it exists
-    rm -f "$install_dir/keycloak-ssi"
-    
-    # Copy CLI to install directory
+
+    local install_path="$install_dir/keycloak-ssi"
+
+    # Check if already installed
+    if command -v keycloak-ssi >/dev/null 2>&1; then
+        local existing_path
+        existing_path="$(command -v keycloak-ssi)"
+        if [[ "$existing_path" == "$install_path" ]]; then
+            success "CLI is already installed at $existing_path"
+            return 0
+        else
+            warn "CLI is installed at $existing_path, reinstalling to $install_path..."
+        fi
+    fi
+
+    # Proceed with installation
+    rm -f "$install_path"
     cp "$SCRIPT_DIR/keycloak-ssi" "$install_dir/"
-    chmod +x "$install_dir/keycloak-ssi"
-    
+    chmod +x "$install_path"
+
     # Check if PATH includes install directory
     if [[ ":$PATH:" != *":$install_dir:"* ]]; then
         warn "Please add $install_dir to your PATH:"
         echo "  export PATH=\"\$PATH:$install_dir\""
         echo "  # Add to ~/.bashrc or ~/.zshrc for persistence"
     fi
-    
-    success "CLI installed to $install_dir/keycloak-ssi"
+
+    success "CLI installed to $install_path"
     success "You can now run 'keycloak-ssi' from anywhere"
 }
 
@@ -340,8 +352,9 @@ main() {
             show_help
             ;;
         *)
-            error "Unknown command: $1"
+            echo -e "${CLI_RED}[ERROR]${CLI_NC} Unknown command: $1" >&2
             echo "Run 'keycloak-ssi help' for usage information."
+            # exit 1
             ;;
     esac
 }

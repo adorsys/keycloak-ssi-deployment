@@ -870,7 +870,7 @@
             "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"
@@ -907,7 +907,7 @@
             "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"
@@ -941,7 +941,7 @@
             "$(env:KC_KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"

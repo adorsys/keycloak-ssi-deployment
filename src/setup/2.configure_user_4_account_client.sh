@@ -60,9 +60,9 @@ success "Password ensured for Francis."
 # -----------------------------------------------------------------------------
 # Prepare user key proof header if not existent
 # -----------------------------------------------------------------------------
-if [ ! -f "$WORK_DIR/src/config/user_key_proof_header.json" ]; then
+if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
   log "Generating keypair for user..."
-  "$WORK_DIR/src/utils/crypto/generate_user_key.sh"
+  . "$WORK_DIR/src/utils/crypto/generate_user_key.sh"
   success "User keyproof generated."
 else
   log "User key proof header already exists."
