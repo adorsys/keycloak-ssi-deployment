@@ -20,7 +20,7 @@ log "Generating keystore $KEYCLOAK_KEYSTORE_FILE..."
 
 # EC key (ECDSA)
 keytool -genkeypair \
-    -keyalg EC -groupname secp256r1 -keysize 256 -validity 3650 \
+    -keyalg EC -keysize 256 -validity 3650 \
     -keystore "$KEYCLOAK_KEYSTORE_FILE" -storepass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -alias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" -keypass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -storetype "$KEYCLOAK_KEYSTORE_TYPE" \

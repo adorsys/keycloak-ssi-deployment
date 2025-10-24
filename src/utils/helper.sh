@@ -62,19 +62,34 @@ get_keycloak_pid() {
 stop_keycloak() {
     local keycloak_pid
     keycloak_pid="$(get_keycloak_pid || true)"
+
     if [[ -n "$keycloak_pid" ]]; then
         log "Keycloak instance found (PID: $keycloak_pid). Shutting it down..."
         kill "$keycloak_pid" || warn "Failed to kill process $keycloak_pid"
         # Wait for process to terminate
         sleep 2
-        # Check if process is still running
         if kill -0 "$keycloak_pid" 2>/dev/null; then
             warn "Process still running, force killing..."
             kill -9 "$keycloak_pid" 2>/dev/null || true
             sleep 1
         fi
+        log "Keycloak stopped."
     else
         log "No running Keycloak instance found."
+    fi
+
+    # -------------------------------------------------------------------------
+    # Stop and remove database container + volume using Docker Compose
+    # -------------------------------------------------------------------------
+    DOCKER_COMPOSE_FILE="${WORK_DIR}/docker-compose.yml"
+    if [[ -f "$DOCKER_COMPOSE_FILE" ]]; then
+        DOCKER_COMPOSE_COMMAND="$(detect_docker_compose)"
+        log "Stopping and removing database container..."
+        eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" down -v db" || \
+            warn "Failed to stop/remove database container or volume. You may need to clean manually."
+        log "Database container and volume removed."
+    else
+        warn "docker-compose.yml not found. Cannot stop DB container."
     fi
 }
 

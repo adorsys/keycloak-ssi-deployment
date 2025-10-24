@@ -13,6 +13,18 @@ CLI Tool • Deployment • Configuration • Testing
 
 ---
 
+## Environment Variable
+
+For global or installed CLI usage, set the project root via:
+
+```bash
+export KEYCLOAK_SSI_HOME=/path/to/keycloak-ssi-deployment
+```
+
+> The CLI will first look for this variable. If it is unset, it will automatically search upward from the script location to locate the project root.
+
+---
+
 ## Usage
 
 ```bash

@@ -30,31 +30,31 @@ fi
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# If we're running from an installed location, find the project root
-if [[ -f "$SCRIPT_DIR/src/utils/helper.sh" ]]; then
+# Priority 1: Use environment variable if set
+if [[ -n "${KEYCLOAK_SSI_HOME:-}" && -f "$KEYCLOAK_SSI_HOME/src/utils/helper.sh" && -f "$KEYCLOAK_SSI_HOME/load_env.sh" ]]; then
+    WORK_DIR="$KEYCLOAK_SSI_HOME"
+
+# Priority 2: Look relative to the script location
+elif [[ -f "$SCRIPT_DIR/src/utils/helper.sh" && -f "$SCRIPT_DIR/load_env.sh" ]]; then
     WORK_DIR="$SCRIPT_DIR"
+
+# Priority 3: Walk up the directory tree from script location
 else
-    # Look for the project root by finding load_env.sh in common locations
-    search_paths=(
-        "$HOME/adorsys/keycloak-ssi-deployment"
-        "$HOME/keycloak-ssi-deployment"
-        "/opt/keycloak-ssi-deployment"
-        "$(dirname "$SCRIPT_DIR")"
-        "$(dirname "$(dirname "$SCRIPT_DIR")")"
-    )
-    
-    for path in "${search_paths[@]}"; do
-        if [[ -f "$path/load_env.sh" && -f "$path/src/utils/helper.sh" ]]; then
-            WORK_DIR="$path"
+    WORK_DIR="$SCRIPT_DIR"
+    while [[ "$WORK_DIR" != "/" ]]; do
+        if [[ -f "$WORK_DIR/src/utils/helper.sh" && -f "$WORK_DIR/load_env.sh" ]]; then
             break
         fi
+        WORK_DIR="$(dirname "$WORK_DIR")"
     done
-    
-    if [[ -z "$WORK_DIR" ]]; then
-        echo "Error: Cannot find project root. Please run from project directory or reinstall."
-        echo "Searched in: ${search_paths[*]}"
-        exit 1
-    fi
+fi
+
+# If we still didn't find it, exit with a clear error
+if [[ ! -f "$WORK_DIR/src/utils/helper.sh" || ! -f "$WORK_DIR/load_env.sh" ]]; then
+    echo -e "\033[0;31m[ERROR]\033[0m Could not locate project root containing load_env.sh and src/utils/helper.sh"
+    echo "Please run this script from within the project directory or set:"
+    echo "  export KEYCLOAK_SSI_HOME=/path/to/keycloak-ssi-deployment"
+    exit 1
 fi
 
 # Load helper functions
