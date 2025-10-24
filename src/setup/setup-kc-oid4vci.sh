@@ -12,30 +12,13 @@ IFS=$'\n\t'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="${WORK_DIR:-$PWD}"
 
-# Load environment variables
-source "$WORK_DIR/load_env.sh"
-
-# ---------------------------------------------------------------------------
-# Logging helpers
-# ---------------------------------------------------------------------------
-log() { echo -e "[INFO] $*"; }
-warn() { echo -e "[WARN] $*" >&2; }
-error() { echo -e "[ERROR] $*" >&2; exit 1; }
+# Load helper (init_script loads env)
+source "$WORK_DIR/src/utils/helper.sh"
+init_script
 
 # ---------------------------------------------------------------------------
 # Ensure a directory exists
 # ---------------------------------------------------------------------------
-ensure_directory_exists() {
-    local dir="$1"
-    if [[ ! -d "$dir" ]]; then
-        log "Directory $dir does not exist. Creating..."
-        mkdir -p "$dir" || error "Failed to create $dir"
-        log "Directory $dir created."
-    else
-        log "Directory $dir already exists."
-    fi
-}
-
 ensure_directory_exists "$TARGET_DIR"
 ensure_directory_exists "$TOOLS_DIR"
 

@@ -9,42 +9,18 @@ IFS=$'\n\t'
 # - Configures client scopes, SAML IdP, and validates OID4VCI config
 # -----------------------------------------------------------------------------
 
-# Color codes for labels only
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# Colored log functions (labels only)
-log()     { printf "${CYAN}[INFO]${NC}  %s\n" "$*"; }
-warn()    { printf "${YELLOW}[WARN]${NC}  %s\n" "$*" >&2; }
-error()   { printf "${RED}[ERROR]${NC} %s\n" "$*" >&2; exit 1; }
-success() { printf "${GREEN}[SUCCESS]${NC} %s\n" "$*"; }
-
-# -----------------------------------------------------------------------------
-# Setup environment
-# -----------------------------------------------------------------------------
+# Use standardized helper
 WORK_DIR="${WORK_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-source "$WORK_DIR/load_env.sh"
+source "$WORK_DIR/src/utils/helper.sh"
+init_script
 
-# ---------------------------------------------------------------------------
-# Return a single Keycloak PID
-# ---------------------------------------------------------------------------
-get_keycloak_pid() {
-  if command -v pgrep &>/dev/null; then
-    pgrep -f keycloak | head -n1 || true
-  else
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-      ps aux | grep -i '[q]uarkus' | awk 'NR==1{print $2}' || true
-    else
-      ps aux | grep -i '[k]eycloak' | awk 'NR==1{print $2}' || true
-    fi
-  fi
-}
-
+# -----------------------------------------------------------------------------
+# Ensure Keycloak is running
+# Use helper's get_keycloak_pid
+# -----------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # Ensure Keycloak is running
+# Use helper's get_keycloak_pid
 # ---------------------------------------------------------------------------
 keycloak_pid="$(get_keycloak_pid || true)"
 if [[ -z "${keycloak_pid:-}" ]]; then

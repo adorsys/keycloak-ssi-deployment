@@ -3,18 +3,15 @@ set -euo pipefail
 IFS=$'\n\t'
 
 WORK_DIR="${WORK_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-source "$WORK_DIR/load_env.sh"
+source "$WORK_DIR/src/utils/helper.sh"
+init_script
 
 FLOW_ALIAS="oid4vp auth"
 AUTH_PROVIDER_ID="sd-jwt-authenticator"
 CONFIG_ALIAS="sdjwt-auth-config"
 VCT="stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct"
 
-log() { echo -e "[INFO] $*"; }
-error() { echo -e "[ERROR] $*" >&2; exit 1; }
 
-# URL encode helper
-urlencode() { jq -nr --arg str "$1" '$str|@uri'; }
 
 # Get admin token
 TOKEN=$(curl -s -k -X POST "$KEYCLOAK_ADMIN_ADDR/realms/master/protocol/openid-connect/token" \

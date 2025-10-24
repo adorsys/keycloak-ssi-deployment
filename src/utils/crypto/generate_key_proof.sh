@@ -8,10 +8,8 @@ IFS=$'\n\t'
 
 WORK_DIR="${WORK_DIR:-$PWD}"
 TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
-source "$WORK_DIR/load_env.sh"
-
-log() { echo -e "[INFO] $*"; }
-error() { echo -e "[ERROR] $*" >&2; exit 1; }
+source "$WORK_DIR/src/utils/helper.sh"
+init_script
 
 # ---------------------------------------------------------------------------
 # Pre-flight checks
