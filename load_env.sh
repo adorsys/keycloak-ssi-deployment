@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Source common env variables
-. .env
+# Source common env variables if they exist
+if [ -f ".env" ]; then
+    . .env
+elif [ -f "$WORK_DIR/.env" ]; then
+    . "$WORK_DIR/.env"
+fi
 
 # Using local properties
 if [ -f "$WORK_DIR/../env/.env" ]; then

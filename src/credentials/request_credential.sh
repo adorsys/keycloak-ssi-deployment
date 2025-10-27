@@ -143,7 +143,7 @@ CREDENTIAL=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oi
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \
-  -d "$REQ_BODY")
+  -d "$REQ_BODY" | jq .)
 
 if [ -z "$CREDENTIAL" ] || [ "$CREDENTIAL" == "null" ]; then
   error "Failed to retrieve credential."
@@ -151,4 +151,4 @@ if [ -z "$CREDENTIAL" ] || [ "$CREDENTIAL" == "null" ]; then
 fi
 
 success "Credential '$CREDENTIAL_TYPE' retrieved successfully!"
-echo -e "\n$CREDENTIAL\n"
+echo "$CREDENTIAL"

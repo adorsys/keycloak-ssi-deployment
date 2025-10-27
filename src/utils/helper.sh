@@ -101,16 +101,6 @@ urlencode() {
     jq -nr --arg str "$1" '$str|@uri'
 }
 
-ensure_directory_exists() {
-    local dir="$1"
-    if [[ ! -d "$dir" ]]; then
-        log "Directory $dir does not exist. Creating..."
-        mkdir -p "$dir" || error "Failed to create $dir"
-        log "Directory $dir created."
-    else
-        debug "Directory $dir already exists."
-    fi
-}
 
 
 # -----------------------------------------------------------------------------
@@ -125,18 +115,6 @@ detect_docker_compose() {
         error "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is installed."
     fi
 }
-
-# -----------------------------------------------------------------------------
-# PKCE Generation
-# -----------------------------------------------------------------------------
-generate_pkce() {
-    local code_verifier
-    code_verifier=$(openssl rand -base64 96 | tr -d '+/=' | cut -c -128)
-    local code_challenge
-    code_challenge=$(echo -n "$code_verifier" | openssl dgst -sha256 -binary | openssl base64 | tr '+/' '-_' | tr -d '=')
-    echo "$code_verifier" "$code_challenge"
-}
-
 
 # -----------------------------------------------------------------------------
 # Script Initialization
@@ -156,6 +134,4 @@ init_script() {
 # -----------------------------------------------------------------------------
 export -f log warn error success debug
 export -f setup_environment get_keycloak_pid stop_keycloak
-export -f urlencode ensure_directory_exists
-export -f detect_docker_compose generate_pkce
-export -f init_script
+export -f urlencode detect_docker_compose init_script

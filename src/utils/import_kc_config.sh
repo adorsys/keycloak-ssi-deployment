@@ -7,9 +7,17 @@ TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
-# ---------------------------------------------------------------------------
+# =============================================================================
+# Hardcoded Configuration Variables
+# These values are project-specific and unlikely to change across environments
+# =============================================================================
+KC_CLI_PROJECT_DIR="$TARGET_DIR/keycloak-config-cli"
+KC_CLI_JAR_FILE="keycloak-config-cli.jar"
+REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
+
+# =============================================================================
 # Clone and build Keycloak Config CLI if needed
-# ---------------------------------------------------------------------------
+# =============================================================================
 if [[ -f "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" ]]; then
     log "Keycloak Config CLI JAR exists. Skipping build."
 else

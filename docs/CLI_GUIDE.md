@@ -1,4 +1,4 @@
-# Keycloak SSI CLI Cheat Sheet
+# Keycloak SSI CLI Guide
 
 ```
       __ __                __            __      __________ ____
@@ -13,15 +13,48 @@ CLI Tool • Deployment • Configuration • Testing
 
 ---
 
-## Environment Variable
+## Overview
 
-For global or installed CLI usage, set the project root via:
+The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
+It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
 
-```bash
-export KEYCLOAK_SSI_HOME=/path/to/keycloak-ssi-deployment
-```
+---
 
-> The CLI will first look for this variable. If it is unset, it will automatically search upward from the script location to locate the project root.
+## Prerequisites
+
+Before using the CLI tool, ensure the following dependencies are installed on your system:
+
+- **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
+- **Keytool** — Java key and certificate management utility (included with JDK)
+- **jq** — lightweight and flexible command-line JSON processor
+- **figlet** — optional ASCII art generator for an enhanced CLI display
+
+---
+
+## Installation
+
+### Quick Installation
+
+1. **Clone and install:**
+
+   ```bash
+   git clone https://github.com/adorsys/keycloak-ssi-deployment.git
+   cd keycloak-ssi-deployment
+   ./keycloak-ssi install
+   ```
+
+2. **Verify installation:**
+   ```bash
+   keycloak-ssi help
+   ```
+
+The CLI tool follows the XDG Base Directory specification:
+
+- **CLI Binary:** `/usr/local/bin/keycloak-ssi` (or `~/.local/bin/keycloak-ssi`)
+- **Project Files:** `~/.local/share/keycloak-ssi-deployment`
+- **Configuration:** `~/.local/share/keycloak-ssi-deployment/.env`
+
+After installation, the CLI works from anywhere on your system without additional configuration.
 
 ---
 
@@ -51,25 +84,22 @@ keycloak-ssi <command> [options]
 ## Quick Start Example
 
 ```bash
-# Install CLI
-./keycloak-ssi install
-
-# Setup Keycloak (first run)
+# 1️⃣ Setup Keycloak (first run - may take 5–10 minutes)
 keycloak-ssi setup
 
-# Configure realm & test user
+# or import a preconfigured realm
+keycloak-ssi import
+
+# 2️⃣ Configure the realm and create a test user
 keycloak-ssi config
 
-# Test credential flows
+# 3️⃣ Test credential flows
 keycloak-ssi test preauth IdentityCredential
 keycloak-ssi test authcode IdentityCredential
 
-# Import a ready realm
-keycloak-ssi import
-
-# Stop Keycloak
+# 4️⃣ Stop the Keycloak server
 keycloak-ssi stop
 
-# Remove CLI
+# 5️⃣ Uninstall the CLI
 keycloak-ssi uninstall
 ```

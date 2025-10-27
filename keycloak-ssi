@@ -27,35 +27,40 @@ else
   CLI_RED=""; CLI_GREEN=""; CLI_YELLOW=""; CLI_CYAN=""; CLI_BLUE=""; CLI_NC="";
 fi
 
-# Script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# =============================================================================
+# Project Root Detection
+# Uses XDG Base Directory specification for clean, professional CLI behavior
+# =============================================================================
 
-# Priority 1: Use environment variable if set
-if [[ -n "${KEYCLOAK_SSI_HOME:-}" && -f "$KEYCLOAK_SSI_HOME/src/utils/helper.sh" && -f "$KEYCLOAK_SSI_HOME/load_env.sh" ]]; then
-    WORK_DIR="$KEYCLOAK_SSI_HOME"
-
-# Priority 2: Look relative to the script location
-elif [[ -f "$SCRIPT_DIR/src/utils/helper.sh" && -f "$SCRIPT_DIR/load_env.sh" ]]; then
-    WORK_DIR="$SCRIPT_DIR"
-
-# Priority 3: Walk up the directory tree from script location
-else
-    WORK_DIR="$SCRIPT_DIR"
-    while [[ "$WORK_DIR" != "/" ]]; do
-        if [[ -f "$WORK_DIR/src/utils/helper.sh" && -f "$WORK_DIR/load_env.sh" ]]; then
-            break
+# Determine project root using XDG Base Directory specification
+determine_project_root() {
+    local project_root=""
+    
+    # Special case: if running install command, use script location
+    if [[ "${1:-}" == "install" ]]; then
+        local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [[ -f "$script_dir/src/utils/helper.sh" && -f "$script_dir/load_env.sh" ]]; then
+            echo "$script_dir"
+            return
         fi
-        WORK_DIR="$(dirname "$WORK_DIR")"
-    done
-fi
+    fi
+    
+    # Normal case: use XDG Base Directory
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    project_root="$xdg_data_home/keycloak-ssi-deployment"
+    
+    # Validate project files exist
+    if [[ -f "$project_root/src/utils/helper.sh" && -f "$project_root/load_env.sh" ]]; then
+        echo "$project_root"
+    else
+        echo "Keycloak SSI project not found. Please install the CLI:" >&2
+        echo "1. Run: ./keycloak-ssi install" >&2
+        exit 1
+    fi
+}
 
-# If we still didn't find it, exit with a clear error
-if [[ ! -f "$WORK_DIR/src/utils/helper.sh" || ! -f "$WORK_DIR/load_env.sh" ]]; then
-    echo -e "\033[0;31m[ERROR]\033[0m Could not locate project root containing load_env.sh and src/utils/helper.sh"
-    echo "Please run this script from within the project directory or set:"
-    echo "  export KEYCLOAK_SSI_HOME=/path/to/keycloak-ssi-deployment"
-    exit 1
-fi
+# Set project root
+WORK_DIR="$(determine_project_root "${1:-}")"
 
 # Load helper functions
 source "$WORK_DIR/src/utils/helper.sh"
@@ -268,9 +273,23 @@ cmd_install() {
         fi
     fi
 
-    # Proceed with installation
+    # Install project files to XDG Base Directory using symbolic link
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local project_install_dir="$xdg_data_home/keycloak-ssi-deployment"
+    
+    log "Installing project files to $project_install_dir..."
+    
+    # Remove existing installation (whether symlink or directory)
+    if [[ -e "$project_install_dir" ]]; then
+        rm -rf "$project_install_dir"
+    fi
+    
+    # Create symbolic link to project directory
+    ln -s "$WORK_DIR" "$project_install_dir" || error "Failed to create symbolic link"
+
+    # Install CLI script
     rm -f "$install_path"
-    cp "$SCRIPT_DIR/keycloak-ssi" "$install_dir/"
+    cp "$WORK_DIR/keycloak-ssi" "$install_dir/"
     chmod +x "$install_path"
 
     # Check if PATH includes install directory
@@ -281,6 +300,7 @@ cmd_install() {
     fi
 
     success "CLI installed to $install_path"
+    success "Project files installed to $project_install_dir"
     success "You can now run 'keycloak-ssi' from anywhere"
 }
 
@@ -298,6 +318,16 @@ cmd_uninstall() {
             removed=true
         fi
     done
+    
+    # Remove project files from XDG Base Directory (symlink or directory)
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local project_install_dir="$xdg_data_home/keycloak-ssi-deployment"
+    
+    if [[ -e "$project_install_dir" ]]; then
+        rm -f "$project_install_dir"  # Works for both symlinks and directories
+        success "Removed project files from $project_install_dir"
+        removed=true
+    fi
     
     if [[ "$removed" == "false" ]]; then
         warn "No keycloak-ssi installation found in common locations"

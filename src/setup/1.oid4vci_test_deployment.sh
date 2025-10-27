@@ -42,7 +42,7 @@ log "Authenticating admin user..."
 # Create realm
 # -----------------------------------------------------------------------------
 log "Creating realm '$KEYCLOAK_REALM' (if not exists)..."
-"$KCADM" create realms -s realm="$KEYCLOAK_REALM" -s enabled=true >/dev/null 2>&1 || log "Realm may already exist; continuing."
+"$KCADM" create realms -s realm="$KEYCLOAK_REALM" -s enabled=true >/dev/null 2>&1 || warn "Realm already exists; continuing."
 
 # -----------------------------------------------------------------------------
 # Configure key providers
@@ -87,7 +87,7 @@ register_key_provider() {
   fi
 
   if ! echo "$json_content" | "$KCADM" create components -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1; then
-    warn "Failed to register key provider '$name'; it may already exist."
+    warn "Failed to register key provider '$name'; it already exists."
   fi
 }
 
@@ -132,7 +132,7 @@ if [[ -f "$WORK_DIR/src/config/client-scope-config.json" ]]; then
   CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
   echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | "$KCADM" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
-      warn "Client scope may already exist; skipping."
+      warn "Client scope already exists; skipping."
   done
 else
   warn "client-scope-config.json not found; skipping client scopes creation."
@@ -145,13 +145,13 @@ SAML_CONFIG_FILE="$WORK_DIR/src/config/saml-idp-config.json"
 if [[ -f "$SAML_CONFIG_FILE" ]]; then
     jq -c '.identityProviders[]' "$SAML_CONFIG_FILE" | while read -r idp; do
         echo "$idp" | "$KCADM" create identity-provider/instances -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
-          warn "SAML Identity Provider may already exist; skipping."
+          warn "SAML Identity Provider already exists; skipping."
     done
 
     if jq -e '.identityProviderMappers' "$SAML_CONFIG_FILE" >/dev/null 2>&1; then
         jq -c '.identityProviderMappers[]' "$SAML_CONFIG_FILE" | while read -r mapper; do
             echo "$mapper" | "$KCADM" create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
-              warn "SAML mapper may already exist: $(echo "$mapper" | jq -r '.name')"
+              warn "SAML mapper already exists: $(echo "$mapper" | jq -r '.name')"
         done
     fi
 else
@@ -172,14 +172,14 @@ log "Creating clients..."
                 .attributes["post.logout.redirect.uris"] = ("##" + $ISSUER_FRONTEND_URL + "##" + $ISSUER_FRONTEND_URL + "/*")' \
                "$WORK_DIR/src/config/openid4vc-rest-api.json") && \
   echo "$CONFIG" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
-  warn "OPENID4VC-REST-API client may already exist; skipping."
+  warn "OPENID4VC-REST-API client already exists; skipping."
 
 [[ -f "$WORK_DIR/src/config/oid4vc-demo-public.json" ]] && \
   PUBLIC_CLIENT=$(jq --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
                      '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")' \
                      "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
   echo "$PUBLIC_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
-  warn "oid4vc-demo-public client may already exist; skipping."
+  warn "oid4vc-demo-public client already exists; skipping."
 
 # -----------------------------------------------------------------------------
 # Ensure SD-JWT authenticator VCT

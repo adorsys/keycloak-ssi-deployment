@@ -9,8 +9,6 @@ WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
-## env loaded via helper
-
 # -----------------------------------------------------------------------------
 # Get admin token using environment variables for credentials
 # -----------------------------------------------------------------------------
@@ -47,7 +45,7 @@ if ! "$KCADM" get users -r "$KEYCLOAK_REALM" -q username=francis | jq -e '.[0].i
   "$KCADM" create users -r "$KEYCLOAK_REALM" -s username=francis -s firstName=Francis -s lastName=Pouatcha -s email=fpo@mail.de -s enabled=true
   success "User Francis created."
 else
-  log "User Francis already exists."
+  warn "User Francis already exists."
 fi
 
 # -----------------------------------------------------------------------------
@@ -65,7 +63,7 @@ if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
   . "$WORK_DIR/src/utils/crypto/generate_user_key.sh"
   success "User keyproof generated."
 else
-  log "User key proof header already exists."
+  warn "User key proof header already exists."
 fi
 
 success "Script execution completed."
