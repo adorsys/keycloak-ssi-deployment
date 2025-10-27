@@ -2,7 +2,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-WORK_DIR="${WORK_DIR:-$PWD}"
+# WORK_DIR is set by the CLI
 TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
@@ -40,7 +40,7 @@ fi
 # Run CLI JAR to import realm configuration
 # ---------------------------------------------------------------------------
 log "Running Keycloak Config CLI..."
-java -DCLIENT_SECRET="$CLIENT_SECRET" \
+cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENT_SECRET" \
      -DKEYCLOAK_ADMIN_ADDR="$KEYCLOAK_ADMIN_ADDR" \
      -DKEYCLOAK_KEYSTORE_PASSWORD="$KEYCLOAK_KEYSTORE_PASSWORD" \
      -DKC_KEYSTORE_PATH="$KC_KEYSTORE_PATH" \

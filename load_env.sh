@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # Source common env variables if they exist
-if [ -f ".env" ]; then
-    . .env
-elif [ -f "$WORK_DIR/.env" ]; then
+if [ -f "$WORK_DIR/.env" ]; then
     . "$WORK_DIR/.env"
 fi
 

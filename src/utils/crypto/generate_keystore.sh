@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # Generate Keycloak keystore with EC and RSA keys
 # -----------------------------------------------------------------------------
 
-WORK_DIR="${WORK_DIR:-$PWD}"
+# WORK_DIR is set by the CLI
 TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script

@@ -50,9 +50,8 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
 
 The CLI tool follows the XDG Base Directory specification:
 
-- **CLI Binary:** `/usr/local/bin/keycloak-ssi` (or `~/.local/bin/keycloak-ssi`)
-- **Project Files:** `~/.local/share/keycloak-ssi-deployment`
-- **Configuration:** `~/.local/share/keycloak-ssi-deployment/.env`
+- **CLI Binary:** `~/.local/bin/keycloak-ssi`
+- **Project Files:** `~/.local/share/keycloak-ssi-deployment` (symbolic link)
 
 After installation, the CLI works from anywhere on your system without additional configuration.
 

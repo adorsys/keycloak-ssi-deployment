@@ -5,7 +5,7 @@ IFS=$'\n\t'
 # ===============================
 # Load Environment
 # ===============================
-WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# WORK_DIR is set by the CLI
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -151,4 +151,4 @@ if [ -z "$CREDENTIAL" ] || [ "$CREDENTIAL" == "null" ]; then
 fi
 
 success "Credential '$CREDENTIAL_TYPE' retrieved successfully!"
-echo "$CREDENTIAL"
+echo -e "\n$CREDENTIAL\n"

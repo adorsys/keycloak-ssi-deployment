@@ -5,7 +5,7 @@ IFS=$'\n\t'
 # -----------------------------------------------------------------------------
 # Helpers and env
 # -----------------------------------------------------------------------------
-WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# WORK_DIR is set by the CLI
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 

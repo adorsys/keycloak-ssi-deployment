@@ -5,7 +5,7 @@ IFS=$'\n\t'
 # ===============================
 # Load Environment
 # ===============================
-WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# WORK_DIR is set by the CLI
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -176,7 +176,7 @@ request_credential() {
   fi
 
   success "Credential '$credential_id' successfully issued."
-  echo "$credential"
+  echo -e "\n$credential\n"
 }
 
 # ===============================

@@ -11,7 +11,6 @@ IFS=$'\n\t'
 # -----------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK_DIR="${WORK_DIR:-$PWD}"
 
 # Load helpers (init_script loads env)
 source "$WORK_DIR/src/utils/helper.sh"

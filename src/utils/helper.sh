@@ -31,10 +31,22 @@ setup_environment() {
     set -euo pipefail
     IFS=$'\n\t'
     
-    # Determine work directory
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
-    WORK_DIR="${WORK_DIR:-$(cd "$script_dir/../.." && pwd)}"
+    # Use WORK_DIR if already set (by CLI), otherwise determine it
+    if [[ -z "${WORK_DIR:-}" ]]; then
+        # Find the project root by looking for load_env.sh
+        local search_dir="${PWD}"
+        while [[ "$search_dir" != "/" && "$search_dir" != "" ]]; do
+            if [[ -f "$search_dir/load_env.sh" ]]; then
+                WORK_DIR="$search_dir"
+                break
+            fi
+            search_dir="$(dirname "$search_dir")"
+        done
+        
+        if [[ -z "${WORK_DIR:-}" ]]; then
+            error "Could not find project root containing load_env.sh"
+        fi
+    fi
     
     # Load environment variables
     if [[ -f "$WORK_DIR/load_env.sh" ]]; then
@@ -117,11 +129,29 @@ detect_docker_compose() {
 }
 
 # -----------------------------------------------------------------------------
+# Directory Management
+# -----------------------------------------------------------------------------
+ensure_directory_exists() {
+    local dir="$1"
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir"
+        log "Created directory: $dir"
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Script Initialization
 # -----------------------------------------------------------------------------
 init_script() {
-    # Setup environment
-    setup_environment
+    # Always load environment variables if WORK_DIR is set
+    if [[ -n "${WORK_DIR:-}" ]]; then
+        if [[ -f "$WORK_DIR/load_env.sh" ]]; then
+            source "$WORK_DIR/load_env.sh"
+        fi
+    else
+        # Setup environment only if WORK_DIR is not already set
+        setup_environment
+    fi
     
     # Log script start
     local script_name
@@ -132,6 +162,6 @@ init_script() {
 # -----------------------------------------------------------------------------
 # Export functions for use in other scripts
 # -----------------------------------------------------------------------------
-export -f log warn error success debug
+export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
-export -f urlencode detect_docker_compose init_script
+export -f urlencode detect_docker_compose init_script ensure_directory_exists
