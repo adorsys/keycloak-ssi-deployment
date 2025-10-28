@@ -54,7 +54,7 @@ determine_project_root() {
         echo "$project_root"
     else
         echo "Keycloak SSI project not found. Please install the CLI:" >&2
-        echo "1. Run: ./keycloak-ssi install" >&2
+        echo "1. Run: ./keycloak-ssi.sh install" >&2
         exit 1
     fi
 }
@@ -272,6 +272,9 @@ cmd_install() {
     
     log "Installing project files to $project_install_dir..."
     
+    # Ensure the parent directory exists for the project installation
+    mkdir -p "$xdg_data_home"
+
     # Remove existing installation (whether symlink or directory)
     if [[ -e "$project_install_dir" ]]; then
         rm -rf "$project_install_dir"
@@ -282,7 +285,7 @@ cmd_install() {
 
     # Install CLI script
     rm -f "$install_path"
-    cp "$WORK_DIR/keycloak-ssi" "$install_dir/"
+    cp "$WORK_DIR/keycloak-ssi.sh" "$install_path"
     chmod +x "$install_path"
 
     # Check if PATH includes install directory
