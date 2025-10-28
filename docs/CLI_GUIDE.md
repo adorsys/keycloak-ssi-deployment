@@ -40,7 +40,7 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
    ```bash
    git clone https://github.com/adorsys/keycloak-ssi-deployment.git
    cd keycloak-ssi-deployment
-   ./keycloak-ssi install
+   ./keycloak-ssi.sh install
    ```
 
 2. **Verify installation:**
