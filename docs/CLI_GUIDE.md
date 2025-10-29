@@ -28,6 +28,13 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
 - **Keytool** — Java key and certificate management utility (included with JDK)
 - **jq** — lightweight and flexible command-line JSON processor
 - **figlet** — optional ASCII art generator for an enhanced CLI display
+- **Java Version:**
+  - A minimum of Java 17 is required.
+  - For compatibility with the `keycloak-ssi import` feature (which uses the Keycloak config CLI), Java 21 is recommended.
+    Make sure to set your JAVA_HOME environment variable accordingly:
+    ```bash
+    export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64/
+    ```
 
 ---
 
@@ -86,11 +93,11 @@ keycloak-ssi <command> [options]
 # 1️⃣ Setup Keycloak (first run - may take 5–10 minutes)
 keycloak-ssi setup
 
-# or import a preconfigured realm
-keycloak-ssi import
-
 # 2️⃣ Configure the realm and create a test user
 keycloak-ssi config
+
+# or import a preconfigured realm
+keycloak-ssi import
 
 # 3️⃣ Test credential flows
 keycloak-ssi test preauth IdentityCredential

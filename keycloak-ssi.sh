@@ -337,6 +337,9 @@ cmd_uninstall() {
 # =============================================================================
 
 main() {
+    # Check dependencies first
+    check_dependencies
+
     # Show banner
     show_banner
     
@@ -389,3 +392,4 @@ main() {
 
 # Run main function
 main "$@"
+

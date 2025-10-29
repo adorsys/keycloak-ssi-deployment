@@ -140,6 +140,22 @@ ensure_directory_exists() {
 }
 
 # -----------------------------------------------------------------------------
+# Prerequisite Checks
+# -----------------------------------------------------------------------------
+check_dependencies() {
+    local missing_deps=()
+    for dep in openssl keytool jq figlet; do
+        if ! command -v "$dep" &>/dev/null; then
+            missing_deps+=("$dep")
+        fi
+    done
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        error "Missing dependencies: ${missing_deps[*]}. Please install them and try again."
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Script Initialization
 # -----------------------------------------------------------------------------
 init_script() {
@@ -164,4 +180,4 @@ init_script() {
 # -----------------------------------------------------------------------------
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
-export -f urlencode detect_docker_compose init_script ensure_directory_exists
+export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies
