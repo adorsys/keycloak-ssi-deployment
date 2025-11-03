@@ -63,12 +63,26 @@ mkdir -p "$KC_INSTALL_DIR/providers"
 cp "$WORK_DIR/providers/"*.jar "$KC_INSTALL_DIR/providers"
 
 # ---------------------------------------------------------------------------
-# Start Keycloak
+# Start Keycloak (foreground by default; '-d' to detach and log to file)
 # ---------------------------------------------------------------------------
+
+DETACH_MODE="false"
+if [[ "${1:-}" == "-d" ]]; then
+  DETACH_MODE="true"
+fi
+
 log "Starting Keycloak with OID4VCI features..."
-(
-    export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD
-    cd "$KC_INSTALL_DIR" || error "Cannot cd to $KC_INSTALL_DIR"
-    eval "bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth" &
-)
-log "Keycloak startup initiated."
+export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD
+cd "$KC_INSTALL_DIR" || error "Cannot cd to $KC_INSTALL_DIR"
+
+if [[ "$DETACH_MODE" == "true" ]]; then
+  LOG_DIR="$WORK_DIR/target"
+  ensure_directory_exists "$LOG_DIR"
+  LOG_FILE="$LOG_DIR/keycloak.log"
+  log "Detaching Keycloak; logs will be written to $LOG_FILE"
+  nohup bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth" \
+    >"$LOG_FILE" 2>&1 &
+  disown || true
+else
+  exec bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"
+fi

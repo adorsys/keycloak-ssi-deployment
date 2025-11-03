@@ -3,7 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # -----------------------------------------------------------------------------
-# OID4VCI test deployment script
+# OID4VCI configuration script
 # - Ensures Keycloak is running
 # - Creates realm, registers key providers and clients
 # - Configures client scopes, SAML IdP, and validates OID4VCI config
@@ -201,4 +201,6 @@ for credential in "SteuerberaterCredential" "IdentityCredential" "KMACredential"
 done
 
 success "Keycloak server is running and OID4VCI credentials are configured successfully."
-log "Deployment script completed successfully."
+log "Configuration script completed successfully."
+
+

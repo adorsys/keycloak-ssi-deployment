@@ -12,6 +12,17 @@ if [ -z "$CREDENTIAL_ACCESS_TOKEN" ]; then
     exit 1
 fi
 
+# Ensure user_key_proof_header exists; if not, run the provisioning script
+if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
+    echo "user_key_proof_header.json not found. Running user provisioning to generate it..."
+    if [ -x "$WORK_DIR/src/setup/2.configure_user_4_account_client.sh" ]; then
+        WORK_DIR="$WORK_DIR" bash "$WORK_DIR/src/setup/2.configure_user_4_account_client.sh"
+    else
+        echo "Provisioning script not found or not executable: $WORK_DIR/src/setup/2.configure_user_4_account_client.sh" >&2
+        exit 1
+    fi
+fi
+
 # The proof timestamp
 iat=$(date +%s)
 

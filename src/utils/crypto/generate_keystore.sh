@@ -24,7 +24,7 @@ keytool -genkeypair \
     -keystore "$KEYCLOAK_KEYSTORE_FILE" -storepass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -alias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" -keypass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -storetype "$KEYCLOAK_KEYSTORE_TYPE" \
-    -dname "CN=ECDSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=CM"
+    -dname "CN=ECDSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangangte, ST=West, C=CM"
 
 # RSA signing key
 keytool -genkeypair \
@@ -32,7 +32,7 @@ keytool -genkeypair \
     -keystore "$KEYCLOAK_KEYSTORE_FILE" -storepass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -alias "$KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS" -keypass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -storetype "$KEYCLOAK_KEYSTORE_TYPE" \
-    -dname "CN=RSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=CM"
+    -dname "CN=RSA Signing Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangangte, ST=West, C=CM"
 
 # RSA encryption key
 keytool -genkeypair \
@@ -40,6 +40,6 @@ keytool -genkeypair \
     -keystore "$KEYCLOAK_KEYSTORE_FILE" -storepass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -alias "$KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS" -keypass "$KEYCLOAK_KEYSTORE_PASSWORD" \
     -storetype "$KEYCLOAK_KEYSTORE_TYPE" \
-    -dname "CN=RSA Encryption Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=CM"
+    -dname "CN=RSA Encryption Key, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangangte, ST=West, C=CM"
 
 log "Keystore generated successfully at $KEYCLOAK_KEYSTORE_FILE."

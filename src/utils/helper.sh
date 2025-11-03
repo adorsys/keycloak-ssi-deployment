@@ -16,8 +16,8 @@
 [[ -z "${NC:-}" ]] && readonly NC='\033[0m' # No Color
 
 # Standardized logging functions
-log()     { printf "\n${CYAN}[INFO]${NC}  %s\n" "$*"; }
-warn()    { printf "\n${YELLOW}[WARN]${NC}  %s\n" "$*" >&2; }
+log()     { printf "\n${CYAN}[INFO]${NC} %s\n" "$*"; }
+warn()    { printf "\n${YELLOW}[WARN]${NC} %s\n" "$*" >&2; }
 error()   { printf "\n${RED}[ERROR]${NC} %s\n" "$*" >&2; exit 1; }
 success() { printf "\n${GREEN}[SUCCESS]${NC} %s\n" "$*"; }
 debug()   { printf "\n${BLUE}[DEBUG]${NC} %s\n" "$*"; }
@@ -30,29 +30,33 @@ setup_environment() {
     # Set strict error handling
     set -euo pipefail
     IFS=$'\n\t'
-    
+
     # Use WORK_DIR if already set (by CLI), otherwise determine it
     if [[ -z "${WORK_DIR:-}" ]]; then
-        # Find the project root by looking for load_env.sh
+        # Find the project root by looking for a known marker
         local search_dir="${PWD}"
         while [[ "$search_dir" != "/" && "$search_dir" != "" ]]; do
-            if [[ -f "$search_dir/load_env.sh" ]]; then
+            if [[ -f "$search_dir/src/utils/helper.sh" || -f "$search_dir/docker-compose.yml" ]]; then
                 WORK_DIR="$search_dir"
                 break
             fi
             search_dir="$(dirname "$search_dir")"
         done
-        
+
         if [[ -z "${WORK_DIR:-}" ]]; then
-            error "Could not find project root containing load_env.sh"
+            error "Could not determine project root. Run from within the repository."
         fi
     fi
-    
+
     # Load environment variables
-    if [[ -f "$WORK_DIR/load_env.sh" ]]; then
-        source "$WORK_DIR/load_env.sh"
-    else
-        error "load_env.sh not found in $WORK_DIR"
+    if [[ -f "$WORK_DIR/.env" ]]; then
+        # shellcheck disable=SC1090
+        . "$WORK_DIR/.env"
+    fi
+    if [[ -f "$WORK_DIR/../env/.env" ]]; then
+        log "Using local properties from $WORK_DIR/../env/.env"
+        # shellcheck disable=SC1090
+        . "$WORK_DIR/../env/.env"
     fi
 }
 
@@ -159,16 +163,9 @@ check_dependencies() {
 # Script Initialization
 # -----------------------------------------------------------------------------
 init_script() {
-    # Always load environment variables if WORK_DIR is set
-    if [[ -n "${WORK_DIR:-}" ]]; then
-        if [[ -f "$WORK_DIR/load_env.sh" ]]; then
-            source "$WORK_DIR/load_env.sh"
-        fi
-    else
-        # Setup environment only if WORK_DIR is not already set
-        setup_environment
-    fi
-    
+    # Ensure environment and WORK_DIR are initialized
+    setup_environment
+
     # Log script start
     local script_name
     script_name="$(basename "${BASH_SOURCE[1]}")"

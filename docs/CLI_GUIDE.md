@@ -27,7 +27,7 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
 - **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
 - **Keytool** — Java key and certificate management utility (included with JDK)
 - **jq** — lightweight and flexible command-line JSON processor
-- **figlet** — optional ASCII art generator for an enhanced CLI display
+- **figlet** — ASCII art generator for an enhanced CLI display
 - **Java Version:**
   - A minimum of Java 17 is required.
   - For compatibility with the `keycloak-ssi import` feature (which uses the Keycloak config CLI), Java 21 is recommended.
@@ -38,29 +38,29 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
 
 ---
 
-## Installation
+## Installation (optional)
 
-### Quick Installation
+You can run the CLI directly from the cloned repository without installing it system-wide. Installation is optional and only needed if you want the `keycloak-ssi` command available globally.
 
-1. **Clone and install:**
+### Run without installation
 
-   ```bash
-   git clone https://github.com/adorsys/keycloak-ssi-deployment.git
-   cd keycloak-ssi-deployment
-   ./keycloak-ssi.sh install
-   ```
+```bash
+git clone https://github.com/adorsys/keycloak-ssi-deployment.git
+cd keycloak-ssi-deployment
+./keycloak-ssi.sh help
+```
 
-2. **Verify installation:**
-   ```bash
-   keycloak-ssi help
-   ```
+### Optional: Install globally
 
-The CLI tool follows the XDG Base Directory specification:
+```bash
+./keycloak-ssi.sh install
+keycloak-ssi help
+```
+
+The CLI follows the XDG Base Directory specification when installed:
 
 - **CLI Binary:** `~/.local/bin/keycloak-ssi`
 - **Project Files:** `~/.local/share/keycloak-ssi-deployment` (symbolic link)
-
-After installation, the CLI works from anywhere on your system without additional configuration.
 
 ---
 
@@ -78,8 +78,8 @@ keycloak-ssi <command> [options]
 | ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `install`                                  | Install CLI to system PATH                     | -                                                                                                                         |
 | `uninstall`                                | Remove CLI from system PATH                    | -                                                                                                                         |
-| `setup`                                    | Build and start Keycloak with OID4VCI          | `src/setup/0.start-kc-oid4vci.sh`                                                                                         |
-| `config`                                   | Configure realm, keys, clients, and test users | `src/setup/1.oid4vci_test_deployment.sh`, `src/setup/2.configure_user_4_account_client.sh`                                |
+| `setup [-d]`                               | Build and start Keycloak with OID4VCI          | `src/setup/0.start-kc-oid4vci.sh`                                                                                         |
+| `config`                                   | Configure realm, keys, clients, and test users | `src/setup/1.configure_oid4vci.sh`, `src/setup/2.configure_user_4_account_client.sh`                                      |
 | `test <preauth/authcode> <CredentialType>` | Test credential issuance flows                 | `src/credentials/request_credential.sh` (preauth), `src/credentials/request_credential_with_auth_code_flow.sh` (authcode) |
 | `import`                                   | Import a pre-configured realm                  | `src/utils/import_kc_config.sh`                                                                                           |
 | `stop`                                     | Stop running Keycloak                          | `src/utils/helper.sh` (stop_keycloak function)                                                                            |
@@ -91,7 +91,10 @@ keycloak-ssi <command> [options]
 
 ```bash
 # 1️⃣ Setup Keycloak (first run - may take 5–10 minutes)
+# Foreground (Ctrl+C to stop):
 keycloak-ssi setup
+# Detached (background, logs written to target/keycloak.log):
+keycloak-ssi setup -d
 
 # 2️⃣ Configure the realm and create a test user
 keycloak-ssi config

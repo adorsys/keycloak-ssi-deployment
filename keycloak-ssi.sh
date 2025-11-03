@@ -34,29 +34,21 @@ fi
 
 # Determine project root using XDG Base Directory specification
 determine_project_root() {
-    local project_root=""
-    
-    # Special case: if running install command, use script location
-    if [[ "${1:-}" == "install" ]]; then
-        local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        if [[ -f "$script_dir/src/utils/helper.sh" && -f "$script_dir/load_env.sh" ]]; then
-            echo "$script_dir"
-            return
-        fi
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Prefer running locally from the cloned repository
+    if [[ -f "$script_dir/src/utils/helper.sh" ]]; then
+        echo "$script_dir"
+        return
     fi
-    
-    # Normal case: use XDG Base Directory
+    # If installed, use XDG Base Directory
     local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
-    project_root="$xdg_data_home/keycloak-ssi-deployment"
-    
-    # Validate project files exist
-    if [[ -f "$project_root/src/utils/helper.sh" && -f "$project_root/load_env.sh" ]]; then
+    local project_root="$xdg_data_home/keycloak-ssi-deployment"
+    if [[ -f "$project_root/src/utils/helper.sh" ]]; then
         echo "$project_root"
-    else
-        echo "Keycloak SSI project not found. Please install the CLI:" >&2
-        echo "1. Run: ./keycloak-ssi.sh install" >&2
-        exit 1
+        return
     fi
+    echo "Keycloak SSI project not found. Run from the project root or install with './keycloak-ssi.sh install'." >&2
+    exit 1
 }
 
 # Set project root
@@ -78,7 +70,7 @@ show_help() {
 "  keycloak-ssi <command> [options]" \
 "" \
 "${CLI_CYAN}COMMANDS${CLI_NC}" \
-"  ${CLI_GREEN}setup${CLI_NC}                       Build and start Keycloak with OID4VCI features" \
+"  ${CLI_GREEN}setup [-d]${CLI_NC}                  Build and start Keycloak with OID4VCI features" \
 "  ${CLI_GREEN}config${CLI_NC}                      Configure realm, key providers, clients, and users" \
 "  ${CLI_GREEN}test${CLI_NC}                        <preauth|authcode> <CredentialType>   Test credential flows" \
 "  ${CLI_GREEN}import${CLI_NC}                      Import ready realm configuration" \
@@ -90,6 +82,7 @@ show_help() {
 "${CLI_CYAN}EXAMPLES${CLI_NC}" \
 "  keycloak-ssi install" \
 "  keycloak-ssi setup" \
+"  keycloak-ssi setup -d" \
 "  keycloak-ssi config" \
 "  keycloak-ssi test preauth IdentityCredential" \
 "  keycloak-ssi test authcode IdentityCredential" \
@@ -138,23 +131,19 @@ error() {
 # =============================================================================
 
 cmd_setup() {
+    local detach_flag="${1:-}"
     log "Setting up Keycloak with OID4VCI features..."
     log "This may take 5-10 minutes for first-time build..."
-    
-    # Run setup script in background to avoid signal issues
-    log "Starting Keycloak setup..."
-    WORK_DIR="$WORK_DIR" "$WORK_DIR/src/setup/0.start-kc-oid4vci.sh" &
-    local setup_pid=$!
-    
-    # Wait for setup to complete
-    log "Waiting for setup to complete..."
-    wait $setup_pid
-    local setup_exit_code=$?
-    
-    if [[ $setup_exit_code -ne 0 ]]; then
-        error "Setup failed with exit code $setup_exit_code"
+
+    # Start setup script in foreground by default; support '-d' to detach
+    if [[ "$detach_flag" == "-d" ]]; then
+        log "Starting Keycloak setup in detached mode..."
+        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/setup/0.start-kc-oid4vci.sh" -d
+    else
+        log "Starting Keycloak setup in foreground..."
+        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/setup/0.start-kc-oid4vci.sh"
     fi
-    
+
     # Wait for Keycloak to be ready
     log "Waiting for Keycloak to be ready..."
     for i in {1..120}; do
@@ -179,9 +168,9 @@ cmd_config() {
         error "Keycloak is not running. Run 'keycloak-ssi setup' first."
     fi
     
-    # Run both configuration scripts
-    log "Running OID4VCI test deployment configuration..."
-    "$WORK_DIR/src/setup/1.oid4vci_test_deployment.sh"
+    # Run configuration scripts
+    log "Running OID4VCI configuration..."
+    "$WORK_DIR/src/setup/1.configure_oid4vci.sh"
     
     log "Configuring user and account client..."
     "$WORK_DIR/src/setup/2.configure_user_4_account_client.sh"
@@ -342,21 +331,21 @@ main() {
 
     # Show banner
     show_banner
-    
-    # Check if we're in the right directory
-    if [[ ! -f "$WORK_DIR/src/utils/helper.sh" ]]; then
-        error "❌ Please run this script from the project root directory"
-    fi
-    
+
     # Load environment variables
-    if [[ -f "$WORK_DIR/load_env.sh" ]]; then
-        source "$WORK_DIR/load_env.sh"
+    if [[ -f "$WORK_DIR/.env" ]]; then
+        . "$WORK_DIR/.env"
     fi
-    
+    if [[ -f "$WORK_DIR/../env/.env" ]]; then
+        echo "Using local properties from $WORK_DIR/../env/.env"
+        . "$WORK_DIR/../env/.env"
+        echo "${KC_START:-}"
+    fi
+
     # Parse command
     case "${1:-help}" in
         "setup")
-            cmd_setup
+            cmd_setup "${2:-}"
             ;;
         "config")
             cmd_config

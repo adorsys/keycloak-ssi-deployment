@@ -24,7 +24,7 @@ if [[ ! -f "$FRANCIS_KEYSTORE_FILE" ]]; then
         -alias "$FRANCIS_KEYSTORE_ECDSA_KEY_ALIAS" \
         -keypass "$FRANCIS_KEYSTORE_PASSWORD" \
         -storetype "$FRANCIS_KEYSTORE_TYPE" \
-        -dname "CN=Francis Pouatcha, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangante, ST=West, C=Cameroon"
+        -dname "CN=Francis Pouatcha, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangangte, ST=West, C=Cameroon"
 else
     log "Keystore $FRANCIS_KEYSTORE_FILE already exists. Skipping generation."
 fi

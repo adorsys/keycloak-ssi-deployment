@@ -13,7 +13,7 @@ services:
 
   app:
     image: ghcr.io/adorsys/keycloak-ssi-deployment:latest
-    env_file: .env
+    # env_file: .env  # Optional: uncomment to load environment from a local .env file
     environment:
       - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/keycloak --db-username ${KC_DB_USERNAME} --db-password ${KC_DB_PASSWORD}
     depends_on:
