@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../load_env.sh"
 
 # Configuration
-NGROK_URL="https://7baf29ab3443.ngrok-free.app"
+NGROK_URL="https://bdaa5d6f1fb3.ngrok-free.app"
 KEYCLOAK_REALM_URL="$NGROK_URL/realms/oid4vc-vci"
 TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
 
