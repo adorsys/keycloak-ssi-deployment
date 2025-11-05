@@ -138,10 +138,10 @@ cmd_setup() {
     # Start setup script in foreground by default; support '-d' to detach
     if [[ "$detach_flag" == "-d" ]]; then
         log "Starting Keycloak setup in detached mode..."
-        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/setup/0.start-kc-oid4vci.sh" -d
+        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/deployment/0.start-kc-oid4vci.sh" -d
     else
         log "Starting Keycloak setup in foreground..."
-        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/setup/0.start-kc-oid4vci.sh"
+        WORK_DIR="$WORK_DIR" "$WORK_DIR/src/deployment/0.start-kc-oid4vci.sh"
     fi
 
     # Wait for Keycloak to be ready
@@ -170,10 +170,10 @@ cmd_config() {
     
     # Run configuration scripts
     log "Running OID4VCI configuration..."
-    "$WORK_DIR/src/setup/1.configure_oid4vci.sh"
+    "$WORK_DIR/src/deployment/1.oid4vci_test_deployment.sh"
     
     log "Configuring user and account client..."
-    "$WORK_DIR/src/setup/2.configure_user_4_account_client.sh"
+    "$WORK_DIR/src/deployment/2.configure_user_4_account_client.sh"
     
     success "Configuration completed"
     success "Test User: francis / $USER_FRANCIS_PASSWORD"

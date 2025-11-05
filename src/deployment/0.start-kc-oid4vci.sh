@@ -28,7 +28,7 @@ log "Continuing with script execution..."
 # Setup Keycloak (download/build/unpack, prepare keystore)
 # ---------------------------------------------------------------------------
 log "Preparing Keycloak..."
-"$WORK_DIR/src/setup/setup-kc-oid4vci.sh"
+"$WORK_DIR/src/deployment/setup-kc-oid4vci.sh"
 
 # ---------------------------------------------------------------------------
 # Detect Docker Compose command
