@@ -3,12 +3,13 @@
 .gitignore
 
 # Docs
-README.md
+docs/
 *.md
 
 # Target folders not needed in container
 target/
-keycloak-chart/
+infrastructure/keycloak-chart/
+infrastructure/terraform/
 
 # AWS and other configs
 .aws/
