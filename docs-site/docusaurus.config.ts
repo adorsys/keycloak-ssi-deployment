@@ -27,8 +27,20 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          routeBasePath: '/', // Serve docs from the root
           editUrl:
             'https://github.com/adorsys/keycloak-ssi-deployment/edit/main/docs-site/',
+          onlyIncludeVersions: ['0.1', '0.0.1'],
+          versions: {
+            '0.1': {
+              label: '0.1',
+              path: '0.1/introduction',
+            },
+            '0.0.1': {
+              label: '0.0.1',
+              path: '0.0.1',
+            },
+          },
         },
         blog: false,
         theme: { customCss: './src/css/custom.css' },
@@ -41,7 +53,17 @@ const config: Config = {
       title: 'Keycloak SSI Deployment',
       logo: { alt: 'Logo', src: 'img/logo.svg' },
       items: [
-        { to: '/docs/intro', label: 'Docs', position: 'left' },
+        {
+          type: 'docSidebar',
+          sidebarId: 'docs',
+          position: 'left',
+          label: 'Documentation',
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+          dropdownActiveClassDisabled: true,
+        },
         { href: 'https://github.com/adorsys/keycloak-ssi-deployment', label: 'GitHub', position: 'right' },
       ],
     },

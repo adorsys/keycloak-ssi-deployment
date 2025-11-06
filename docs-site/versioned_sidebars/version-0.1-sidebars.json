@@ -1,0 +1,21 @@
+{
+  "docs": [
+    {
+      "type": "category",
+      "label": "Keycloak SSI Deployment",
+      "link": {
+        "type": "doc",
+        "id": "introduction"
+      },
+      "items": [
+        "introduction",
+        "setup-and-installation",
+        "keycloak-configuration",
+        "credential-management",
+        "testing-and-usage",
+        "deployment",
+        "customization-and-extension"
+      ]
+    }
+  ]
+}

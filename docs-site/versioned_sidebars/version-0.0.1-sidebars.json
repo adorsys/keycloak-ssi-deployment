@@ -1,0 +1,15 @@
+{
+  "docs": [
+    {
+      "type": "category",
+      "label": "Keycloak SSI Deployment",
+      "link": {
+        "type": "doc",
+        "id": "index"
+      },
+      "items": [
+        "index"
+      ]
+    }
+  ]
+}
