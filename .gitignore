@@ -11,6 +11,9 @@ infrastructure/keycloak-chart/**/*.tgz
 # Temporary scripts
 *.tmp.sh
 
+# Keystore files
+*.pkcs12
+
 # Terraform state and cache
 terraform.tfstate
 terraform.tfstate.backup

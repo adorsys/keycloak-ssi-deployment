@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y git apt-utils curl jq && apt-get clean
 COPY .env ./
 
 # Copy necessary setup and utility scripts
-COPY src/deployment/setup-kc-oid4vci.sh src/utils/crypto/cert-config.txt src/utils/crypto/kc_keystore.pkcs12 ./
+COPY src/deployment/setup-kc-oid4vci.sh src/utils/crypto/cert-config.txt ./
 
 # Copy additional utility scripts used by setup
 COPY src/utils/crypto/generate-kc-certs.sh src/utils/crypto/generate_keystore.sh src/utils/crypto/generate_user_key.sh ./utils/
