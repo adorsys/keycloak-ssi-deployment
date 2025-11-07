@@ -17,8 +17,6 @@ These scripts typically output JSON Web Key (JWK) formatted keys or other crypto
 
 The Keycloak SSI Deployment is configured to facilitate the issuance of verifiable credentials. While the exact flow depends on the specific SSI implementation, Keycloak acts as the Identity Provider (IdP) that authenticates users and authorizes the issuance of credentials.
 
-The `openid4vc-rest-api.json` file suggests the presence of an OpenID for Verifiable Credentials (OID4VC) REST API, which is a common standard for issuing and managing verifiable credentials. This API would interact with Keycloak to verify user identity and then issue credentials based on predefined schemas and policies.
-
 The `credential_request_body.json` file likely contains a template or example of a credential request, outlining the type of credential being requested and any associated claims.
 
-The scripts `3.request_credentials_with_auth_code_flow.sh`, `3.retrieve_IdentityCredential.sh`, `3.retrieve_KMACredential.sh`, and `3.retrieve_SteuerberaterCredential.sh` indicate automated processes for requesting and retrieving specific types of credentials, possibly demonstrating different credential issuance flows (e.g., using the OAuth 2.0 Authorization Code Flow).
+The scripts `3.request_credentials_with_auth_code_flow.sh`, `3.retrieve_IdentityCredential.sh`, `3.retrieve_KMACredential.sh`, and `3.retrieve_SteuerberaterCredential.sh` automated processes for requesting and retrieving specific types of credentials, demonstrating different credential issuance flows (e.g., using the OAuth 2.0 Authorization Code Flow).

@@ -5,10 +5,11 @@
       "label": "Keycloak SSI Deployment",
       "link": {
         "type": "doc",
-        "id": "introduction"
+        "id": "index"
       },
       "items": [
-        "introduction",
+        "index",
+        "scripts-overview",
         "setup-and-installation",
         "keycloak-configuration",
         "credential-management",

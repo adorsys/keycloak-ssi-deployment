@@ -34,7 +34,7 @@ const config: Config = {
           versions: {
             '0.1': {
               label: '0.1',
-              path: '0.1/introduction',
+              path: '',
             },
             '0.0.1': {
               label: '0.0.1',
@@ -51,14 +51,8 @@ const config: Config = {
   themeConfig: {
     navbar: {
       title: 'Keycloak SSI Deployment',
-      logo: { alt: 'Logo', src: 'img/logo.svg' },
+      logo: { alt: 'Logo', src: 'img/logo.jpg' },
       items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'docs',
-          position: 'left',
-          label: 'Documentation',
-        },
         {
           type: 'docsVersionDropdown',
           position: 'right',
