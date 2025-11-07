@@ -1,3 +1,7 @@
+---
+sidebar_position: 4
+---
+
 # Setup and Installation
 
 This section guides you through setting up and installing the Keycloak SSI Deployment.
@@ -30,9 +34,11 @@ To start Keycloak with OID4VCI (OpenID for Verifiable Credentials Issuance) supp
 ```
 
 This script will:
-*   Build the necessary Docker images.
-*   Start the Keycloak container.
-*   Configure the Keycloak realm with initial settings for SSI.
+*   Sources common helper functions and environment variables from [`src/utils/helper.sh`](https://github.com/adorsys/keycloak-ssi-deployment/blob/main/src/utils/helper.sh).
+*   Executes [`src/deployment/setup-kc-oid4vci.sh`](https://github.com/adorsys/keycloak-ssi-deployment/blob/main/src/deployment/setup-kc-oid4vci.sh) to download, unpack, and prepare Keycloak.
+*   Starts the PostgreSQL database container using Docker Compose.
+*   Copies custom Keycloak providers (JAR files) into the Keycloak installation directory.
+*   Starts Keycloak with OID4VCI and OID4VPAUTH features enabled.
 
 You can verify that Keycloak is running by accessing its administration console (usually at `http://localhost:8080/auth/admin`).
 

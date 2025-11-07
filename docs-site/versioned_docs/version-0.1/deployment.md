@@ -4,7 +4,7 @@ This section describes how to deploy the Keycloak SSI solution using the provide
 
 ## Helm Chart Structure
 
-The [keycloak-chart](https://github.com/adorsys/keycloak-ssi-deployment/tree/main/keycloak-chart) directory contains the Helm chart for deploying Keycloak. Key files and directories include:
+The [infrastructure/keycloak-chart](https://github.com/adorsys/keycloak-ssi-deployment/tree/main/infrastructure/keycloak-chart) directory contains the Helm chart for deploying Keycloak. Key files and directories include:
 
 *   **`Chart.yaml`**: Defines the metadata for the Helm chart, such as its name, version, and description.
 *   **`values.yaml`**: Contains default configuration values for the chart. You can override these values during deployment to customize the Keycloak instance.
@@ -30,7 +30,7 @@ To deploy the Keycloak SSI solution to a Kubernetes cluster using Helm, follow t
 2.  **Install the chart:**
     Navigate to the root of the `keycloak-ssi-deployment` repository and install the chart. You can override default values using the `--set` flag or by providing a custom `values.yaml` file.
     ```bash
-    helm install my-keycloak ./keycloak-chart -f my-values.yaml
+    helm install my-keycloak ./infrastructure/keycloak-chart -f my-values.yaml
     ```
     Replace `my-keycloak` with your desired release name and `my-values.yaml` with your custom values file.
 
