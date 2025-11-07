@@ -1,19 +1,5 @@
 # Keycloak SSI CLI Guide
 
-```
-      __ __                __            __      __________ ____
-     / //_/__  __  _______/ /___  ____ _/ /__   / ___/ ___//  _/
-    / ,< / _ \/ / / / ___/ / __ \/ __ `/ //_/   \__ \\__ \ / /
-   / /| /  __/ /_/ / /__/ / /_/ / /_/ / ,<     ___/ /__/ // /
-  /_/ |_\___/\__, /\___/_/\____/\__,_/_/|_|   /____/____/___/
-            /____/
-```
-
-CLI Tool • Deployment • Configuration • Testing
-
----
-
-## Overview
 
 The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
 It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
@@ -111,4 +97,3 @@ keycloak-ssi stop
 
 # 5️⃣ Uninstall the CLI
 keycloak-ssi uninstall
-```

@@ -23,26 +23,6 @@ git clone https://github.com/adorsys/keycloak-ssi-deployment.git
 cd keycloak-ssi-deployment
 ```
 
-## Starting Keycloak
+## Recommended approach
 
-The project includes several scripts to help you start and manage the Keycloak instance.
-
-To start Keycloak with OID4VCI (OpenID for Verifiable Credentials Issuance) support, execute the following script:
-
-```bash
-./0.start-kc-oid4vci.sh
-```
-
-This script will:
-*   Sources common helper functions and environment variables from [`src/utils/helper.sh`](https://github.com/adorsys/keycloak-ssi-deployment/blob/main/src/utils/helper.sh).
-*   Executes [`src/deployment/setup-kc-oid4vci.sh`](https://github.com/adorsys/keycloak-ssi-deployment/blob/main/src/deployment/setup-kc-oid4vci.sh) to download, unpack, and prepare Keycloak.
-*   Starts the PostgreSQL database container using Docker Compose.
-*   Copies custom Keycloak providers (JAR files) into the Keycloak installation directory.
-*   Starts Keycloak with OID4VCI and OID4VPAUTH features enabled.
-
-You can verify that Keycloak is running by accessing its administration console (usually at `http://localhost:8080/auth/admin`).
-
-To stop the Keycloak instance, use the following script:
-
-```bash
-./kc-stop.sh
+** There are two options. Use the CLI tool refered in this guide or proceed runnign the scrips in order. **
