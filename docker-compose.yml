@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: postgres
@@ -12,7 +10,9 @@ services:
       - "${KC_DB_EXPOSED_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+
   app:
+    # image: ghcr.io/adorsys/keycloak-ssi-deployment:latest
     build:
       context: .
     env_file: .env

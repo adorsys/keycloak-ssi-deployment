@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Helm
@@ -22,29 +22,31 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/helm
-          key: ${{ runner.os }}-helm-${{ hashFiles('keycloak-chart/Chart.lock') }}
+          key: ${{ runner.os }}-helm-${{ hashFiles('infrastructure/keycloak-chart/Chart.lock') }}
           restore-keys: |
             ${{ runner.os }}-helm-
 
       - name: Helm lint
-        run: helm lint ./keycloak-chart
+        run: helm lint ./infrastructure/keycloak-chart
 
-      - name: Package Helm Charts
+      - name: Package Helm chart
         run: |
-          helm package ./keycloak-chart && mv keycloak-chart*.tgz ocr-keycloak.tgz
+          cd infrastructure/keycloak-chart
+          helm dependency build
+          helm package .
+          mv keycloak-chart-*.tgz ../../ocr-keycloak.tgz
 
-      - name: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push Helm Charts to GitHub Container Registry (GHCR)
+      - name: Push Helm Chart to GHCR as OCI artifact
         run: |
           CHART_REPO="ghcr.io/${{ github.repository }}"
           helm push ./ocr-keycloak.tgz oci://$CHART_REPO/keycloak
 
-      - name: Clean up temporary files
-        run: |
-          rm -f ocr-*.tgz
+      - name: Clean up
+        run: rm -f ./ocr-keycloak.tgz
