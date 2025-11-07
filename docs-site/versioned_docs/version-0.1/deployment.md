@@ -4,7 +4,7 @@ This section describes how to deploy the Keycloak SSI solution using the provide
 
 ## Helm Chart Structure
 
-The [`keycloak-chart/`](keycloak-chart/) directory contains the Helm chart for deploying Keycloak. Key files and directories include:
+The [keycloak-chart](https://github.com/adorsys/keycloak-ssi-deployment/tree/main/keycloak-chart) directory contains the Helm chart for deploying Keycloak. Key files and directories include:
 
 *   **`Chart.yaml`**: Defines the metadata for the Helm chart, such as its name, version, and description.
 *   **`values.yaml`**: Contains default configuration values for the chart. You can override these values during deployment to customize the Keycloak instance.
