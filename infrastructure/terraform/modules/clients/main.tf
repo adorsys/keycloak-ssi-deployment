@@ -6,49 +6,29 @@ terraform {
   }
 }
 
-resource "keycloak_openid_client" "openid4vc_rest_api" {
+
+resource "keycloak_openid_client" "clients" {
+  for_each = var.clients
+
   realm_id                     = var.realm_id
-  client_id                    = "openid4vc-rest-api"
-  name                         = "openid4vc-rest-api"
-  enabled                      = true
-  access_type                  = "CONFIDENTIAL"
-  standard_flow_enabled        = true
-  direct_access_grants_enabled = true
-  valid_redirect_uris = [
-    "https://localhost:8443/callback",
-    "https://issuer.eudi-adorsys.com/services/*",
-    "http://back.localhost.com/*"
-  ]
-  web_origins = [
-    "https://issuer.eudi-adorsys.com/services",
-    "https://localhost:8443"
-  ]
-  client_secret = var.client_secret
+  client_id                    = each.key
+  name                         = each.value.name
+  enabled                      = each.value.enabled
+  access_type                  = each.value.access_type
+  standard_flow_enabled        = each.value.standard_flow_enabled
+  direct_access_grants_enabled = each.value.direct_access_grants_enabled
+  valid_redirect_uris          = each.value.valid_redirect_uris
+  web_origins                  = each.value.web_origins
+  client_secret                = try(each.value.client_secret, null)
+  full_scope_allowed           = each.value.full_scope_allowed
 }
 
-resource "keycloak_openid_client" "test_client" {
-  realm_id                     = var.realm_id
-  client_id                    = "oid4vc-demo-public"
-  name                         = "oid4vc-demo-public"
-  enabled                      = true
-  access_type                  = "PUBLIC"
-  standard_flow_enabled        = true
-  direct_access_grants_enabled = false
-  root_url                     = var.test_client_url
-  base_url                     = var.test_client_url
-  valid_redirect_uris = [
-    "${var.test_client_url}/*"
-  ]
-  web_origins = [
-    var.test_client_url
-  ]
-}
-
-resource "null_resource" "apply_test_client_attributes" {
-  depends_on = [keycloak_openid_client.test_client]
+resource "null_resource" "apply_client_attributes" {
+  for_each = keycloak_openid_client.clients
 
   triggers = {
-    client_id = keycloak_openid_client.test_client.id
+    client_id       = each.value.id
+    attributes_hash = jsonencode(var.clients[each.key].attributes)
   }
 
   provisioner "local-exec" {
@@ -67,35 +47,41 @@ resource "null_resource" "apply_test_client_attributes" {
         -d "password=$KC_ADMIN_PASS" \
         -d "grant_type=password" | jq -r .access_token)
 
-      CLIENT_CFG=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/clients/${keycloak_openid_client.test_client.id}" -H "Authorization: Bearer $TOKEN")
+      CLIENT_CFG=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/clients/${each.value.id}" -H "Authorization: Bearer $TOKEN")
 
-      UPDATED=$(echo "$CLIENT_CFG" | jq --arg URL "${var.test_client_url}" '.attributes += {"oid4vci.enabled":"true","post.logout.redirect.uris": ($URL+"##"+$URL+"/*") }')
+      ATTRIBUTES='${jsonencode(var.clients[each.key].attributes)}'
 
-      curl -s -k -X PUT "$KC_URL/admin/realms/$REALM/clients/${keycloak_openid_client.test_client.id}" \
+      UPDATED=$(echo "$CLIENT_CFG" | jq --argjson attrs "$ATTRIBUTES" '.attributes += $attrs')
+
+      curl -s -k -X PUT "$KC_URL/admin/realms/$REALM/clients/${each.value.id}" \
         -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "$UPDATED" > /dev/null
 
-      echo "oid4vc-demo-public attributes applied."
+      echo "Attributes for client ${each.key} applied."
     EOT
     interpreter = ["bash", "-c"]
   }
 }
 
-# Attach optional client scopes to oid4vc-demo-public
-resource "null_resource" "attach_optional_scopes_public" {
-  depends_on = [null_resource.apply_test_client_attributes]
+resource "null_resource" "apply_optional_scopes" {
+  for_each = keycloak_openid_client.clients
+
+  depends_on = [null_resource.apply_client_attributes]
 
   triggers = {
-    client_id = keycloak_openid_client.test_client.id
+    client_id      = each.value.id
+    scopes_applied = jsonencode(var.client_scopes_dependency)
   }
 
   provisioner "local-exec" {
     command     = <<-EOT
-      set -e
+      set -euo pipefail
 
       KC_ADMIN_USER="admin"
       KC_ADMIN_PASS="${var.admin_password}"
       KC_URL="${var.keycloak_url}"
       REALM="${var.realm_name}"
+      CLIENT_ID="${each.value.id}"
+      OPTIONAL_SCOPES='["IdentityCredential", "KMACredential", "SteuerberaterCredential"]'
 
       TOKEN=$(curl -s -k -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
@@ -104,112 +90,20 @@ resource "null_resource" "attach_optional_scopes_public" {
         -d "password=$KC_ADMIN_PASS" \
         -d "grant_type=password" | jq -r .access_token)
 
-      # Get client internal ID by clientId
-      CLIENT_ID=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/clients?clientId=${keycloak_openid_client.test_client.client_id}" \
-        -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id')
+      # Get all available scopes in the realm
+      ALL_SCOPES=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/client-scopes" -H "Authorization: Bearer $TOKEN")
 
-      attach_scope() {
-        SCOPE_NAME=$1
-        SCOPE_ID=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/client-scopes" \
-          -H "Authorization: Bearer $TOKEN" | jq -r ".[] | select(.name==\"$SCOPE_NAME\") | .id")
-        curl -s -k -X PUT "$KC_URL/admin/realms/$REALM/clients/$CLIENT_ID/optional-client-scopes/$SCOPE_ID" \
-          -H "Authorization: Bearer $TOKEN"
-        echo "Attached optional scope: $SCOPE_NAME"
-      }
-
-      attach_scope "IdentityCredential"
-      attach_scope "SteuerberaterCredential"
-      attach_scope "KMACredential"
-
-      echo "All optional scopes attached to oid4vc-demo-public."
-    EOT
-    interpreter = ["bash", "-c"]
-  }
-}
-
-resource "null_resource" "apply_client_attributes" {
-  depends_on = [keycloak_openid_client.openid4vc_rest_api]
-
-  triggers = {
-    client_id = keycloak_openid_client.openid4vc_rest_api.id
-  }
-
-  provisioner "local-exec" {
-    command     = <<-EOT
-      set -e
-
-      KC_ADMIN_USER="admin"
-      KC_ADMIN_PASS="${var.admin_password}"
-      KC_URL="${var.keycloak_url}"
-      KC_REALM="master"
-
-      TOKEN=$(curl -s -k -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "client_id=admin-cli" \
-        -d "username=$KC_ADMIN_USER" \
-        -d "password=$KC_ADMIN_PASS" \
-        -d "grant_type=password" | jq -r .access_token)
-
-      CLIENT_CONFIG=$(curl -s -k -X GET "$KC_URL/admin/realms/${var.realm_name}/clients/${keycloak_openid_client.openid4vc_rest_api.id}" \
-        -H "Authorization: Bearer $TOKEN")
-
-      curl -s -k -X PUT "$KC_URL/admin/realms/${var.realm_name}/clients/${keycloak_openid_client.openid4vc_rest_api.id}" \
-        -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "$(echo "$CLIENT_CONFIG" | jq '.attributes += {
-          "oid4vci.enabled": "true",
-          "client.secret.creation.time": "1719785014",
-          "post.logout.redirect.uris": "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
-        }')"
-
-      echo "Client attributes applied successfully."
-    EOT
-    interpreter = ["bash", "-c"]
-  }
-}
-
-resource "null_resource" "attach_optional_scopes" {
-  depends_on = [null_resource.apply_client_attributes]
-
-  triggers = {
-    client_id = keycloak_openid_client.openid4vc_rest_api.id
-  }
-
-  provisioner "local-exec" {
-    command     = <<-EOT
-      set -e
-
-      KC_ADMIN_USER="admin"
-      KC_ADMIN_PASS="${var.admin_password}"
-      KC_URL="${var.keycloak_url}"
-      KC_REALM="master"
-
-      TOKEN=$(curl -s -k -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "client_id=admin-cli" \
-        -d "username=$KC_ADMIN_USER" \
-        -d "password=$KC_ADMIN_PASS" \
-        -d "grant_type=password" | jq -r .access_token)
-
-      # Get client internal ID
-      CLIENT_ID=$(curl -s -k -X GET "$KC_URL/admin/realms/${var.realm_name}/clients?clientId=${keycloak_openid_client.openid4vc_rest_api.client_id}" \
-        -H "Authorization: Bearer $TOKEN" | jq -r '.[0].id')
-
-      attach_scope() {
-        SCOPE_NAME=$1
-        SCOPE_ID=$(curl -s -k -X GET "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
-          -H "Authorization: Bearer $TOKEN" | jq -r ".[] | select(.name==\"$SCOPE_NAME\") | .id")
-        curl -s -k -X PUT "$KC_URL/admin/realms/${var.realm_name}/clients/$CLIENT_ID/optional-client-scopes/$SCOPE_ID" \
-          -H "Authorization: Bearer $TOKEN"
-        echo "Attached optional scope: $SCOPE_NAME"
-      }
-
-      # Attach the custom scopes
-      attach_scope "IdentityCredential"
-      attach_scope "SteuerberaterCredential"
-      attach_scope "KMACredential"
-
-      echo "All optional scopes attached successfully."
+      # For each optional scope, find its ID and add it to the client
+      for scope_name in $(echo "$OPTIONAL_SCOPES" | jq -r '.[]'); do
+        SCOPE_ID=$(echo "$ALL_SCOPES" | jq -r --arg name "$scope_name" '.[] | select(.name == $name) | .id')
+        if [ -n "$SCOPE_ID" ]; then
+          curl -s -k -X PUT "$KC_URL/admin/realms/$REALM/clients/$CLIENT_ID/optional-client-scopes/$SCOPE_ID" \
+            -H "Authorization: Bearer $TOKEN" > /dev/null
+          echo "Assigned optional scope $scope_name to client ${each.key}."
+        else
+          echo "Warning: Optional scope $scope_name not found."
+        fi
+      done
     EOT
     interpreter = ["bash", "-c"]
   }
@@ -217,7 +111,7 @@ resource "null_resource" "attach_optional_scopes" {
 
 # Optionally update sd-jwt authenticator VCT via admin REST API
 resource "null_resource" "update_sdjwt_vct" {
-  depends_on = [null_resource.attach_optional_scopes]
+  depends_on = [null_resource.apply_optional_scopes]
 
   triggers = {
     realm_name = var.realm_name

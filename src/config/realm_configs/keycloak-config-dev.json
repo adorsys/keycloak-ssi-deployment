@@ -3,7 +3,8 @@
   "realm": "oid4vc-vci",
   "enabled": true,
   "attributes": {
-    "preAuthorizedCodeLifespanS": "120"
+    "preAuthorizedCodeLifespanS": "120",
+    "status-list-server-url": "https://statuslist.eudi-adorsys.com"
   },
   "users": [
     {

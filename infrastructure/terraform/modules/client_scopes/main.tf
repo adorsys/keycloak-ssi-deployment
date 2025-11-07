@@ -7,20 +7,18 @@ terraform {
 }
 
 locals {
-  identity_credential_json      = file("${path.root}/jsons/scopes/client-scope-identity_credential.json")
-  steuerberater_credential_json = file("${path.root}/jsons/scopes/client-scope-stbk_westfalen_lippe.json")
-  kma_credential_json           = file("${path.root}/jsons/scopes/client-scope-kma_credential.json")
+  # Find all .json files in the scopes directory
+  client_scope_files = fileset("${path.root}/jsons/scopes", "*.json")
 }
 
 resource "null_resource" "apply_custom_oid4vc_client_scopes" {
+  for_each = toset(local.client_scope_files)
+
   depends_on = [var.realm_id]
 
   triggers = {
-    oid4vc_client_scopes_hash = join(",", [
-      sha256(local.identity_credential_json),
-      sha256(local.steuerberater_credential_json),
-      sha256(local.kma_credential_json)
-    ])
+    # Trigger a re-run if the file content changes
+    client_scope_hash = filemd5("${path.root}/jsons/scopes/${each.value}")
   }
 
   provisioner "local-exec" {
@@ -38,34 +36,17 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
         -d "password=$KC_ADMIN_PASS" \
         -d "grant_type=password" | jq -r .access_token)
 
-      echo "Importing OID4VC client scopes via curl..."
+      echo "Importing OID4VC client scope from ${each.value} via curl..."
 
-      # Import IdentityCredential scope
-      cat <<EOF | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
+      # Import the client scope
+      curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        --data-binary @-
-      ${local.identity_credential_json}
-      EOF
+        --data-binary @"${path.root}/jsons/scopes/${each.value}"
 
-      # Import SteuerberaterCredential scope
-      cat <<EOF | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
-        -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        --data-binary @-
-      ${local.steuerberater_credential_json}
-      EOF
-
-      # Import KMACredential scope
-      cat <<EOF | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
-        -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        --data-binary @-
-      ${local.kma_credential_json}
-      EOF
-
-      echo "Custom OID4VC client scopes imported."
+      echo "Custom OID4VC client scope from ${each.value} imported."
     EOT
     interpreter = ["bash", "-c"]
   }
 }
+
