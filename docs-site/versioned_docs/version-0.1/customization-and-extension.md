@@ -15,7 +15,7 @@ To develop and integrate your own Keycloak plugins:
 
 ## Terraform Modules
 
-The Terraform modules in [`config/terraform/modules/`](config/terraform/modules/) provide a structured way to extend and customize your Keycloak configuration. You can:
+The Terraform modules in [`config/terraform/modules/`](https://github.com/adorsys/keycloak-ssi-deployment/tree/main/config/terraform/modules) provide a structured way to extend and customize your Keycloak configuration. You can:
 
 *   **Create new modules**: Develop custom Terraform modules to manage additional Keycloak resources or integrate with other services.
 *   **Modify existing modules**: Adjust the existing modules to fit specific requirements, such as adding new client attributes or realm settings.
