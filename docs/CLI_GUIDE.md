@@ -13,6 +13,28 @@ CLI Tool • Deployment • Configuration • Testing
 
 ---
 
+## Configuration
+
+The CLI uses a configuration system based on shell environment variables for better organization and maintainability. Configuration is managed through `config.yaml` in the project root.
+
+### Configuration Structure
+
+The `config.yaml` file contains all configuration settings with preserved comments from the original `.env` file.
+
+### Override Mechanisms
+
+The system supports multiple levels of configuration overrides:
+
+1. **Environment Variables** (highest priority): `SECTION_KEY=value` format
+2. **Partial Overrides**: `config.override.yaml` for environment-specific overrides
+3. **Base Configuration**: `config.yaml` (default values)
+
+### Environment Variable Injection
+
+Configuration values support environment variable injection using `${VAR_NAME}` syntax.
+
+---
+
 ## Overview
 
 The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
@@ -27,6 +49,7 @@ Before using the CLI tool, ensure the following dependencies are installed on yo
 - **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
 - **Keytool** — Java key and certificate management utility (included with JDK)
 - **jq** — lightweight and flexible command-line JSON processor
+- **yq** — portable command-line YAML processor (used for configuration management)
 - **figlet** — ASCII art generator for an enhanced CLI display
 - **Java Version:**
   - A minimum of Java 17 is required.
