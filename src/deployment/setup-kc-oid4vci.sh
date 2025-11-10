@@ -18,21 +18,21 @@ init_script
 # ---------------------------------------------------------------------------
 # Ensure a directory exists
 # ---------------------------------------------------------------------------
-ensure_directory_exists "$TARGET_DIR"
-ensure_directory_exists "$TOOLS_DIR"
+ensure_directory_exists "$PROJECT_TARGET_DIR"
+ensure_directory_exists "$PROJECT_TOOLS_DIR"
 
 # ---------------------------------------------------------------------------
 # Download Keycloak tarball if it does not exist
 # ---------------------------------------------------------------------------
 download_tarball() {
-    if [[ ! -f "$KEYCLOAK_TARBALL" ]]; then
-        log "Downloading Keycloak $KC_VERSION tarball..."
-        curl -fSL -o "$KEYCLOAK_TARBALL" \
-            "https://github.com/keycloak/keycloak/releases/download/$KC_VERSION/keycloak-$KC_VERSION.tar.gz" \
+    if [[ ! -f "$KEYCLOAK_TARBALL_PATH" ]]; then
+        log "Downloading Keycloak $KEYCLOAK_VERSION tarball..."
+        curl -fSL -o "$KEYCLOAK_TARBALL_PATH" \
+            "https://github.com/keycloak/keycloak/releases/download/$KEYCLOAK_VERSION/keycloak-$KEYCLOAK_VERSION.tar.gz" \
             || error "Could not download Keycloak tarball"
-        log "Keycloak tarball downloaded to $KEYCLOAK_TARBALL."
+        log "Keycloak tarball downloaded to $KEYCLOAK_TARBALL_PATH."
     else
-        log "Keycloak tarball already exists at $KEYCLOAK_TARBALL."
+        log "Keycloak tarball already exists at $KEYCLOAK_TARBALL_PATH."
     fi
 }
 
@@ -40,23 +40,24 @@ download_tarball() {
 # Clone custom Keycloak repository and build if needed
 # ---------------------------------------------------------------------------
 clone_and_build_keycloak() {
-    local repo_url="${KC_REPO_URL:-https://github.com/adorsys/keycloak-oid4vc.git}"
-    local target_dir="$TARGET_DIR/$KC_OID4VCI"
+    local repo_url="${KEYCLOAK_REPO_URL:-https://github.com/adorsys/keycloak-oid4vc.git}"
+    local target_dir="$PROJECT_TARGET_DIR/$KEYCLOAK_OID4VCI_DIR"
     local build_artifact="$target_dir/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz"
 
-    if [[ ! -d "$target_dir" ]]; then
-        log "Cloning Keycloak repository from $repo_url..."
-        git clone --depth 1 --branch "$KC_TARGET_BRANCH" "$repo_url" "$target_dir" \
-            || error "Could not clone the repository"
-        log "Keycloak cloned into $target_dir."
-    else
-        log "Keycloak repository already exists at $target_dir."
+    if [[ -d "$target_dir" ]]; then
+        log "Removing existing Keycloak repository at $target_dir..."
+        rm -rf "$target_dir" || error "Failed to remove existing repository"
     fi
+
+    log "Cloning Keycloak repository from $repo_url..."
+    git clone --depth 1 --branch "$KEYCLOAK_TARGET_BRANCH" "$repo_url" "$target_dir" \
+        || error "Could not clone the repository"
+    log "Keycloak cloned into $target_dir."
 
     if [[ ! -f "$build_artifact" ]]; then
         log "Building Keycloak..."
         cd "$target_dir" || error "Cannot cd into $target_dir"
-        ./mvnw clean install -DskipTests || error "Failed to build Keycloak"
+        ./mvnw clean install -Dmaven.test.skip=true -U || error "Failed to build Keycloak"
         log "Keycloak build completed successfully."
     else
         log "Keycloak build artifact exists. Skipping build."
@@ -67,7 +68,7 @@ clone_and_build_keycloak() {
 # Determine installation mode
 # ---------------------------------------------------------------------------
 KC_USE_UPSTREAM=true
-if [[ "$KC_VERSION" == "999.0.0-SNAPSHOT" ]]; then
+if [[ "$KEYCLOAK_VERSION" == "999.0.0-SNAPSHOT" ]]; then
     KC_USE_UPSTREAM=false
 fi
 
@@ -77,19 +78,19 @@ fi
 unpack_keycloak() {
     local tar_file
     if [[ "$KC_USE_UPSTREAM" == true ]]; then
-        tar_file="$KEYCLOAK_TARBALL"
+        tar_file="$KEYCLOAK_TARBALL_PATH"
     else
-        tar_file="$TARGET_DIR/$KC_OID4VCI/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz"
+        tar_file="$PROJECT_TARGET_DIR/$KEYCLOAK_OID4VCI_DIR/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz"
     fi
 
-    if [[ -d "$KC_INSTALL_DIR" ]]; then
+    if [[ -d "$KEYCLOAK_INSTALL_DIR" ]]; then
         log "Removing existing Keycloak installation..."
-        rm -rf "$KC_INSTALL_DIR" || error "Failed to remove existing installation"
+        rm -rf "$KEYCLOAK_INSTALL_DIR" || error "Failed to remove existing installation"
     fi
 
     log "Unpacking Keycloak..."
-    tar xzf "$tar_file" -C "$TOOLS_DIR" || error "Could not unpack Keycloak tarball"
-    log "Keycloak unpacked to $KC_INSTALL_DIR."
+    tar xzf "$tar_file" -C "$PROJECT_TOOLS_DIR" || error "Could not unpack Keycloak tarball"
+    log "Keycloak unpacked to $KEYCLOAK_INSTALL_DIR."
 }
 
 # ---------------------------------------------------------------------------
@@ -110,7 +111,7 @@ cd "$WORK_DIR" || error "Cannot return to working directory"
 # ---------------------------------------------------------------------------
 # Generate SSL keys if trust store does not exist
 # ---------------------------------------------------------------------------
-if [[ ! -f "$KC_TRUST_STORE" ]]; then
+if [[ ! -f "$SSL_TRUST_STORE" ]]; then
     log "Generating SSL keys..."
     source "$WORK_DIR/src/utils/crypto/generate-kc-certs.sh"
 else
@@ -120,10 +121,10 @@ fi
 # ---------------------------------------------------------------------------
 # Generate or reuse keystore
 # ---------------------------------------------------------------------------
-KEYSTORE_BASENAME=$(basename "$KEYCLOAK_KEYSTORE_FILE")
+KEYSTORE_BASENAME=$(basename "$KEYSTORE_FILE")
 if [[ -f "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" ]]; then
     log "Reusing existing keystore $WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME..."
-    cp "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" "$KEYCLOAK_KEYSTORE_FILE"
+    cp "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" "$KEYSTORE_FILE"
 else
     log "Generating new keystore..."
     source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore"

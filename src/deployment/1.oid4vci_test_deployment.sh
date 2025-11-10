@@ -25,7 +25,7 @@ log "Keycloak is running (PID: $keycloak_pid)."
 # -----------------------------------------------------------------------------
 # Helper for executing kcadm
 # -----------------------------------------------------------------------------
-KCADM="$KC_INSTALL_DIR/bin/kcadm.sh"
+KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
 if [[ ! -x "$KCADM" ]]; then
   error "kcadm.sh not found or not executable at: $KCADM"
 fi
@@ -34,9 +34,9 @@ fi
 # Authenticate admin
 # -----------------------------------------------------------------------------
 log "Authenticating admin user..."
-"$KCADM" config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
-"$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
-    --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
+"$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
+"$KCADM" config credentials --server "$URLS_ADMIN_ADDR" --realm master \
+    --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
 
 # -----------------------------------------------------------------------------
 # Create realm
@@ -61,11 +61,11 @@ configure_key_provider() {
     error "Key provider template not found: $json_template"
   fi
 
-  jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
-     --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
-     --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
+  jq --arg keystore "$KEYSTORE_FILE" \
+     --arg keystorePassword "$KEYSTORE_PASSWORD" \
+     --arg keystoreType "$KEYSTORE_TYPE" \
      --arg keyAlias "$alias" \
-     --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
+     --arg keyPassword "$KEYSTORE_PASSWORD" \
      '.config.keystore = [$keystore] |
       .config.keystorePassword = [$keystorePassword] |
       .config.keystoreType = [$keystoreType] |
@@ -93,21 +93,21 @@ register_key_provider() {
 
 # ECDSA
 if [[ -f "$ECDSA_JSON" ]]; then
-  ECDSA_PROVIDER_JSON=$(configure_key_provider "$ECDSA_JSON" "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS")
+  ECDSA_PROVIDER_JSON=$(configure_key_provider "$ECDSA_JSON" "$KEYSTORE_ALIASES_ECDSA_KEY")
   NAME=$(jq -r '.name' "$ECDSA_JSON")
   register_key_provider "$NAME" "$ECDSA_PROVIDER_JSON"
 fi
 
 # RSA Signing
 if [[ -f "$RSA_JSON" ]]; then
-  RSA_PROVIDER_JSON=$(configure_key_provider "$RSA_JSON" "$KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS")
+  RSA_PROVIDER_JSON=$(configure_key_provider "$RSA_JSON" "$KEYSTORE_ALIASES_RSA_SIG_KEY")
   NAME=$(jq -r '.name' "$RSA_JSON")
   register_key_provider "$NAME" "$RSA_PROVIDER_JSON"
 fi
 
 # RSA Encryption
 if [[ -f "$RSA_ENC_JSON" ]]; then
-  RSA_ENC_PROVIDER_JSON=$(configure_key_provider "$RSA_ENC_JSON" "$KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS")
+  RSA_ENC_PROVIDER_JSON=$(configure_key_provider "$RSA_ENC_JSON" "$KEYSTORE_ALIASES_RSA_ENC_KEY")
   NAME=$(jq -r '.name' "$RSA_ENC_JSON")
   register_key_provider "$NAME" "$RSA_ENC_PROVIDER_JSON"
 fi
@@ -129,7 +129,7 @@ fi
 # -----------------------------------------------------------------------------
 log "Creating client scopes..."
 if [[ -f "$WORK_DIR/src/config/client-scope-config.json" ]]; then
-  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
+  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$URLS_ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
   echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | "$KCADM" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
       warn "Client scope already exists; skipping."
@@ -163,21 +163,14 @@ fi
 # -----------------------------------------------------------------------------
 log "Creating clients..."
 [[ -f "$WORK_DIR/src/config/openid4vc-rest-api.json" ]] && \
-  CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" \
-               --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
-               --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
-               '.secret += $CLIENT_SECRET |
-                .redirectUris += [$ISSUER_BACKEND_URL + "/*", "https://localhost:8443/callback"] |
-                .webOrigins += [$ISSUER_BACKEND_URL, "https://localhost:8443"] |
-                .attributes["post.logout.redirect.uris"] = ("##" + $ISSUER_FRONTEND_URL + "##" + $ISSUER_FRONTEND_URL + "/*")' \
+  CONFIG=$(jq --arg CLIENT_SECRET "$CLIENTS_SECRET" \
+               '.secret += $CLIENT_SECRET' \
                "$WORK_DIR/src/config/openid4vc-rest-api.json") && \
   echo "$CONFIG" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
   warn "OPENID4VC-REST-API client already exists; skipping."
 
 [[ -f "$WORK_DIR/src/config/oid4vc-demo-public.json" ]] && \
-  PUBLIC_CLIENT=$(jq --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
-                     '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")' \
-                     "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
+  PUBLIC_CLIENT=$(jq '.' "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
   echo "$PUBLIC_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
   warn "oid4vc-demo-public client already exists; skipping."
 
@@ -192,7 +185,7 @@ log "Ensuring SD-JWT authenticator VCT is configured..."
 # Validate OID4VCI configuration
 # -----------------------------------------------------------------------------
 log "Validating OID4VCI configuration..."
-response=$(curl -ks "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
+response=$(curl -ks "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
 [[ -z "$response" ]] && error "No response from Keycloak OIDC credential issuer endpoint."
 
 for credential in "SteuerberaterCredential" "IdentityCredential" "KMACredential"; do

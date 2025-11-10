@@ -4,18 +4,6 @@
 # This file allows you to override specific configuration values from config.yaml
 # Only include the values you want to override - this file is merged with config.yaml
 #
-# Example overrides (YAML format):
-# keycloak:
-#   realm: "my-custom-realm"
-#   version: "24.0.0"
-#
-# database:
-#   password: "${PROD_DB_PASSWORD}"
-#   username: "${PROD_DB_USER}"
-#
-# urls:
-#   https_port: 9443
-# =============================================================================
 
 # Example: Override realm name
 # keycloak:

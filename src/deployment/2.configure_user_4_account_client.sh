@@ -13,9 +13,9 @@ init_script
 # Get admin token using environment variables for credentials
 # -----------------------------------------------------------------------------
 log "Obtaining admin token..."
-KCADM="$KC_INSTALL_DIR/bin/kcadm.sh"
-"$KCADM" config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
-"$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
+KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
+"$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
+"$KCADM" config credentials --server "$URLS_ADMIN_ADDR" --realm master --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
 success "Admin token obtained."
 
 # -----------------------------------------------------------------------------
@@ -52,13 +52,13 @@ fi
 # Set password for Francis
 # -----------------------------------------------------------------------------
 log "Setting password for user Francis..."
-"$KCADM" set-password -r "$KEYCLOAK_REALM" --username "$USER_FRANCIS_NAME" --new-password "$USER_FRANCIS_PASSWORD" || true
+"$KCADM" set-password -r "$KEYCLOAK_REALM" --username "$USERS_FRANCIS_NAME" --new-password "$USERS_FRANCIS_PASSWORD" || true
 success "Password ensured for Francis."
 
 # -----------------------------------------------------------------------------
 # Prepare user key proof header if not existent
 # -----------------------------------------------------------------------------
-if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
+if [ ! -f "$PROJECT_TARGET_DIR/user_key_proof_header.json" ]; then
   log "Generating keypair for user..."
   . "$WORK_DIR/src/utils/crypto/generate_user_key.sh"
   success "User keyproof generated."

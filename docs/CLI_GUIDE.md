@@ -17,10 +17,6 @@ CLI Tool • Deployment • Configuration • Testing
 
 The CLI uses a configuration system based on shell environment variables for better organization and maintainability. Configuration is managed through `config.yaml` in the project root.
 
-### Configuration Structure
-
-The `config.yaml` file contains all configuration settings with preserved comments from the original `.env` file.
-
 ### Override Mechanisms
 
 The system supports multiple levels of configuration overrides:

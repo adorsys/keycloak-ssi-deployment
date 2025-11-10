@@ -3,9 +3,9 @@
 # -----------------------------------------------------------------------------
 project:
   # Working directory (project root)
-  target_dir: "${WORK_DIR:-$(pwd)}/target"
+  target_dir: "${WORK_DIR}/target"
   # Tools directory for Keycloak, builds, and binaries
-  tools_dir: "${TARGET_DIR}/tools"
+  tools_dir: "${PROJECT_TARGET_DIR}/tools"
 
 # -----------------------------------------------------------------------------
 # Keycloak setup
@@ -76,17 +76,11 @@ clients:
 # -----------------------------------------------------------------------------
 urls:
   # HTTPS port for Keycloak
-  https_port: 8443
+  https_port: 8444
   # Keycloak admin address
   admin_addr: "https://localhost:${KEYCLOAK_HTTPS_PORT}"
   # Issuer DID (Decentralized Identifier)
   issuer_did: "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
-  # Issuer backend URL
-  issuer_backend: "https://issuer.eudi-adorsys.com/services"
-  # Issuer frontend URL
-  issuer_frontend: "https://issuer.eudi-adorsys.com"
-  # Test client URL
-  test_client: "https://oid4vc-client.eudi-adorsys.com"
 
 # -----------------------------------------------------------------------------
 # SSL configuration
@@ -106,20 +100,20 @@ ssl:
 # -----------------------------------------------------------------------------
 database:
   # Database exposed port
-  exposed_port: "5433"
+  exposed_port: "5434"
   # Database name
   name: "keycloak"
   # Database username
-  username: "postgres"
+  username: "keycloak"
   # Database password
-  password: "postgres"
+  password: "keycloak"
   # Optional manual DB options (takes precedence if set)
   # opts: "--db postgres --db-url jdbc:postgresql://localhost:5432/keycloak --db-username postgres --db-password postgres"
 
 # -----------------------------------------------------------------------------
 # Keycloak start command
 # -----------------------------------------------------------------------------
-start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${KC_SERVER_CERT} --https-certificate-key-file=${KC_SERVER_KEY} --log-level=debug"
+start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${KC_SERVER_CERT} --https-certificate-key-file=${KC_SERVER_KEY}"
 
 # -----------------------------------------------------------------------------
 # Keycloak config CLI

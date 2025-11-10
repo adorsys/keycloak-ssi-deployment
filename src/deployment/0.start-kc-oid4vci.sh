@@ -45,22 +45,22 @@ if [[ ! -f "$DOCKER_COMPOSE_FILE" ]]; then
     error "docker-compose.yml not found in project root: $DOCKER_COMPOSE_FILE"
 fi
 
-if [[ -z "${KC_DB_OPTS:-}" ]]; then
+if [[ -z "${DATABASE_OPTS:-}" ]]; then
     log "Starting database container using Docker Compose..."
     # Use eval to properly handle multi-word commands
     eval $DOCKER_COMPOSE_COMMAND -f "$DOCKER_COMPOSE_FILE" up -d db || error "Could not start database container"
-    KC_DB_OPTS="--db postgres --db-url-port $KC_DB_EXPOSED_PORT --db-url-database $KC_DB_NAME --db-username $KC_DB_USERNAME --db-password $KC_DB_PASSWORD"
-    log "Database container started and KC_DB_OPTS set."
+    DATABASE_OPTS="--db postgres --db-url-port $DATABASE_EXPOSED_PORT --db-url-database $DATABASE_NAME --db-username $DATABASE_USERNAME --db-password $DATABASE_PASSWORD"
+    log "Database container started and DATABASE_OPTS set."
 else
-    log "Using provided KC_DB_OPTS: $KC_DB_OPTS"
+    log "Using provided DATABASE_OPTS: $DATABASE_OPTS"
 fi
 
 # ---------------------------------------------------------------------------
 # Inject providers
 # ---------------------------------------------------------------------------
 log "Injecting Keycloak providers..."
-mkdir -p "$KC_INSTALL_DIR/providers"
-cp "$WORK_DIR/providers/"*.jar "$KC_INSTALL_DIR/providers"
+mkdir -p "$KEYCLOAK_INSTALL_DIR/providers"
+cp "$WORK_DIR/providers/"*.jar "$KEYCLOAK_INSTALL_DIR/providers"
 
 # ---------------------------------------------------------------------------
 # Start Keycloak (foreground by default; '-d' to detach and log to file)
@@ -72,17 +72,17 @@ if [[ "${1:-}" == "-d" ]]; then
 fi
 
 log "Starting Keycloak with OID4VCI features..."
-export KC_BOOTSTRAP_ADMIN_USERNAME KC_BOOTSTRAP_ADMIN_PASSWORD
-cd "$KC_INSTALL_DIR" || error "Cannot cd to $KC_INSTALL_DIR"
+export KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD
+cd "$KEYCLOAK_INSTALL_DIR" || error "Cannot cd to $KEYCLOAK_INSTALL_DIR"
 
 if [[ "$DETACH_MODE" == "true" ]]; then
   LOG_DIR="$WORK_DIR/target"
   ensure_directory_exists "$LOG_DIR"
   LOG_FILE="$LOG_DIR/keycloak.log"
   log "Detaching Keycloak; logs will be written to $LOG_FILE"
-  nohup bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth" \
+  nohup bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci,oid4vc-vpauth" \
     >"$LOG_FILE" 2>&1 &
   disown || true
 else
-  exec bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"
+  exec bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci,oid4vc-vpauth"
 fi

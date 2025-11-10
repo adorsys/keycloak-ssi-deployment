@@ -28,7 +28,7 @@ debug()   { printf "\n${BLUE}[DEBUG]${NC} %s\n" "$*"; }
 # -----------------------------------------------------------------------------
 setup_environment() {
     # Set strict error handling
-    set -eo pipefail
+    set -euo pipefail
     IFS=$'\n\t'
 
     # Use WORK_DIR if already set (by CLI), otherwise determine it
@@ -87,6 +87,11 @@ export_yaml_as_env() {
         local env_var_name
         # Convert key to uppercase and replace dots with underscores
         env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+
+        # Handle specific environment variable name overrides
+        if [[ "$key" == "urls.https_port" ]]; then
+            env_var_name="KEYCLOAK_HTTPS_PORT"
+        fi
 
         # Resolve placeholders using envsubst
         local resolved_value
@@ -242,6 +247,10 @@ check_dependencies() {
 init_script() {
     # Ensure environment and WORK_DIR are initialized
     setup_environment
+
+    # Export shorthand variables for convenience, as used in config.yaml
+    export TARGET_DIR="${PROJECT_TARGET_DIR}"
+    export TOOLS_DIR="${PROJECT_TOOLS_DIR}"
 
     # Log script start
     local script_name
