@@ -953,5 +953,6 @@
       }
     ]
   },
-  "keycloakVersion": "999.0.0-SNAPSHOT"
+  "keycloakVersion": "999.0.0-SNAPSHOT",
+  "verifiableCredentialsEnabled": true
 }

@@ -1,12 +1,12 @@
 # Multi-stage build for Keycloak with OID4VCI from datev/develop branch
-FROM maven:3.8.4-openjdk-17-slim AS builder
+FROM eclipse-temurin:21-jdk-jammy AS builder
 
 ARG KC_BRANCH=datev/develop
 ARG KC_REPO=https://github.com/adorsys/keycloak-oid4vc.git
 
 WORKDIR /build
 
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --branch ${KC_BRANCH} ${KC_REPO} keycloak-oid4vc
 
@@ -14,7 +14,7 @@ WORKDIR /build/keycloak-oid4vc
 RUN ./mvnw clean install -DskipTests -Dquarkus.package.type=tar.gz
 
 # Runtime stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:21-jdk-jammy
 
 # Create non-privileged user with fixed UID/GID 1000
 RUN groupadd -g 1000 keycloak && \
