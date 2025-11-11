@@ -73,6 +73,11 @@ fi
 
 log "Starting Keycloak with OID4VCI features..."
 export KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD
+
+# Set standard Keycloak admin environment variables for initial setup
+export KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME"
+export KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+
 cd "$KEYCLOAK_INSTALL_DIR" || error "Cannot cd to $KEYCLOAK_INSTALL_DIR"
 
 if [[ "$DETACH_MODE" == "true" ]]; then

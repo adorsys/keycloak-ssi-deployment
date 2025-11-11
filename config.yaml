@@ -18,9 +18,9 @@ keycloak:
   # Directory name for cloned Keycloak repo
   oid4vci_dir: "keycloak_${KC_TARGET_BRANCH}"
   # Keycloak tarball path
-  tarball_path: "${TARGET_DIR}/keycloak-${KC_VERSION}.tar.gz"
+  tarball_path: "${PROJECT_TARGET_DIR}/keycloak-${KEYCLOAK_VERSION}.tar.gz"
   # Keycloak installation directory (after unpack)
-  install_dir: "${TOOLS_DIR}/keycloak-${KC_VERSION}"
+  install_dir: "${PROJECT_TOOLS_DIR}/keycloak-${KEYCLOAK_VERSION}"
   # Keycloak repository to clone
   repo_url: "https://github.com/adorsys/keycloak-oid4vc.git"
   # Bootstrap admin credentials
@@ -35,7 +35,7 @@ keycloak:
 # -----------------------------------------------------------------------------
 keystore:
   # Keycloak keystore file path
-  file: "${TARGET_DIR}/kc_keystore.pkcs12"
+  file: "${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
   # Keystore type
   type: "PKCS12"
   # Keystore password
@@ -59,7 +59,7 @@ users:
     password: "francis"
     # Francis test keystore
     keystore:
-      file: "${TARGET_DIR}/francis_kc_keystore.pkcs12"
+      file: "${PROJECT_TARGET_DIR}/francis_kc_keystore.pkcs12"
       password: "francis_store_key_password"
       type: "PKCS12"
       ecdsa_alias: "ecdsa_key"
@@ -76,22 +76,28 @@ clients:
 # -----------------------------------------------------------------------------
 urls:
   # HTTPS port for Keycloak
-  https_port: 8444
+  https_port: 8443
   # Keycloak admin address
   admin_addr: "https://localhost:${KEYCLOAK_HTTPS_PORT}"
   # Issuer DID (Decentralized Identifier)
-  issuer_did: "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
+  issuer_did: "${URLS_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
+  # Issuer backend URL
+  issuer_backend: "https://issuer.eudi-adorsys.com/services"
+  # Issuer frontend URL
+  issuer_frontend: "https://issuer.eudi-adorsys.com"
+  # Test client URL
+  test_client: "http://localhost:4200"
 
 # -----------------------------------------------------------------------------
 # SSL configuration
 # -----------------------------------------------------------------------------
 ssl:
   # Keycloak SSL server key file
-  server_key: "${TARGET_DIR}/keycloak-server.key.pem"
+  server_key: "${PROJECT_TARGET_DIR}/keycloak-server.key.pem"
   # Keycloak SSL server certificate file
-  server_cert: "${TARGET_DIR}/keycloak-server.crt.pem"
+  server_cert: "${PROJECT_TARGET_DIR}/keycloak-server.crt.pem"
   # Trust store file
-  trust_store: "${TARGET_DIR}/cacerts"
+  trust_store: "${PROJECT_TARGET_DIR}/cacerts"
   # Trust store password
   trust_store_pass: "francis"
 
@@ -100,20 +106,20 @@ ssl:
 # -----------------------------------------------------------------------------
 database:
   # Database exposed port
-  exposed_port: "5434"
+  exposed_port: "5432"
   # Database name
   name: "keycloak"
   # Database username
-  username: "keycloak"
+  username: "postgres"
   # Database password
-  password: "keycloak"
+  password: "postgres"
   # Optional manual DB options (takes precedence if set)
   # opts: "--db postgres --db-url jdbc:postgresql://localhost:5432/keycloak --db-username postgres --db-password postgres"
 
 # -----------------------------------------------------------------------------
 # Keycloak start command
 # -----------------------------------------------------------------------------
-start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${KC_SERVER_CERT} --https-certificate-key-file=${KC_SERVER_KEY}"
+start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY}"
 
 # -----------------------------------------------------------------------------
 # Keycloak config CLI
@@ -124,4 +130,4 @@ cli:
   # Realm configuration file
   realm_file: "src/config/realm_configs/keycloak-config-dev.json"
   # Keystore path for CLI operations
-  keystore_path: "${TARGET_DIR}/kc_keystore.pkcs12"
+  keystore_path: "${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"

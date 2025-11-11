@@ -14,27 +14,27 @@ init_script
 # -----------------------------------------------------------------------------
 # Generate ECDSA Key in keystore if missing
 # -----------------------------------------------------------------------------
-if [[ ! -f "$FRANCIS_KEYSTORE_FILE" ]]; then
-    log "Generating ECDSA key in $FRANCIS_KEYSTORE_FILE..."
+if [[ ! -f "$USERS_FRANCIS_KEYSTORE_FILE" ]]; then
+    log "Generating ECDSA key in $USERS_FRANCIS_KEYSTORE_FILE..."
     keytool -genkeypair \
         -keyalg EC \
         -groupname secp256r1 \
-        -keystore "$FRANCIS_KEYSTORE_FILE" \
-        -storepass "$FRANCIS_KEYSTORE_PASSWORD" \
-        -alias "$FRANCIS_KEYSTORE_ECDSA_KEY_ALIAS" \
-        -keypass "$FRANCIS_KEYSTORE_PASSWORD" \
-        -storetype "$FRANCIS_KEYSTORE_TYPE" \
+        -keystore "$USERS_FRANCIS_KEYSTORE_FILE" \
+        -storepass "$USERS_FRANCIS_KEYSTORE_PASSWORD" \
+        -alias "$USERS_FRANCIS_KEYSTORE_ECDSA_ALIAS" \
+        -keypass "$USERS_FRANCIS_KEYSTORE_PASSWORD" \
+        -storetype "$USERS_FRANCIS_KEYSTORE_TYPE" \
         -dname "CN=Francis Pouatcha, OU=Keycloak Competence Center, O=Adorsys Lab, L=Bangangte, ST=West, C=Cameroon"
 else
-    log "Keystore $FRANCIS_KEYSTORE_FILE already exists. Skipping generation."
+    log "Keystore $USERS_FRANCIS_KEYSTORE_FILE already exists. Skipping generation."
 fi
 
 # -----------------------------------------------------------------------------
 # Extract public key in DER format
 # -----------------------------------------------------------------------------
 log "Extracting public key in DER format..."
-cat "$FRANCIS_KEYSTORE_FILE" | openssl ec \
-    -passin pass:"$FRANCIS_KEYSTORE_PASSWORD" \
+cat "$USERS_FRANCIS_KEYSTORE_FILE" | openssl ec \
+    -passin pass:"$USERS_FRANCIS_KEYSTORE_PASSWORD" \
     -pubout -outform der \
     -out "$TARGET_DIR/francis_pub.der"
 

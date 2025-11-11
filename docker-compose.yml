@@ -19,7 +19,7 @@ services:
     depends_on:
       - db
     ports:
-      - "${URLS_HTTPS_PORT}:${URLS_HTTPS_PORT}"
+      - "${KEYCLOAK_HTTPS_PORT}:${KEYCLOAK_HTTPS_PORT}"
 
 volumes:
   db_data:

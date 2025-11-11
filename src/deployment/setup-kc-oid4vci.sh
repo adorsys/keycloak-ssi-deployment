@@ -57,7 +57,7 @@ clone_and_build_keycloak() {
     if [[ ! -f "$build_artifact" ]]; then
         log "Building Keycloak..."
         cd "$target_dir" || error "Cannot cd into $target_dir"
-        ./mvnw clean install -Dmaven.test.skip=true -U || error "Failed to build Keycloak"
+        ./mvnw clean install -DskipTests || error "Failed to build Keycloak"
         log "Keycloak build completed successfully."
     else
         log "Keycloak build artifact exists. Skipping build."

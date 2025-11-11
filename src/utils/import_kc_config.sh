@@ -41,7 +41,7 @@ fi
 # ---------------------------------------------------------------------------
 log "Running Keycloak Config CLI..."
 cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
-     -DKEYCLOAK_ADMIN_ADDR="$URLS_ADMIN_ADDR" \
+     -DURLS_ADMIN_ADDR="$URLS_ADMIN_ADDR" \
      -DKEYCLOAK_KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" \
      -DKC_KEYSTORE_PATH="$CLI_KEYSTORE_PATH" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \

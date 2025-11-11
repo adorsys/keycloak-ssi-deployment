@@ -30,14 +30,14 @@ TARGET_DIR="${TARGET_DIR:-/tmp}"
 # ===============================
 # Get User Token
 # ===============================
-log "Requesting access token for user '$USER_FRANCIS_NAME'..."
+log "Requesting access token for user '$USERS_FRANCIS_NAME'..."
 
 response=$(curl -k -s -o "$TARGET_DIR/response.json" -w "%{http_code}" -X POST \
-  "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" \
+  "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" \
   -d "client_id=openid4vc-rest-api" \
-  -d "client_secret=$CLIENT_SECRET" \
-  -d "username=$USER_FRANCIS_NAME" \
-  -d "password=$USER_FRANCIS_PASSWORD" \
+  -d "client_secret=$CLIENTS_SECRET" \
+  -d "username=$USERS_FRANCIS_NAME" \
+  -d "password=$USERS_FRANCIS_PASSWORD" \
   -d "grant_type=password" \
   -d "scope=openid")
 
@@ -54,7 +54,7 @@ success "User Access Token retrieved."
 # ===============================
 log "Requesting credential offer for '$CREDENTIAL_TYPE'..."
 
-CREDENTIAL_OFFER_LINK=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer-uri?credential_configuration_id=$CREDENTIAL_TYPE" \
+CREDENTIAL_OFFER_LINK=$(curl -k -s "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer-uri?credential_configuration_id=$CREDENTIAL_TYPE" \
   -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' | jq -r '"\(.issuer)\(.nonce)"')
@@ -87,7 +87,7 @@ success "Pre-Authorized Code: $PRE_AUTHORIZED_CODE"
 # ===============================
 log "Requesting nonce from Keycloak..."
 
-C_NONCE=$(curl -k -s -X POST "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce" | jq -r '.c_nonce')
+C_NONCE=$(curl -k -s -X POST "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce" | jq -r '.c_nonce')
 
 if [ -z "$C_NONCE" ] || [ "$C_NONCE" == "null" ]; then
   error "Failed to retrieve C_NONCE"
@@ -101,13 +101,13 @@ success "C_NONCE: $C_NONCE"
 # ===============================
 log "Requesting credential bearer token..."
 
-CREDENTIAL_BEARER_TOKEN=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" \
+CREDENTIAL_BEARER_TOKEN=$(curl -k -s "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
   -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
   -d "client_id=openid4vc-rest-api" \
-  -d "client_secret=$CLIENT_SECRET")
+  -d "client_secret=$CLIENTS_SECRET")
 
 CREDENTIAL_ACCESS_TOKEN=$(echo "$CREDENTIAL_BEARER_TOKEN" | jq -r '.access_token')
 
@@ -139,7 +139,7 @@ REQ_BODY=$(jq \
 # ===============================
 log "Requesting credential '$CREDENTIAL_TYPE'..."
 
-CREDENTIAL=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential" \
+CREDENTIAL=$(curl -k -s "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential" \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $CREDENTIAL_ACCESS_TOKEN" \

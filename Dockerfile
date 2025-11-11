@@ -47,7 +47,7 @@ COPY --from=builder /app/target /opt/keycloak/target
 # and the resulting Keycloak installation is copied. No need to copy config files to runtime.
 
 # Expose Keycloak default ports
-EXPOSE 8444
+EXPOSE 8443
 
 # Set entrypoint command
 CMD ["/opt/keycloak/target/bin/kc.sh", "${START_COMMAND}", "${KC_DB_OPTS}", "--features=oid4vc-vci,oid4vc-vpauth"]

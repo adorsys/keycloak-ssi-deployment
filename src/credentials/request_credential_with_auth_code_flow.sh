@@ -51,7 +51,7 @@ fi
 # Check User 'francis'
 # ===============================
 log "Verifying user 'francis'..."
-if ! $KC_INSTALL_DIR/bin/kcadm.sh get users -r "$KEYCLOAK_REALM" --fields username | jq -e '.[] | select(.username=="francis")' > /dev/null; then
+if ! $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh get users -r "$KEYCLOAK_REALM" --fields username | jq -e '.[] | select(.username=="francis")' > /dev/null; then
   error "User 'francis' does not exist. Run 2.configure_user_4_account_client.sh first."
   exit 1
 fi

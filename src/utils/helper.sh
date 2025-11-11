@@ -128,6 +128,15 @@ load_configuration() {
     # Export variables using the new helper function.
     # The yq dependency check is now handled inside export_yaml_as_env.
     export_yaml_as_env "${yq_files[@]}"
+
+    # -------------------------------------------------------------------------
+    # Backward-compatible aliases for env placeholders used by realm configs
+    # Map values from urls.* to the names expected by $(env:...) placeholders
+    # -------------------------------------------------------------------------
+    [[ -n "${URLS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${URLS_TEST_CLIENT}"
+    [[ -n "${URLS_ISSUER_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${URLS_ISSUER_BACKEND}"
+    [[ -n "${URLS_ISSUER_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${URLS_ISSUER_FRONTEND}"
+    [[ -n "${URLS_ISSUER_DID:-}" ]] && export ISSUER_DID="${URLS_ISSUER_DID}"
 }
 
 # -----------------------------------------------------------------------------
