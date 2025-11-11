@@ -15,6 +15,17 @@ KC_CLI_PROJECT_DIR="$TARGET_DIR/keycloak-config-cli"
 KC_CLI_JAR_FILE="keycloak-config-cli.jar"
 REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
 
+# -----------------------------------------------------------------------------
+# Determine keystore path dynamically
+# -----------------------------------------------------------------------------
+if [[ "$KEYCLOAK_ADMIN_ADDR" == *"localhost"* || "$KEYCLOAK_ADMIN_ADDR" == *"127.0.0.1"* ]]; then
+    KC_KEYSTORE_PATH="$TARGET_DIR/kc_keystore.pkcs12"
+    log "Detected local Keycloak instance. Using keystore path: $KC_KEYSTORE_PATH"
+else
+    KC_KEYSTORE_PATH="/opt/keycloak/target/kc_keystore.pkcs12"
+    log "Detected live Keycloak instance. Using keystore path: $KC_KEYSTORE_PATH"
+fi
+
 # =============================================================================
 # Clone and build Keycloak Config CLI if needed
 # =============================================================================
