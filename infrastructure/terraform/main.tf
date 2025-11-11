@@ -39,6 +39,7 @@ module "clients" {
   keycloak_url             = var.keycloak_url
   sdjwt_vct                = var.sdjwt_vct
   clients                  = var.clients
+  optional_client_scopes   = var.optional_client_scopes
   client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
   depends_on               = [module.realm, module.client_scopes]
 }

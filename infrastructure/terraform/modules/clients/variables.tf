@@ -45,3 +45,8 @@ variable "client_scopes_dependency" {
   type        = any
   default     = {}
 }
+
+variable "optional_client_scopes" {
+  description = "List of optional client scope names to assign to each client"
+  type        = list(string)
+}

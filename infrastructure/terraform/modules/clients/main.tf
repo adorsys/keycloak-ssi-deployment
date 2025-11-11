@@ -68,8 +68,9 @@ resource "null_resource" "apply_optional_scopes" {
   depends_on = [null_resource.apply_client_attributes]
 
   triggers = {
-    client_id      = each.value.id
-    scopes_applied = jsonencode(var.client_scopes_dependency)
+    client_id       = each.value.id
+    scopes_applied  = jsonencode(var.client_scopes_dependency)
+    optional_scopes = jsonencode(var.optional_client_scopes)
   }
 
   provisioner "local-exec" {
@@ -81,7 +82,7 @@ resource "null_resource" "apply_optional_scopes" {
       KC_URL="${var.keycloak_url}"
       REALM="${var.realm_name}"
       CLIENT_ID="${each.value.id}"
-      OPTIONAL_SCOPES='["IdentityCredential", "KMACredential", "SteuerberaterCredential"]'
+      OPTIONAL_SCOPES='${jsonencode(var.optional_client_scopes)}'
 
       TOKEN=$(curl -s -k -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
