@@ -26,6 +26,11 @@ else
     log "Detected live Keycloak instance. Using keystore path: $KC_KEYSTORE_PATH"
 fi
 
+if [[ ! -f "$KC_KEYSTORE_PATH" ]]; then
+    error "Keystore not found at $KC_KEYSTORE_PATH."
+fi
+
+
 # =============================================================================
 # Clone and build Keycloak Config CLI if needed
 # =============================================================================

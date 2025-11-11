@@ -1,6 +1,9 @@
 # Build and target folders
 target/
 
+# Keystore files
+*.pkcs12
+
 # IDE and editor configs
 /.idea/
 .vscode/
