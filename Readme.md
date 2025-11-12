@@ -87,7 +87,7 @@ Before running the configuration, ensure your `config.yaml` is set up correctly.
 
 **Key variables to review (config-driven):**
 
-- `URLS_ADMIN_ADDR`: URL of your Keycloak server.
+- `KEYCLOAK_ADMIN_ADDR`: URL of your Keycloak server.
 - `KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME`: Admin username for Keycloak.
 - `KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD`: Admin password for Keycloak.
 
@@ -256,7 +256,7 @@ The following lines will allow you to configure a truststore for used by `kcadm.
 $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $SSL_TRUST_STORE_PASS $SSL_TRUST_STORE
 echo "Obtaining admin token..."
 # Get admin token using environment variables for credentials
-$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config credentials --server $URLS_ADMIN_ADDR --realm master --user $KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME --password $KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD
+$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME --password $KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD
 ```
 
 ### Issuer Identifier (DID)
@@ -290,7 +290,7 @@ keytool \
   -genkeypair \
   -keyalg EC \
   -keysize 256 \
-  -keystore "${KEYSTORE_FILE}" \
+  -keystore "${KEYSTORE_PATH}" \
   -storepass "${KEYSTORE_PASSWORD}" \
   -alias "${KEYSTORE_ALIASES_ECDSA_KEY}" \
   -keypass "${KEYSTORE_PASSWORD}" \
@@ -309,7 +309,7 @@ Next, we'll create a JSON file that describes the key to Keycloak. This file wil
   "providerId": "java-keystore",
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
-    "keystore": ["${KEYSTORE_FILE}"],
+    "keystore": ["${KEYSTORE_PATH}"],
     "keystoreType": ["${KEYSTORE_TYPE}"],
     "keystorePassword": ["${KEYSTORE_PASSWORD}"],
     "keyAlias": ["${KEYSTORE_ALIASES_ECDSA_KEY}"],
@@ -336,7 +336,7 @@ command line (as mentioned in the prerequisites).
 # Add concrete info and passwords to key provider
 echo "Configuring ecdsa key provider..."
 cat $WORK_DIR/issuer_key_ecdsa.json | \
-  jq --arg keystore "$KEYSTORE_FILE" \
+  jq --arg keystore "$KEYSTORE_PATH" \
   --arg keystorePassword "$KEYSTORE_PASSWORD" \
   --arg keystoreType "$KEYSTORE_TYPE" \
   --arg keyAlias "$KEYSTORE_ALIASES_ECDSA_KEY" \

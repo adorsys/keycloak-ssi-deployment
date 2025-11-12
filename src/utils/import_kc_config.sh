@@ -18,7 +18,7 @@ REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
 # -----------------------------------------------------------------------------
 # Determine keystore path dynamically
 # -----------------------------------------------------------------------------
-if [[ "$URLS_ADMIN_ADDR" == *"localhost"* || "$URLS_ADMIN_ADDR" == *"127.0.0.1"* ]]; then
+if [[ "$KEYCLOAK_ADMIN_ADDR" == *"localhost"* || "$KEYCLOAK_ADMIN_ADDR" == *"127.0.0.1"* ]]; then
     CLI_KEYSTORE_PATH="$TARGET_DIR/kc_keystore.pkcs12"
     log "Detected local Keycloak instance. Using keystore path: $CLI_KEYSTORE_PATH"
 else
@@ -57,16 +57,16 @@ fi
 # ---------------------------------------------------------------------------
 log "Running Keycloak Config CLI..."
 cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
-     -DURLS_ADMIN_ADDR="$URLS_ADMIN_ADDR" \
+     -DKEYCLOAK_ADMIN_ADDR="$KEYCLOAK_ADMIN_ADDR" \
      -DKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" \
      -DCLI_KEYSTORE_PATH="$CLI_KEYSTORE_PATH" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \
-     -DISSUER_DID="$URLS_ISSUER_DID" \
-     -DSAML_ENTITYID="$URLS_ISSUER_DID" \
+     -DISSUER_DID="$KEYCLOAK_ISSUER_DID" \
+     -DSAML_ENTITYID="$KEYCLOAK_ISSUER_DID" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
      --import.var-substitution.enabled=true \
-     --keycloak.url="$URLS_ADMIN_ADDR" \
+     --keycloak.url="$KEYCLOAK_ADMIN_ADDR" \
      --keycloak.user="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" \
      --keycloak.password="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
      --keycloak.ssl-verify=false \

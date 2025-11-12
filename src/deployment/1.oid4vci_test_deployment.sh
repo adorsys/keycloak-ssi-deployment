@@ -35,7 +35,7 @@ fi
 # -----------------------------------------------------------------------------
 log "Authenticating admin user..."
 "$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
-"$KCADM" config credentials --server "$URLS_ADMIN_ADDR" --realm master \
+"$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
     --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
 
 # -----------------------------------------------------------------------------
@@ -61,7 +61,7 @@ configure_key_provider() {
     error "Key provider template not found: $json_template"
   fi
 
-  jq --arg keystore "$KEYSTORE_FILE" \
+  jq --arg keystore "$KEYSTORE_PATH" \
      --arg keystorePassword "$KEYSTORE_PASSWORD" \
      --arg keystoreType "$KEYSTORE_TYPE" \
      --arg keyAlias "$alias" \
@@ -129,7 +129,7 @@ fi
 # -----------------------------------------------------------------------------
 log "Creating client scopes..."
 if [[ -f "$WORK_DIR/src/config/client-scope-config.json" ]]; then
-  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$URLS_ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
+  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$KEYCLOAK_ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
   echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | "$KCADM" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
       warn "Client scope already exists; skipping."
@@ -185,7 +185,7 @@ log "Ensuring SD-JWT authenticator VCT is configured..."
 # Validate OID4VCI configuration
 # -----------------------------------------------------------------------------
 log "Validating OID4VCI configuration..."
-response=$(curl -ks "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
+response=$(curl -ks "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
 [[ -z "$response" ]] && error "No response from Keycloak OIDC credential issuer endpoint."
 
 for credential in "SteuerberaterCredential" "IdentityCredential" "KMACredential"; do

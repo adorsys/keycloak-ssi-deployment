@@ -121,10 +121,10 @@ fi
 # ---------------------------------------------------------------------------
 # Generate or reuse keystore
 # ---------------------------------------------------------------------------
-KEYSTORE_BASENAME=$(basename "$KEYSTORE_FILE")
+KEYSTORE_BASENAME=$(basename "$KEYSTORE_PATH")
 if [[ -f "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" ]]; then
     log "Reusing existing keystore $WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME..."
-    cp "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" "$KEYSTORE_FILE"
+    cp "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" "$KEYSTORE_PATH"
 else
     log "Generating new keystore..."
     source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore"

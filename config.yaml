@@ -16,7 +16,7 @@ keycloak:
   # Keycloak version
   version: "999.0.0-SNAPSHOT"
   # Directory name for cloned Keycloak repo
-  oid4vci_dir: "keycloak_${KC_TARGET_BRANCH}"
+  oid4vci_dir: "keycloak_${KEYCLOAK_TARGET_BRANCH}"
   # Keycloak tarball path
   tarball_path: "${PROJECT_TARGET_DIR}/keycloak-${KEYCLOAK_VERSION}.tar.gz"
   # Keycloak installation directory (after unpack)
@@ -35,7 +35,7 @@ keycloak:
 # -----------------------------------------------------------------------------
 keystore:
   # Keycloak keystore file path
-  file: "${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
+  path: "${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
   # Keystore type
   type: "PKCS12"
   # Keystore password
@@ -59,7 +59,7 @@ users:
     password: "francis"
     # Francis test keystore
     keystore:
-      file: "${PROJECT_TARGET_DIR}/francis_kc_keystore.pkcs12"
+      path: "${PROJECT_TARGET_DIR}/francis_kc_keystore.pkcs12"
       password: "francis_store_key_password"
       type: "PKCS12"
       ecdsa_alias: "ecdsa_key"
@@ -72,19 +72,29 @@ clients:
   secret: "uArydomqOymeF0tBrtipkPYujNNUuDlt"
 
 # -----------------------------------------------------------------------------
-# Keycloak URLs and endpoints
+# Keycloak endpoints
 # -----------------------------------------------------------------------------
-urls:
+keycloak_endpoints:
   # HTTPS port for Keycloak
   https_port: 8443
   # Keycloak admin address
   admin_addr: "https://localhost:${KEYCLOAK_HTTPS_PORT}"
   # Issuer DID (Decentralized Identifier)
-  issuer_did: "${URLS_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
+  issuer_did: "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
+
+# -----------------------------------------------------------------------------
+# Issuer endpoints
+# -----------------------------------------------------------------------------
+issuer_endpoints:
   # Issuer backend URL
-  issuer_backend: "https://issuer.eudi-adorsys.com/services"
+  backend: "https://issuer.eudi-adorsys.com/services"
   # Issuer frontend URL
-  issuer_frontend: "https://issuer.eudi-adorsys.com"
+  frontend: "https://issuer.eudi-adorsys.com"
+
+# -----------------------------------------------------------------------------
+# Development client endpoints
+# -----------------------------------------------------------------------------
+dev_clients:
   # Test client URL
   test_client: "http://localhost:4200"
 
@@ -119,7 +129,7 @@ database:
 # -----------------------------------------------------------------------------
 # Keycloak start command
 # -----------------------------------------------------------------------------
-start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY} --log-level=debug"
+start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY}"
 
 # -----------------------------------------------------------------------------
 # Keycloak config CLI

@@ -5,7 +5,7 @@
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
     "keystore": [
-      "$KEYSTORE_FILE"
+      "$KEYSTORE_PATH"
     ],
     "keystoreType": [
       "$KEYSTORE_TYPE"

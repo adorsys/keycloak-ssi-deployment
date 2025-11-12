@@ -147,9 +147,9 @@ cmd_setup() {
     # Wait for Keycloak to be ready
     log "Waiting for Keycloak to be ready..."
     for i in {1..120}; do
-        if curl -k -s "$URLS_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
+        if curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
             success "Keycloak is ready and running"
-            success "Admin Console: $URLS_ADMIN_ADDR"
+            success "Admin Console: $KEYCLOAK_ADMIN_ADDR"
             return 0
         fi
         if [[ $i -eq 120 ]]; then
@@ -164,7 +164,7 @@ cmd_config() {
     log "Configuring realm, key providers, clients, and users..."
     
     # Check if Keycloak is running
-    if ! curl -k -s "$URLS_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
+    if ! curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
         error "Keycloak is not running. Run 'keycloak-ssi setup' first."
     fi
     
@@ -188,7 +188,7 @@ cmd_test() {
     fi
     
     # Check if Keycloak is running
-    if ! curl -k -s "$URLS_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
+    if ! curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
         error "❌ Keycloak is not running. Run 'keycloak-ssi setup' first."
     fi
     
@@ -215,7 +215,7 @@ cmd_import() {
     log "📥 Importing ready realm configuration..."
     
     # Check if Keycloak is running
-    if ! curl -k -s "$URLS_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
+    if ! curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/master" >/dev/null 2>&1; then
         error "❌ Keycloak is not running. Run 'keycloak-ssi setup' first."
     fi
     

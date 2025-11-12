@@ -15,7 +15,7 @@ init_script
 log "Obtaining admin token..."
 KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
 "$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
-"$KCADM" config credentials --server "$URLS_ADMIN_ADDR" --realm master --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+"$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
 success "Admin token obtained."
 
 # -----------------------------------------------------------------------------

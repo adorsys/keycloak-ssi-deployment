@@ -33,10 +33,10 @@ CREDENTIAL_TYPE="$1"
 log "Configuring Keycloak admin credentials..."
 $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
 
-if ! $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh get realms --server "$URLS_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
+if ! $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
   log "No existing admin credentials found. Configuring new credentials..."
   $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config credentials \
-    --server "$URLS_ADMIN_ADDR" \
+    --server "$KEYCLOAK_ADMIN_ADDR" \
     --realm master \
     --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" \
     --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" || {
@@ -107,7 +107,7 @@ request_credential() {
   encoded_scopes=$(printf "%s" "$scopes" | jq -sRr @uri)
   local issuer_state="state-$(uuidgen)"
 
-  local auth_url="${URLS_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
+  local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
 
   warn "Manual step required: Open the following URL in your browser and login as 'francis':"
   echo -e "\n$auth_url\n"
@@ -121,7 +121,7 @@ request_credential() {
 
   log "Exchanging authorization code for token..."
   local token_response
-  token_response=$(curl -s -k -X POST "${URLS_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
+  token_response=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
     -d "grant_type=authorization_code" \
     -d "code=${auth_code}" \
     -d "client_id=openid4vc-rest-api" \
@@ -142,7 +142,7 @@ request_credential() {
 
   # Retrieve nonce
   log "Retrieving nonce..."
-  C_NONCE=$(curl -k -s -X POST "$URLS_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce" | jq -r '.c_nonce')
+  C_NONCE=$(curl -k -s -X POST "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/nonce" | jq -r '.c_nonce')
   if [ -z "$C_NONCE" ]; then
     error "Failed to retrieve C_NONCE"
     exit 1
@@ -165,7 +165,7 @@ request_credential() {
 
   log "Requesting credential..."
   local credential
-  credential=$(curl -s -k -X POST "${URLS_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential" \
+  credential=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/oid4vc/credential" \
     -H "Authorization: Bearer ${access_token}" \
     -H "Content-Type: application/json" \
     -d "$req_body" | jq .)

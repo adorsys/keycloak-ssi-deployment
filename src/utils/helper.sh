@@ -38,6 +38,7 @@ setup_environment() {
         while [[ "$search_dir" != "/" && "$search_dir" != "" ]]; do
             if [[ -f "$search_dir/src/utils/helper.sh" || -f "$search_dir/docker-compose.yml" ]]; then
                 WORK_DIR="$search_dir"
+                export WORK_DIR # Export WORK_DIR so it's available for envsubst
                 break
             fi
             search_dir="$(dirname "$search_dir")"
@@ -70,38 +71,64 @@ export_yaml_as_env() {
     local yq_merge_command=". as \$item ireduce ({}; . * \$item)"
 
     # 1. Merge config files, flatten to properties, and clean up for shell export.
-    merged_props=$(yq eval-all "$yq_merge_command | to_props" "${yaml_files[@]}" | \
-        # 1. Trim leading/trailing whitespace and remove spaces around '='
+    #    Store this raw output for two passes.
+    local raw_props_output=$(yq eval-all "$yq_merge_command | to_props" "${yaml_files[@]}" | \
         sed -E 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/' | \
-        # 2. Filter out lines that are comments or empty, and ensure they contain a valid assignment
         grep -vE '^\s*#' | \
         grep -E '^[a-zA-Z_][a-zA-Z0-9_.]*='
     )
 
-    # Iterate over the properties and export them in the parent shell environment
-    # Temporarily disable 'nounset' for envsubst to handle undefined variables gracefully
+    # Pass 1: Export all variables with their raw values first.
+    # This makes all potential reference targets available as environment variables.
     set +u
     while IFS='=' read -r key value; do
         [[ -z "$key" ]] && continue
-
         local env_var_name
-        # Convert key to uppercase and replace dots with underscores
         env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+        # Export the raw value
+        export "$env_var_name"="$value"
+        case "$key" in
+            "keycloak_endpoints.https_port")
+                export KEYCLOAK_HTTPS_PORT="$value"
+                ;;
+            "keycloak_endpoints.admin_addr")
+                export KEYCLOAK_ADMIN_ADDR="$value"
+                ;;
+        esac
+    done <<< "$raw_props_output"
+    set -u # Restore 'nounset'
 
-        # Handle specific environment variable name overrides
-        if [[ "$key" == "urls.https_port" ]]; then
-            env_var_name="KEYCLOAK_HTTPS_PORT"
-        fi
-
-        # Resolve placeholders using envsubst
+    # Pass 2: Now that all variables are exported, re-evaluate and export with substitution.
+    set +u # Temporarily disable 'nounset'
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        local env_var_name
+        env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+        # Resolve placeholders using envsubst, now that all variables are in the environment
         local resolved_value
         resolved_value=$(echo "$value" | envsubst)
-
-        # Export the variable
+        # Re-export the variable with its resolved value
         export "$env_var_name"="$resolved_value"
-    done <<< "$merged_props"
-    # Restore 'nounset' setting
-    set -u
+        case "$key" in
+            "keycloak_endpoints.https_port")
+                export KEYCLOAK_HTTPS_PORT="$resolved_value"
+                ;;
+            "keycloak_endpoints.admin_addr")
+                export KEYCLOAK_ADMIN_ADDR="$resolved_value"
+                ;;
+            "keycloak_endpoints.issuer_did")
+                export KEYCLOAK_ISSUER_DID="$resolved_value"
+                ;;
+        esac
+    done <<< "$raw_props_output"
+    set -u # Restore 'nounset'
+
+    # Derived aliases for convenience
+    [[ -n "${KEYCLOAK_ENDPOINTS_ADMIN_ADDR:-}" ]] && export KEYCLOAK_ADMIN_ADDR="${KEYCLOAK_ENDPOINTS_ADMIN_ADDR}"
+    [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export KEYCLOAK_ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
+    [[ -n "${ISSUER_ENDPOINTS_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ISSUER_ENDPOINTS_BACKEND}"
+    [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
+    [[ -n "${DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${DEV_CLIENTS_TEST_CLIENT}"
 }
 # -----------------------------------------------------------------------------
 # Configuration Loading
@@ -131,12 +158,12 @@ load_configuration() {
 
     # -------------------------------------------------------------------------
     # Backward-compatible aliases for env placeholders used by realm configs
-    # Map values from urls.* to the names expected by $(env:...) placeholders
+    # Map values from keycloak_endpoints/issuer_endpoints/dev_clients to expected placeholder names
     # -------------------------------------------------------------------------
-    [[ -n "${URLS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${URLS_TEST_CLIENT}"
-    [[ -n "${URLS_ISSUER_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${URLS_ISSUER_BACKEND}"
-    [[ -n "${URLS_ISSUER_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${URLS_ISSUER_FRONTEND}"
-    [[ -n "${URLS_ISSUER_DID:-}" ]] && export ISSUER_DID="${URLS_ISSUER_DID}"
+    [[ -n "${DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${DEV_CLIENTS_TEST_CLIENT}"
+    [[ -n "${ISSUER_ENDPOINTS_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ISSUER_ENDPOINTS_BACKEND}"
+    [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
+    [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
 }
 
 # -----------------------------------------------------------------------------
@@ -277,3 +304,4 @@ init_script() {
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
 export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
+
