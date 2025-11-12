@@ -290,11 +290,11 @@ keytool \
   -genkeypair \
   -keyalg EC \
   -keysize 256 \
-  -keystore "${KEYCLOAK_KEYSTORE_FILE}" \
-  -storepass "${KEYCLOAK_KEYSTORE_PASSWORD}" \
-  -alias "${KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS}" \
-  -keypass "${KEYCLOAK_KEYSTORE_PASSWORD}" \
-  -storetype "${KEYCLOAK_KEYSTORE_TYPE}" \
+  -keystore "${KEYSTORE_FILE}" \
+  -storepass "${KEYSTORE_PASSWORD}" \
+  -alias "${KEYSTORE_ALIASES_ECDSA_KEY}" \
+  -keypass "${KEYSTORE_PASSWORD}" \
+  -storetype "${KEYSTORE_TYPE}" \
   -dname "CN=ECDSA Signing Key, OU=Keycloak, O=YourOrganization"
 ```
 
@@ -309,11 +309,11 @@ Next, we'll create a JSON file that describes the key to Keycloak. This file wil
   "providerId": "java-keystore",
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
-    "keystore": ["${KEYCLOAK_KEYSTORE_FILE}"],
-    "keystoreType": ["${KEYCLOAK_KEYSTORE_TYPE}"],
-    "keystorePassword": ["${KEYCLOAK_KEYSTORE_PASSWORD}"],
-    "keyAlias": ["${KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS}"],
-    "keyPassword": ["${KEYCLOAK_KEYSTORE_PASSWORD}"],
+    "keystore": ["${KEYSTORE_FILE}"],
+    "keystoreType": ["${KEYSTORE_TYPE}"],
+    "keystorePassword": ["${KEYSTORE_PASSWORD}"],
+    "keyAlias": ["${KEYSTORE_ALIASES_ECDSA_KEY}"],
+    "keyPassword": ["${KEYSTORE_PASSWORD}"],
     "active": ["true"],
     "priority": ["0"],
     "enabled": ["true"],
@@ -336,11 +336,11 @@ command line (as mentioned in the prerequisites).
 # Add concrete info and passwords to key provider
 echo "Configuring ecdsa key provider..."
 cat $WORK_DIR/issuer_key_ecdsa.json | \
-  jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
-  --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
-  --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
-  --arg keyAlias "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS" \
-  --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
+  jq --arg keystore "$KEYSTORE_FILE" \
+  --arg keystorePassword "$KEYSTORE_PASSWORD" \
+  --arg keystoreType "$KEYSTORE_TYPE" \
+  --arg keyAlias "$KEYSTORE_ALIASES_ECDSA_KEY" \
+  --arg keyPassword "$KEYSTORE_PASSWORD" \
   '.config.keystore = [$keystore] |
    .config.keystorePassword = [$keystorePassword] |
    .config.keystoreType = [$keystoreType] |
