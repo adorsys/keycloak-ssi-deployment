@@ -95,3 +95,8 @@ variable "sdjwt_vct" {
   default     = "stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct"
 }
 
+variable "initial_password" {
+  description = "Initial password for user"
+  type        = string
+  default     = "francis"
+}

@@ -14,7 +14,7 @@ module "users" {
     keycloak = keycloak
   }
   realm_id         = module.realm.realm_id
-  initial_password = "francis"
+  initial_password = var.initial_password
 }
 
 module "client_scopes" {
