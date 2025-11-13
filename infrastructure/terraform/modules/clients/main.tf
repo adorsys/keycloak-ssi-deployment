@@ -47,7 +47,17 @@ resource "null_resource" "apply_client_attributes" {
         -d "password=$KC_ADMIN_PASS" \
         -d "grant_type=password" | jq -r .access_token)
 
+      if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+        echo "Failed to obtain admin token" >&2
+        exit 1
+      fi
+
       CLIENT_CFG=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/clients/${each.value.id}" -H "Authorization: Bearer $TOKEN")
+
+      if ! echo "$CLIENT_CFG" | jq -e . > /dev/null 2>&1; then
+        echo "Failed to retrieve client configuration or invalid JSON for client ${each.key}" >&2
+        exit 1
+      fi
 
       ATTRIBUTES='${jsonencode(var.clients[each.key].attributes)}'
 
@@ -91,6 +101,11 @@ resource "null_resource" "apply_optional_scopes" {
         -d "password=$KC_ADMIN_PASS" \
         -d "grant_type=password" | jq -r .access_token)
 
+      if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+        echo "Failed to obtain admin token" >&2
+        exit 1
+      fi
+
       # Get all available scopes in the realm
       ALL_SCOPES=$(curl -s -k -X GET "$KC_URL/admin/realms/$REALM/client-scopes" -H "Authorization: Bearer $TOKEN")
 
@@ -98,8 +113,12 @@ resource "null_resource" "apply_optional_scopes" {
       for scope_name in $(echo "$OPTIONAL_SCOPES" | jq -r '.[]'); do
         SCOPE_ID=$(echo "$ALL_SCOPES" | jq -r --arg name "$scope_name" '.[] | select(.name == $name) | .id')
         if [ -n "$SCOPE_ID" ]; then
-          curl -s -k -X PUT "$KC_URL/admin/realms/$REALM/clients/$CLIENT_ID/optional-client-scopes/$SCOPE_ID" \
-            -H "Authorization: Bearer $TOKEN" > /dev/null
+          HTTP_CODE=$(curl -s -k -w "%%{http_code}" -o /dev/null -X PUT "$KC_URL/admin/realms/$REALM/clients/$CLIENT_ID/optional-client-scopes/$SCOPE_ID" \
+            -H "Authorization: Bearer $TOKEN")
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Failed to assign optional scope $scope_name to client ${each.key}. HTTP $HTTP_CODE" >&2
+            exit 1
+          fi
           echo "Assigned optional scope $scope_name to client ${each.key}."
         else
           echo "Warning: Optional scope $scope_name not found."
