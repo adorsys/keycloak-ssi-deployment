@@ -7,15 +7,3 @@ target/
 # IDE and editor configs
 /.idea/
 .vscode/
-
-# Keycloak chart env and package files
-infrastructure/keycloak-chart/**/*.tgz
-
-# Temporary scripts
-*.tmp.sh
-
-# Terraform state and cache
-terraform.tfstate
-terraform.tfstate.backup
-.terraform/
-**/.terraform.lock.hcl
