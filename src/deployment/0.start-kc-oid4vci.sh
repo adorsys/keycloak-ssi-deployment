@@ -84,5 +84,5 @@ if [[ "$DETACH_MODE" == "true" ]]; then
     >"$LOG_FILE" 2>&1 &
   disown || true
 else
-  exec bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"
+  bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"
 fi
