@@ -94,6 +94,9 @@ export_yaml_as_env() {
             "keycloak_endpoints.admin_addr")
                 export KEYCLOAK_ADMIN_ADDR="$value"
                 ;;
+            "keycloak.target_branch")
+                export KEYCLOAK_TARGET_BRANCH="$value"
+                ;;
         esac
     done <<< "$raw_props_output"
     set -u # Restore 'nounset'
@@ -116,8 +119,14 @@ export_yaml_as_env() {
             "keycloak_endpoints.admin_addr")
                 export KEYCLOAK_ADMIN_ADDR="$resolved_value"
                 ;;
-            "keycloak_endpoints.issuer_did")
-                export KEYCLOAK_ISSUER_DID="$resolved_value"
+            "keycloak.target_branch")
+                export KEYCLOAK_TARGET_BRANCH="$resolved_value"
+                ;;
+            "keycloak.oid4vci_dir")
+                export KEYCLOAK_OID4VCI_DIR="$resolved_value"
+                ;;
+            "keycloak.realm")
+                export KEYCLOAK_REALM="$resolved_value"
                 ;;
         esac
     done <<< "$raw_props_output"
@@ -160,9 +169,9 @@ load_configuration() {
     # Backward-compatible aliases for env placeholders used by realm configs
     # Map values from keycloak_endpoints/issuer_endpoints/dev_clients to expected placeholder names
     # -------------------------------------------------------------------------
-    [[ -n "${DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${DEV_CLIENTS_TEST_CLIENT}"
-    [[ -n "${ISSUER_ENDPOINTS_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ISSUER_ENDPOINTS_BACKEND}"
-    [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
+    [[ -n "${ENDPOINTS_DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${ENDPOINTS_DEV_CLIENTS_TEST_CLIENT}"
+    [[ -n "${ENDPOINTS_ISSUER_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ENDPOINTS_ISSUER_BACKEND}"
+    [[ -n "${ENDPOINTS_ISSUER_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ENDPOINTS_ISSUER_FRONTEND}"
     [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
 }
 
