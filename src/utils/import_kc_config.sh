@@ -19,15 +19,15 @@ REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
 # Determine keystore path dynamically
 # -----------------------------------------------------------------------------
 if [[ "$KEYCLOAK_ADMIN_ADDR" == *"localhost"* || "$KEYCLOAK_ADMIN_ADDR" == *"127.0.0.1"* ]]; then
-    CLI_KEYSTORE_PATH="$TARGET_DIR/kc_keystore.pkcs12"
-    log "Detected local Keycloak instance. Using keystore path: $CLI_KEYSTORE_PATH"
+    KEYSTORE_PATH="$TARGET_DIR/kc_keystore.pkcs12"
+    log "Detected local Keycloak instance. Using keystore path: $KEYSTORE_PATH"
 else
-    CLI_KEYSTORE_PATH="/opt/keycloak/target/kc_keystore.pkcs12"
-    log "Detected live Keycloak instance. Using keystore path: $CLI_KEYSTORE_PATH"
+    KEYSTORE_PATH="/opt/keycloak/target/kc_keystore.pkcs12"
+    log "Detected live Keycloak instance. Using keystore path: $KEYSTORE_PATH"
 fi
 
-if [[ ! -f "$CLI_KEYSTORE_PATH" ]]; then
-    error "Keystore not found at $CLI_KEYSTORE_PATH."
+if [[ ! -f "$KEYSTORE_PATH" ]]; then
+    error "Keystore not found at $KEYSTORE_PATH."
 fi
 
 
@@ -59,7 +59,7 @@ log "Running Keycloak Config CLI..."
 cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
      -DKEYCLOAK_ADMIN_ADDR="$KEYCLOAK_ADMIN_ADDR" \
      -DKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" \
-     -DCLI_KEYSTORE_PATH="$CLI_KEYSTORE_PATH" \
+     -DKEYSTORE_PATH="$KEYSTORE_PATH" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \
      -DISSUER_DID="$KEYCLOAK_ISSUER_DID" \
      -DSAML_ENTITYID="$KEYCLOAK_ISSUER_DID" \

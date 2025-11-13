@@ -44,15 +44,14 @@ clone_and_build_keycloak() {
     local target_dir="$PROJECT_TARGET_DIR/$KEYCLOAK_OID4VCI_DIR"
     local build_artifact="$target_dir/quarkus/dist/target/keycloak-999.0.0-SNAPSHOT.tar.gz"
 
-    if [[ -d "$target_dir" ]]; then
-        log "Removing existing Keycloak repository at $target_dir..."
-        rm -rf "$target_dir" || error "Failed to remove existing repository"
+    if [[ ! -d "$target_dir" ]]; then
+        log "Cloning Keycloak repository from $repo_url..."
+        git clone --depth 1 --branch "$KEYCLOAK_TARGET_BRANCH" "$repo_url" "$target_dir" \
+            || error "Could not clone the repository"
+        log "Keycloak cloned into $target_dir."
+    else
+        log "Keycloak repository already exists at $target_dir."
     fi
-
-    log "Cloning Keycloak repository from $repo_url..."
-    git clone --depth 1 --branch "$KEYCLOAK_TARGET_BRANCH" "$repo_url" "$target_dir" \
-        || error "Could not clone the repository"
-    log "Keycloak cloned into $target_dir."
 
     if [[ ! -f "$build_artifact" ]]; then
         log "Building Keycloak..."

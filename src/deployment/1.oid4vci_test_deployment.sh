@@ -164,13 +164,20 @@ fi
 log "Creating clients..."
 [[ -f "$WORK_DIR/src/config/openid4vc-rest-api.json" ]] && \
   CONFIG=$(jq --arg CLIENT_SECRET "$CLIENTS_SECRET" \
-               '.secret += $CLIENT_SECRET' \
+               --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
+               --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
+               '.secret = $CLIENT_SECRET |
+                .redirectUris += [$ISSUER_BACKEND_URL + "/*", "https://localhost:8443/callback"] |
+                .webOrigins += [$ISSUER_BACKEND_URL, "https://localhost:8443"] |
+                .attributes["post.logout.redirect.uris"] = ("##" + $ISSUER_FRONTEND_URL + "##" + $ISSUER_FRONTEND_URL + "/*")' \
                "$WORK_DIR/src/config/openid4vc-rest-api.json") && \
   echo "$CONFIG" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
   warn "OPENID4VC-REST-API client already exists; skipping."
 
 [[ -f "$WORK_DIR/src/config/oid4vc-demo-public.json" ]] && \
-  PUBLIC_CLIENT=$(jq '.' "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
+  PUBLIC_CLIENT=$(jq --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
+                     '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")' \
+                     "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
   echo "$PUBLIC_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
   warn "oid4vc-demo-public client already exists; skipping."
 

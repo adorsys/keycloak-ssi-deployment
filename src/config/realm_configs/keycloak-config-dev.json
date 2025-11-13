@@ -867,7 +867,7 @@
             "true"
           ],
           "keystore": [
-            "$(env:CLI_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"
@@ -904,7 +904,7 @@
             "true"
           ],
           "keystore": [
-            "$(env:CLI_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"
@@ -938,7 +938,7 @@
             "true"
           ],
           "keystore": [
-            "$(env:CLI_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"

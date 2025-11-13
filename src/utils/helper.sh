@@ -137,7 +137,7 @@ export_yaml_as_env() {
     [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export KEYCLOAK_ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
     [[ -n "${ISSUER_ENDPOINTS_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ISSUER_ENDPOINTS_BACKEND}"
     [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
-    [[ -n "${DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${DEV_CLIENTS_TEST_CLIENT}"
+    [[ -n "${CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${CLIENTS_TEST_CLIENT}"
 }
 # -----------------------------------------------------------------------------
 # Configuration Loading
