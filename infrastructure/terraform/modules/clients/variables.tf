@@ -18,17 +18,35 @@ variable "keycloak_url" {
   type        = string
 }
 
-variable "client_secret" {
-  description = "Client secret for openid4vc-rest-api"
-  type        = string
-}
-
-variable "test_client_url" {
-  description = "Base URL for test-client"
-  type        = string
+variable "clients" {
+  description = "A map of client configurations."
+  type = map(object({
+    name                         = string
+    client_secret                = optional(string)
+    enabled                      = bool
+    access_type                  = string
+    standard_flow_enabled        = bool
+    direct_access_grants_enabled = bool
+    valid_redirect_uris          = list(string)
+    web_origins                  = list(string)
+    full_scope_allowed           = bool
+    attributes                   = map(string)
+  }))
+  default = {}
 }
 
 variable "sdjwt_vct" {
   description = "Comma-separated list of VCT entries for sd-jwt authenticator"
   type        = string
+}
+
+variable "client_scopes_dependency" {
+  description = "A dependency map from the client_scopes module to ensure proper ordering."
+  type        = any
+  default     = {}
+}
+
+variable "optional_client_scopes" {
+  description = "List of optional client scope names to assign to each client"
+  type        = list(string)
 }
