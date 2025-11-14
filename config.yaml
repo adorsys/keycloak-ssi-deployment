@@ -124,7 +124,7 @@ database:
 # -----------------------------------------------------------------------------
 # Keycloak start command
 # -----------------------------------------------------------------------------
-start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY} --log-level=debug"
+start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY}"
 
 # -----------------------------------------------------------------------------
 # Keycloak config CLI

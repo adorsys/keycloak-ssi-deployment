@@ -29,6 +29,16 @@ The system supports multiple levels of configuration overrides:
 
 Configuration values support environment variable injection using `${VAR_NAME}` syntax.
 
+### How Environment Variables are Loaded
+
+The project uses a robust system for managing configuration through YAML files and environment variables, primarily orchestrated by the [`src/utils/helper.sh`](src/utils/helper.sh) script. This ensures that configuration is centralized, extensible, and easily accessible by other scripts.
+
+Here's a breakdown of the process:
+
+1.  **Configuration Files**: [`config.yaml`](config.yaml) defines the base configuration, and [`config.override.yaml`](config.override.yaml) provides optional overrides.
+2.  **[`src/utils/helper.sh`](src/utils/helper.sh)**: This script's [`setup_environment()`](src/utils/helper.sh:29) and [`load_configuration()`](src/utils/helper.sh:145) functions read and merge these YAML files. The [`export_yaml_as_env()`](src/utils/helper.sh:60) function then converts the merged YAML properties into environment variables, handling placeholder substitution in a two-pass process.
+3.  **Loading into Other Scripts**: Other shell scripts source [`src/utils/helper.sh`](src/utils/helper.sh) and call [`init_script()`](src/utils/helper.sh:292) to make these resolved environment variables available for their execution.
+
 ---
 
 ## Overview

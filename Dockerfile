@@ -35,18 +35,36 @@ FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /opt/keycloak
 ENV JAVA_TMPDIR=/tmp
 
+# Install gettext-base for envsubst (used by entrypoint script)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gettext-base && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create a non-privileged user
 RUN groupadd -r keycloak && useradd -r -g keycloak keycloak
+
+# Create directory for custom .env files (to be mounted at runtime)
+RUN mkdir -p /opt/keycloak/env && \
+    chown -R keycloak:keycloak /opt/keycloak
 
 # Copy the built Keycloak target from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
 
-# Ensure proper permissions and switch to non-privileged user
+# Copy entrypoint script
+COPY --chown=keycloak:keycloak scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+
+RUN chown keycloak:keycloak /opt/keycloak/.env
+
+# Ensure proper permissions
 RUN chown -R keycloak:keycloak /opt/keycloak
+
+# Switch to non-privileged user
 USER keycloak
 
 # Expose Keycloak default ports
 EXPOSE 8443
 
-# Set entrypoint command
-CMD ["/opt/keycloak/target/bin/kc.sh", "${START_COMMAND}", "${KC_DB_OPTS}", "--features=oid4vc-vci,oid4vc-vpauth"]
+# Set entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

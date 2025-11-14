@@ -13,7 +13,3 @@
 # database:
 #   password: "${PROD_DB_PASSWORD}"
 #   username: "${PROD_DB_USER}"
-
-# Example: Override ports for production
-# urls:
-#   https_port: 9443

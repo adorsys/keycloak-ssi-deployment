@@ -6,6 +6,62 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 Checkout this project.
 
+## Quick Start: Docker Compose
+
+For a quick local setup with Docker Compose (Postgres + Keycloak):
+
+1. **Generate environment file from config.yaml:**
+   ```bash
+   bash scripts/generate-compose-env.sh
+   ```
+   This creates a `.env` file with all required environment variables from `config.yaml`.
+
+2. **Start services:**
+   ```bash
+   # Option 1: Use the wrapper script (recommended)
+   ./docker-compose.sh up
+
+   # Option 2: Use docker compose directly (after generating .env)
+   docker compose up
+   ```
+
+   The wrapper script (`docker-compose.sh`) automatically generates the `.env` file if it doesn't exist, so you can use it directly:
+   ```bash
+   ./docker-compose.sh up -d
+   ./docker-compose.sh down
+   ./docker-compose.sh logs -f
+   ```
+
+   **Note:** The `.env` file is automatically generated from `config.yaml` and is git-ignored. To customize values, edit `config.yaml` or `config.override.yaml` and regenerate the `.env` file.
+
+### Runtime Environment Variable Overrides
+
+The Docker container supports runtime environment variable overrides via:
+1. **Environment variables passed directly** (highest priority)
+2. **Custom .env file mounted at `/opt/keycloak/env/.env`**
+3. **Default .env file at `/opt/keycloak/.env`** (built into image)
+
+**Example: Override with custom .env file**
+```yaml
+services:
+  app:
+    volumes:
+      - ./custom.env:/opt/keycloak/env/.env:ro
+```
+
+**Example: Override with environment variables**
+```yaml
+services:
+  app:
+    environment:
+      - KEYCLOAK_HTTPS_PORT=9443
+      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/mydb
+```
+
+**Verification:**
+- See detailed documentation: `docs/DOCKER_RUNTIME_OVERRIDES.md`
+- Run verification script: `bash scripts/verify-runtime-overrides.sh`
+
 ## Checkout, Build, and Deploy Keycloak
 
 ### Prerequisites
