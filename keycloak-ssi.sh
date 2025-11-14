@@ -385,8 +385,10 @@ main() {
 
 # Function to handle script exit and clean up
 cleanup() {
+    log "DEBUG: cleanup function called."
     log "Caught signal, performing graceful shutdown..."
     stop_keycloak
+    log "DEBUG: stop_keycloak completed."
     log "Shutdown complete."
 }
 
