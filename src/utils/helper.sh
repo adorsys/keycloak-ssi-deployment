@@ -64,7 +64,6 @@ setup_environment() {
 # Keycloak Process Management
 # -----------------------------------------------------------------------------
 get_keycloak_pid() {
-    debug "DEBUG: Attempting to get Keycloak PID..."
     local pid
     if command -v pgrep &>/dev/null; then
         pid=$(pgrep -f keycloak | head -n1 || true)
@@ -75,30 +74,28 @@ get_keycloak_pid() {
             pid=$(ps aux | grep -i '[k]eycloak' | awk 'NR==1{print $2}' || true)
         fi
     fi
-    debug "DEBUG: get_keycloak_pid found PID: $pid"
     echo "$pid"
 }
 
 stop_keycloak() {
-    debug "DEBUG: stop_keycloak function called."
     local keycloak_pid
     keycloak_pid="$(get_keycloak_pid || true)"
 
     if [[ -n "$keycloak_pid" ]]; then
         log "Keycloak instance found (PID: $keycloak_pid). Shutting it down..."
-        kill "$keycloak_pid" || warn "Failed to kill process $keycloak_pid. It might already be stopped or require elevated privileges."
+        if ! kill "$keycloak_pid"; then
+            return 1
+        fi
         # Wait for process to terminate
         sleep 2
         if kill -0 "$keycloak_pid" 2>/dev/null; then
-            warn "Process $keycloak_pid still running after SIGTERM, force killing with SIGKILL..."
             kill -9 "$keycloak_pid" 2>/dev/null || true
             sleep 1
         fi
         if kill -0 "$keycloak_pid" 2>/dev/null; then
-            error "Failed to stop Keycloak process $keycloak_pid even after SIGKILL."
-        else
-            log "Keycloak stopped."
+            return 1
         fi
+        log "Keycloak stopped."
     else
         log "No running Keycloak instance found."
     fi
