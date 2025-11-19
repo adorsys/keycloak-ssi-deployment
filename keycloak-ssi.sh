@@ -71,6 +71,7 @@ show_help() {
 "" \
 "${CLI_CYAN}COMMANDS${CLI_NC}" \
 "  ${CLI_GREEN}setup [-d]${CLI_NC}                  Build and start Keycloak with OID4VCI features" \
+"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., 'kc compose up -d')" \
 "  ${CLI_GREEN}config${CLI_NC}                      Configure realm, key providers, clients, and users" \
 "  ${CLI_GREEN}test${CLI_NC}                        <preauth|authcode> <CredentialType>   Test credential flows" \
 "  ${CLI_GREEN}import${CLI_NC}                      Import ready realm configuration" \
@@ -83,6 +84,8 @@ show_help() {
 "  keycloak-ssi install" \
 "  keycloak-ssi setup" \
 "  keycloak-ssi setup -d" \
+"  keycloak-ssi compose up -d" \
+"  keycloak-ssi compose down" \
 "  keycloak-ssi config" \
 "  keycloak-ssi test preauth IdentityCredential" \
 "  keycloak-ssi test authcode IdentityCredential" \
@@ -231,6 +234,40 @@ cmd_stop() {
     success "Stop command completed"
 }
 
+cmd_compose() {
+    log "Running docker compose command: docker compose $@"
+
+    local env_file=".env.generated" # Use a temporary file name
+    
+    # Generate .env file from config.yaml
+    log "Generating temporary .env file from config.yaml..."
+    export_yaml_as_env > "$env_file" || error "Failed to generate .env file"
+
+    # Detect docker-compose command
+    local DOCKER_COMPOSE_CMD=()
+    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
+        # Docker Compose v2 (plugin)
+        DOCKER_COMPOSE_CMD=(docker compose)
+    elif command -v docker-compose &> /dev/null; then
+        # Docker Compose v1 (standalone)
+        DOCKER_COMPOSE_CMD=(docker-compose)
+    else
+        error "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is installed."
+    fi
+
+    # Execute docker-compose with all passed arguments, using the generated .env file
+    # Docker Compose automatically picks up .env in the current directory
+    "${DOCKER_COMPOSE_CMD[@]}" "$@"
+
+    local compose_exit_code=$?
+
+    # Clean up the temporary .env file
+    log "Cleaning up temporary .env file..."
+    rm -f "$env_file"
+
+    return "$compose_exit_code"
+}
+
 cmd_install() {
     log "Installing keycloak-ssi CLI to system PATH..."
 
@@ -348,6 +385,10 @@ main() {
             ;;
         "import")
             cmd_import
+            ;;
+        "compose")
+            shift # Remove 'compose' from arguments, pass the rest to cmd_compose
+            cmd_compose "$@"
             ;;
         "stop")
             cmd_stop

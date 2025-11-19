@@ -165,14 +165,6 @@ load_configuration() {
     # The yq dependency check is now handled inside export_yaml_as_env.
     export_yaml_as_env "${yq_files[@]}"
 
-    # -------------------------------------------------------------------------
-    # Backward-compatible aliases for env placeholders used by realm configs
-    # Map values from keycloak_endpoints/issuer_endpoints/dev_clients to expected placeholder names
-    # -------------------------------------------------------------------------
-    [[ -n "${ENDPOINTS_DEV_CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${ENDPOINTS_DEV_CLIENTS_TEST_CLIENT}"
-    [[ -n "${ENDPOINTS_ISSUER_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ENDPOINTS_ISSUER_BACKEND}"
-    [[ -n "${ENDPOINTS_ISSUER_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ENDPOINTS_ISSUER_FRONTEND}"
-    [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
 }
 
 # -----------------------------------------------------------------------------

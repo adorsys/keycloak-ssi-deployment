@@ -17,7 +17,7 @@ RUN apt-get update && \
 RUN curl -L https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o /usr/bin/yq && chmod +x /usr/bin/yq
 
 # Copy environment file
-COPY config.yaml config.override.yaml ./
+COPY config.yaml ./
 
 # Copy necessary source scripts
 COPY src/deployment ./src/deployment
@@ -35,27 +35,13 @@ FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /opt/keycloak
 ENV JAVA_TMPDIR=/tmp
 
-# Install gettext-base for envsubst (used by entrypoint script)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gettext-base && \
-    rm -rf /var/lib/apt/lists/*
-
 # Create a non-privileged user
 RUN groupadd -r keycloak && useradd -r -g keycloak keycloak
 
-# Create directory for custom .env files (to be mounted at runtime)
-RUN mkdir -p /opt/keycloak/env && \
-    chown -R keycloak:keycloak /opt/keycloak
 
 # Copy the built Keycloak target from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
 
-# Copy entrypoint script
-COPY --chown=keycloak:keycloak scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-
-RUN chown keycloak:keycloak /opt/keycloak/.env
 
 # Ensure proper permissions
 RUN chown -R keycloak:keycloak /opt/keycloak
@@ -67,4 +53,4 @@ USER keycloak
 EXPOSE 8443
 
 # Set entrypoint script
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "-c", "cd $KC_INSTALL_DIR && exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"]

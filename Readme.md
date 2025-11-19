@@ -6,61 +6,38 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 Checkout this project.
 
-## Quick Start: Docker Compose
+## Quick Start
 
-For a quick local setup with Docker Compose (Postgres + Keycloak):
+For a quick local setup with Docker Compose (Postgres + Keycloak) using the `keycloak-ssi` CLI:
 
-1. **Generate environment file from config.yaml:**
-   ```bash
-   bash scripts/generate-compose-env.sh
-   ```
-   This creates a `.env` file with all required environment variables from `config.yaml`.
+1.  **Start Keycloak:**
+    ```bash
+    keycloak-ssi compose up -d
+    ```
+    This command starts Keycloak with OID4VCI features in detached mode, handling configuration from `config.yaml` and `config.override.yaml`.
 
-2. **Start services:**
-   ```bash
-   # Option 1: Use the wrapper script (recommended)
-   ./docker-compose.sh up
+2.  **Stop Keycloak:**
+    ```bash
+    keycloak-ssi compose down
+    ```
 
-   # Option 2: Use docker compose directly (after generating .env)
-   docker compose up
-   ```
+### Runtime Configuration Overrides
 
-   The wrapper script (`docker-compose.sh`) automatically generates the `.env` file if it doesn't exist, so you can use it directly:
-   ```bash
-   ./docker-compose.sh up -d
-   ./docker-compose.sh down
-   ./docker-compose.sh logs -f
-   ```
+Keycloak configuration is managed through `config.yaml` and can be overridden by `config.override.yaml` or directly by environment variables (highest priority).
 
-   **Note:** The `.env` file is automatically generated from `config.yaml` and is git-ignored. To customize values, edit `config.yaml` or `config.override.yaml` and regenerate the `.env` file.
-
-### Runtime Environment Variable Overrides
-
-The Docker container supports runtime environment variable overrides via:
-1. **Environment variables passed directly** (highest priority)
-2. **Custom .env file mounted at `/opt/keycloak/env/.env`**
-3. **Default .env file at `/opt/keycloak/.env`** (built into image)
-
-**Example: Override with custom .env file**
+**Example: Override with `config.override.yaml`**
+To change the Keycloak HTTPS port to `9443`, create or modify `config.override.yaml` as follows:
 ```yaml
-services:
-  app:
-    volumes:
-      - ./custom.env:/opt/keycloak/env/.env:ro
+keycloak:
+  https_port: 9443
 ```
+This will start Keycloak on port 9443.
 
 **Example: Override with environment variables**
-```yaml
-services:
-  app:
-    environment:
-      - KEYCLOAK_HTTPS_PORT=9443
-      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/mydb
+```bash
+KEYCLOAK_HTTPS_PORT=9443 keycloak-ssi compose up
 ```
-
-**Verification:**
-- See detailed documentation: `docs/DOCKER_RUNTIME_OVERRIDES.md`
-- Run verification script: `bash scripts/verify-runtime-overrides.sh`
+This will also start Keycloak on port 9443.
 
 ## Checkout, Build, and Deploy Keycloak
 
@@ -104,7 +81,7 @@ To control which method is used, set `keycloak.version` (and optionally `keycloa
 Set `keycloak.version` to the desired official Keycloak version (e.g., `26.0.7`) in `config.yaml` and run:
 
 ```bash
-./0.start-kc-oid4vci.sh
+keycloak-ssi setup
 ```
 
 This will:
@@ -125,7 +102,7 @@ keycloak:
 Then run:
 
 ```bash
-./0.start-kc-oid4vci.sh
+keycloak-ssi setup
 ```
 
 This will:
@@ -171,12 +148,7 @@ In the project directory execute following scripts (tested on debian & ubuntu li
 
 ```bash
 # Configure oid4vci protocol
-./1.oid4vci_test_deployment.sh
-```
-
-```bash
-# Create a user account
-./2.configure_user_4_account_client.sh
+keycloak-ssi config
 ```
 
 ## Requesting Credentials
@@ -188,7 +160,7 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 ### Request a Credential with Key Binding (Pre-Authorized Code Flow)
 
 ```bash
-./3.retrieve_IdentityCredential.sh
+keycloak-ssi test preauth IdentityCredential
 ```
 
 This script:
@@ -200,7 +172,7 @@ This script:
 ### Request a Credential with Key Binding (Authorization Code Flow with PKCE)
 
 ```bash
-./3.configure_auth_code_flow.sh
+keycloak-ssi test authcode IdentityCredential
 ```
 
 This script:
@@ -220,7 +192,7 @@ Refer to the TLDR section for initial setup requirements.
 
 ### Configuration Files (config.yaml and config.override.yaml)
 
-All settings come from `config.yaml`. You can optionally create `config.override.yaml` to override a subset of values locally; it will be merged on top automatically. Environment variables are exported from `config.yaml` by the helper so scripts and tools can consume them.
+Configuration is loaded from `config.yaml` and `config.override.yaml`, and can be further customized using environment variables. The `keycloak-ssi` CLI automatically loads these configurations and makes them available as environment variables for scripts and Docker Compose operations.
 
 ### Using Keycloak with OID4VCI Support
 
@@ -407,7 +379,7 @@ cat $WORK_DIR/issuer_key_ecdsa.json | \
 
 **4. Adding the Key to the Keycloak Realm:**
 
-The following Bash command adds an EC key to the Keycloak realm specified in the `.env` file and configures it to produce JWS ES256 signatures (ECDSA on curve P-256):
+The following Bash command adds an EC key to the Keycloak realm and configures it to produce JWS ES256 signatures (ECDSA on curve P-256):
 
 ```bash
 # Register the EC-key with Keycloak
