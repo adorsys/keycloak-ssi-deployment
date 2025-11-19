@@ -65,7 +65,7 @@
       "id": "4c486109-a4ab-4207-9028-65d4364459dd",
       "clientId": "openid4vc-rest-api",
       "clientAuthenticatorType": "client-secret",
-      "secret": "$(env:CLIENT_SECRET)",
+      "secret": "$(env:CLIENTS_SECRET)",
       "redirectUris": [
         "$(env:ISSUER_BACKEND_URL)/*",
         "https://localhost:8443/callback",

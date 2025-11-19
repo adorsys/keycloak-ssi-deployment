@@ -53,4 +53,4 @@ USER keycloak
 EXPOSE 8443
 
 # Set entrypoint script
-ENTRYPOINT ["/bin/sh", "-c", "cd $KC_INSTALL_DIR && exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"]
+ENTRYPOINT ["/bin/sh", "-c", "cd $KEYCLOAK_INSTALL_DIR && exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"]
