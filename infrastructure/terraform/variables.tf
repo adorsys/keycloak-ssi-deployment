@@ -16,10 +16,65 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
-variable "client_secret" {
-  description = "Client secret for openid4vc-rest-api"
-  type        = string
-  default     = "uArydomqOymeF0tBrtipkPYujNNUuDlt"
+variable "clients" {
+  description = "A map of client configurations."
+  type = map(object({
+    name                         = string
+    client_secret                = optional(string)
+    enabled                      = bool
+    access_type                  = string
+    standard_flow_enabled        = bool
+    direct_access_grants_enabled = bool
+    valid_redirect_uris          = list(string)
+    web_origins                  = list(string)
+    full_scope_allowed           = bool
+    attributes                   = map(string)
+  }))
+  default = {
+    "oid4vc-demo-public" = {
+      name                         = "oid4vc-demo-public"
+      enabled                      = true
+      access_type                  = "PUBLIC"
+      standard_flow_enabled        = true
+      direct_access_grants_enabled = false
+      valid_redirect_uris          = ["http://localhost:4200/*"]
+      web_origins                  = ["http://localhost:4200"]
+      full_scope_allowed           = true
+      attributes = {
+        "oid4vci.enabled"           = "true"
+        "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*"
+      }
+    },
+    "openid4vc-rest-api" = {
+      name                         = "openid4vc-rest-api"
+      client_secret                = "uArydomqOymeF0tBrtipkPYujNNUuDlt"
+      enabled                      = true
+      access_type                  = "CONFIDENTIAL"
+      standard_flow_enabled        = true
+      direct_access_grants_enabled = true
+      full_scope_allowed           = true
+      valid_redirect_uris = [
+        "https://localhost:8443/callback",
+        "https://issuer.eudi-adorsys.com/services/*",
+        "http://back.localhost.com/*"
+      ]
+      web_origins = [
+        "https://issuer.eudi-adorsys.com/services",
+        "https://localhost:8443"
+      ]
+      attributes = {
+        "oid4vci.enabled"             = "true"
+        "client.secret.creation.time" = "1719785014"
+        "post.logout.redirect.uris"   = "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
+      }
+    }
+  }
+}
+
+variable "optional_client_scopes" {
+  description = "List of optional client scope names to assign to clients"
+  type        = list(string)
+  default     = ["IdentityCredential", "KMACredential", "SteuerberaterCredential"]
 }
 
 variable "pre_authorized_code_lifespanS" {
@@ -31,13 +86,7 @@ variable "pre_authorized_code_lifespanS" {
 variable "status_list_server_url" {
   description = "URL of the status list server"
   type        = string
-  default     = "https://statuslist.eudi-adorsys.com/"
-}
-
-variable "test_client_url" {
-  description = "Base URL for test-client"
-  type        = string
-  default     = "http://localhost:4200"
+  default     = "https://statuslist.eudi-adorsys.com"
 }
 
 variable "sdjwt_vct" {

@@ -162,24 +162,42 @@ fi
 # Create clients
 # -----------------------------------------------------------------------------
 log "Creating clients..."
-[[ -f "$WORK_DIR/src/config/openid4vc-rest-api.json" ]] && \
-  CONFIG=$(jq --arg CLIENT_SECRET "$CLIENT_SECRET" \
-               --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
-               --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
-               '.secret += $CLIENT_SECRET |
-                .redirectUris += [$ISSUER_BACKEND_URL + "/*", "https://localhost:8443/callback"] |
-                .webOrigins += [$ISSUER_BACKEND_URL, "https://localhost:8443"] |
-                .attributes["post.logout.redirect.uris"] = ("##" + $ISSUER_FRONTEND_URL + "##" + $ISSUER_FRONTEND_URL + "/*")' \
-               "$WORK_DIR/src/config/openid4vc-rest-api.json") && \
-  echo "$CONFIG" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
-  warn "OPENID4VC-REST-API client already exists; skipping."
+CLIENTS_CONFIG_FILE="$WORK_DIR/src/config/clients-config.json"
+CLIENT_SCOPE_CONFIG_FILE="$WORK_DIR/src/config/client-scope-config.json"
 
-[[ -f "$WORK_DIR/src/config/oid4vc-demo-public.json" ]] && \
-  PUBLIC_CLIENT=$(jq --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
-                     '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")' \
-                     "$WORK_DIR/src/config/oid4vc-demo-public.json") && \
-  echo "$PUBLIC_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
-  warn "oid4vc-demo-public client already exists; skipping."
+if [[ -f "$CLIENTS_CONFIG_FILE" && -f "$CLIENT_SCOPE_CONFIG_FILE" ]]; then
+  # Dynamically get all scope names from client-scope-config.json
+  OPTIONAL_SCOPES=$(jq '[.[].name]' "$CLIENT_SCOPE_CONFIG_FILE")
+
+  jq -c '.[]' "$CLIENTS_CONFIG_FILE" | while read -r client; do
+    CLIENT_ID=$(echo "$client" | jq -r '.clientId')
+    
+    # Add the dynamic optional scopes to the client configuration
+    MODIFIED_CLIENT=$(echo "$client" | jq --argjson scopes "$OPTIONAL_SCOPES" '.optionalClientScopes = $scopes')
+
+    if [[ "$CLIENT_ID" == "openid4vc-rest-api" ]]; then
+      MODIFIED_CLIENT=$(echo "$MODIFIED_CLIENT" | jq \
+        --arg CLIENT_SECRET "$CLIENT_SECRET" \
+        --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
+        --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
+        '.secret = $CLIENT_SECRET |
+         .redirectUris += [$ISSUER_BACKEND_URL + "/*", "https://localhost:8443/callback"] |
+         .webOrigins += [$ISSUER_BACKEND_URL, "https://localhost:8443"] |
+         .attributes["post.logout.redirect.uris"] = ("##" + $ISSUER_FRONTEND_URL + "##" + $ISSUER_FRONTEND_URL + "/*")')
+    elif [[ "$CLIENT_ID" == "oid4vc-demo-public" ]]; then
+      MODIFIED_CLIENT=$(echo "$MODIFIED_CLIENT" | jq \
+        --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
+        '.redirectUris = [$TEST_CLIENT_URL + "/*"] |
+         .webOrigins = [$TEST_CLIENT_URL] |
+         .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")')
+    fi
+
+    echo "$MODIFIED_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
+      warn "Client '$CLIENT_ID' already exists; skipping."
+  done
+else
+  warn "clients-config.json or client-scope-config.json not found; skipping client creation."
+fi
 
 # -----------------------------------------------------------------------------
 # Ensure SD-JWT authenticator VCT
@@ -195,12 +213,11 @@ log "Validating OID4VCI configuration..."
 response=$(curl -ks "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/.well-known/openid-credential-issuer")
 [[ -z "$response" ]] && error "No response from Keycloak OIDC credential issuer endpoint."
 
-for credential in "SteuerberaterCredential" "IdentityCredential" "KMACredential"; do
+# Dynamically validate all credentials from the configuration file
+jq -r '.[].name' "$CLIENT_SCOPE_CONFIG_FILE" | while read -r credential; do
   jq -e --arg c "$credential" '."credential_configurations_supported"[$c]' <<< "$response" >/dev/null || \
     error "Configuration missing: '$credential' not found in OID4VCI configuration."
 done
 
 success "Keycloak server is running and OID4VCI credentials are configured successfully."
 log "Configuration script completed successfully."
-
-

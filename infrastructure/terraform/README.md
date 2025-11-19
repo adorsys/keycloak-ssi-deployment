@@ -51,12 +51,11 @@ infrastructure/terraform/
 
 The following variables can be customized in `variables.tf`:
 
-| Variable         | Description                        | Default Value                      |
-| ---------------- | ---------------------------------- | ---------------------------------- |
-| `keycloak_url`   | Keycloak base URL                  | `https://localhost:8443`           |
-| `admin_password` | Keycloak admin password            | `admin`                            |
-| `realm`          | Keycloak realm name                | `oid4vc-vci`                       |
-| `client_secret`  | Client secret for OID4VCI REST API | `uArydomqOymeF0tBrtipkPYujNNUuDlt` |
+| Variable         | Description             | Default Value            |
+| ---------------- | ----------------------- | ------------------------ |
+| `keycloak_url`   | Keycloak base URL       | `https://localhost:8443` |
+| `admin_password` | Keycloak admin password | `admin`                  |
+| `realm`          | Keycloak realm name     | `oid4vc-vci`             |
 
 ### Key Configuration
 
@@ -128,13 +127,11 @@ The configuration automatically disables certain default Keycloak keys:
 
 This ensures only the custom imported keys are active for OID4VCI operations.
 
-### Credential Types Supported
+### Extensible Credential Configuration
 
-The configuration supports three main credential types:
+The Terraform setup is designed to be fully extensible. It automatically discovers and configures all credential definitions (`*.json` files) located in the `jsons/scopes/` directory.
 
-- **SteuerberaterCredential**: Tax advisor credentials
-- **IdentityCredential**: Identity verification credentials
-- **KMACredential**: Credentials for a person's professional status and chamber membership
+To add a new credential type, simply create a new JSON file in this directory. Terraform will automatically create the corresponding client scope and associate it with the clients.
 
 ### SAML Identity Provider Features
 
