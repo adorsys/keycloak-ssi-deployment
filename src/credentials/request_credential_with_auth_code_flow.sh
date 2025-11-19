@@ -104,10 +104,16 @@ request_credential() {
   debug "Code challenge: $code_challenge"
 
   local encoded_scopes
-  encoded_scopes=$(printf "%s" "$scopes" | jq -sRr @uri)
+  encoded_scopes=$(urlencode "$scopes")
   local issuer_state="state-$(uuidgen)"
+  local issuer_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}"
 
-  local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
+  local authorization_details_json
+  authorization_details_json=$(jq -n --arg credential_id "$credential_id" --arg issuer_url "$issuer_url" '[{"type":"openid_credential", "credential_configuration_id": $credential_id, "locations": [$issuer_url]}]' | tr -d '\n')
+  local encoded_authorization_details
+  encoded_authorization_details=$(urlencode "$authorization_details_json")
+
+  local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=${encoded_authorization_details}&code_challenge=${code_challenge}&code_challenge_method=S256"
 
   warn "Manual step required: Open the following URL in your browser and login as 'francis':"
   echo -e "\n$auth_url\n"
@@ -122,12 +128,13 @@ request_credential() {
   log "Exchanging authorization code for token..."
   local token_response
   token_response=$(curl -s -k -X POST "${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token" \
-    -d "grant_type=authorization_code" \
-    -d "code=${auth_code}" \
-    -d "client_id=openid4vc-rest-api" \
-    -d "client_secret=${CLIENT_SECRET}" \
-    -d "redirect_uri=https://localhost:8443/callback" \
-    -d "code_verifier=${code_verifier}")
+    --data-urlencode "grant_type=authorization_code" \
+    --data-urlencode "code=${auth_code}" \
+    --data-urlencode "client_id=openid4vc-rest-api" \
+    --data-urlencode "client_secret=${CLIENT_SECRET}" \
+    --data-urlencode "redirect_uri=https://localhost:8443/callback" \
+    --data-urlencode "code_verifier=${code_verifier}" \
+    --data-urlencode "authorization_details=$authorization_details_json")
 
   local access_token
   access_token=$(echo "$token_response" | jq -r '.access_token')
