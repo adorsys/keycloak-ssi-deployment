@@ -379,5 +379,17 @@ main() {
     esac
 }
 
+# =============================================================================
+# Trap for graceful shutdown
+# =============================================================================
+
+# Function to handle script exit and clean up
+cleanup() {
+    stop_keycloak
+}
+
+# Trap SIGINT (Ctrl+C) and SIGTERM signals
+trap cleanup SIGINT SIGTERM
+
 # Run main function
 main "$@"
