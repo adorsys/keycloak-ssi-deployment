@@ -59,8 +59,13 @@ fi
 # Inject providers
 # ---------------------------------------------------------------------------
 log "Injecting Keycloak providers..."
-mkdir -p "$KC_INSTALL_DIR/providers"
-cp "$WORK_DIR/providers/"*.jar "$KC_INSTALL_DIR/providers"
+if [ -d "$WORK_DIR/providers" ]; then
+  echo "Injecting Keycloak providers..."
+  mkdir -p "$KC_INSTALL_DIR/providers"
+  cp "$WORK_DIR/providers/"*.jar "$KC_INSTALL_DIR/providers"
+else
+  echo "No providers folder found at $WORK_DIR/providers — skipping injection."
+fi
 
 # ---------------------------------------------------------------------------
 # Start Keycloak (foreground by default; '-d' to detach and log to file)
@@ -80,9 +85,9 @@ if [[ "$DETACH_MODE" == "true" ]]; then
   ensure_directory_exists "$LOG_DIR"
   LOG_FILE="$LOG_DIR/keycloak.log"
   log "Detaching Keycloak; logs will be written to $LOG_FILE"
-  nohup bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth" \
+  nohup bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci" \
     >"$LOG_FILE" 2>&1 &
   disown || true
 else
-  bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci,oid4vc-vpauth"
+  bash -c "exec bin/kc.sh $KC_START $KC_DB_OPTS --features=oid4vc-vci"
 fi

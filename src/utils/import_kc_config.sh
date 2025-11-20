@@ -64,7 +64,6 @@ cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENT_SECRET" \
      -DISSUER_BACKEND_URL="$ISSUER_BACKEND_URL" \
      -DISSUER_FRONTEND_URL="$ISSUER_FRONTEND_URL" \
      -DISSUER_DID="$ISSUER_DID" \
-     -DSAML_ENTITYID="$ISSUER_DID" \
      -DTEST_CLIENT_URL="$TEST_CLIENT_URL" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
@@ -77,8 +76,3 @@ cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENT_SECRET" \
      --import.files.locations="$KC_REALM_FILE"
 
 log "Realm configuration imported successfully."
-
-# ---------------------------------------------------------------------------
-# Update SD-JWT authenticator configuration
-# ---------------------------------------------------------------------------
-source "$WORK_DIR/src/utils/update_sdjwt_vct.sh"

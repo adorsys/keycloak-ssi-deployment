@@ -3,8 +3,7 @@
   "realm": "oid4vc-vci",
   "enabled": true,
   "attributes": {
-    "preAuthorizedCodeLifespanS": "120",
-    "status-list-server-url": "https://statuslist.eudi-adorsys.com"
+    "preAuthorizedCodeLifespanS": "120"
   },
   "users": [
     {
@@ -96,7 +95,7 @@
       "attributes": {
         "vc.credential_configuration_id": "IdentityCredential",
         "vc.credential_contexts": "https://credentials.example.com/identity_credential",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
         "vc.proof_signing_alg_values_supported": "ES256,ES384",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "identity_credential",
@@ -211,7 +210,7 @@
       "attributes": {
         "vc.credential_configuration_id": "KMACredential",
         "vc.credential_contexts": "person_vct",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
         "vc.proof_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "person_vct",
@@ -449,7 +448,7 @@
       "attributes": {
         "vc.credential_configuration_id": "SteuerberaterCredential",
         "vc.credential_contexts": "stbk_westfalen_lippe",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
         "vc.proof_signing_alg_values_supported": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "stbk_westfalen_lippe",
@@ -625,224 +624,6 @@
           }
         }
       ]
-    }
-  ],
-  "identityProviders": [
-    {
-      "alias": "saml",
-      "providerId": "saml",
-      "enabled": true,
-      "updateProfileFirstLoginMode": "on",
-      "config": {
-        "postBindingResponse": "true",
-        "xmlSigKeyInfoKeyNameTransformer": "KEY_ID",
-        "idpEntityId": "https://saml.example.com/entityid",
-        "allowCreate": "true",
-        "syncMode": "LEGACY",
-        "singleSignOnServiceUrl": "https://mocksaml.com/api/saml/sso",
-        "wantAuthnRequestsSigned": "true",
-        "validateSignature": "true",
-        "signingCertificate": "MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\nSzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\nMjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\nDAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\nRuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\npwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\nNfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\nAAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\nkhuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\nUjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\nr/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\nm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==",
-        "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-        "entityId": "$(env:SAML_ENTITYID)",
-        "signatureAlgorithm": "RSA_SHA256",
-        "metadataDescriptorUrl": "https://mocksaml.com/api/saml/metadata"
-      }
-    }
-  ],
-  "identityProviderMappers": [
-    {
-      "name": "email",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "email",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "email"
-      }
-    },
-    {
-      "name": "firstName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "firstName",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "firstName"
-      }
-    },
-    {
-      "name": "lastName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "lastName",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "lastName"
-      }
-    },
-    {
-      "name": "displayName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "John Doe",
-        "attribute": "displayName"
-      }
-    },
-    {
-      "name": "department",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "IT Department",
-        "attribute": "department"
-      }
-    },
-    {
-      "name": "organization",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Example Organization",
-        "attribute": "organization"
-      }
-    },
-    {
-      "name": "title",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Employee",
-        "attribute": "title"
-      }
-    },
-    {
-      "name": "phoneNumber",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "+1-555-123-4567",
-        "attribute": "phoneNumber"
-      }
-    },
-    {
-      "name": "address",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "123 Main St, City, State 12345",
-        "attribute": "address"
-      }
-    },
-    {
-      "name": "roles",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "user",
-        "attribute": "roles"
-      }
-    },
-    {
-      "name": "professional_status",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Professional",
-        "attribute": "professional_status"
-      }
-    },
-    {
-      "name": "chamber",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Unknown Chamber",
-        "attribute": "chamber"
-      }
-    },
-    {
-      "name": "date_of_birth",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "1970-01-01",
-        "attribute": "date_of_birth"
-      }
-    },
-    {
-      "name": "member_id",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "000000",
-        "attribute": "member_id"
-      }
-    },
-    {
-      "name": "customer_number",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "000000",
-        "attribute": "customer_number"
-      }
-    },
-    {
-      "name": "safe_id",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "SAFE-000000",
-        "attribute": "safe_id"
-      }
-    },
-    {
-      "name": "chamber_id",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "CH-000000",
-        "attribute": "chamber_id"
-      }
-    },
-    {
-      "name": "chamber_name",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Unknown Chamber",
-        "attribute": "chamber_name"
-      }
-    },
-    {
-      "name": "role_id",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "ROLE-000000",
-        "attribute": "role_id"
-      }
     }
   ],
   "components": {
