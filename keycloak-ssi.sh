@@ -241,7 +241,10 @@ cmd_compose() {
     
     # Generate .env file from config.yaml
     log "Generating temporary .env file from config.yaml..."
-    export_yaml_as_env > "$env_file" || error "Failed to generate .env file"
+    rm -f "$env_file"
+    local env_content
+    env_content=$(export_yaml_as_env "$WORK_DIR/config.yaml" "$WORK_DIR/config.override.yaml")
+    echo "$env_content" > "$env_file"
 
     # Detect docker-compose command
     local DOCKER_COMPOSE_CMD=()

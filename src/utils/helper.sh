@@ -33,15 +33,23 @@ setup_environment() {
 
     # Use WORK_DIR if already set (by CLI), otherwise determine it
     if [[ -z "${WORK_DIR:-}" ]]; then
-        # Find the project root by looking for a known marker
+        # Find the project root by walking upward
         local search_dir="${PWD}"
-        while [[ "$search_dir" != "/" && "$search_dir" != "" ]]; do
+
+        while true; do
+            # Stop if we reached filesystem root
+            local parent="$(dirname "$search_dir")"
+            [[ "$parent" == "$search_dir" ]] && break
+
+            # Detect project root
             if [[ -f "$search_dir/src/utils/helper.sh" || -f "$search_dir/docker-compose.yml" ]]; then
                 WORK_DIR="$search_dir"
-                export WORK_DIR # Export WORK_DIR so it's available for envsubst
+                export WORK_DIR
                 break
             fi
-            search_dir="$(dirname "$search_dir")"
+
+            # Move up
+            search_dir="$parent"
         done
 
         if [[ -z "${WORK_DIR:-}" ]]; then
@@ -72,6 +80,7 @@ export_yaml_as_env() {
 
     # 1. Merge config files, flatten to properties, and clean up for shell export.
     #    Store this raw output for two passes.
+    set +u # Temporarily disable 'nounset' for yq and sed pipeline
     local raw_props_output=$(yq eval-all "$yq_merge_command | to_props" "${yaml_files[@]}" | \
         sed -E 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/' | \
         grep -vE '^\s*#' | \
@@ -87,6 +96,7 @@ export_yaml_as_env() {
         env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
         # Export the raw value
         export "$env_var_name"="$value"
+        echo "$env_var_name=$value"
         case "$key" in
             "keycloak_endpoints.https_port")
                 export KEYCLOAK_HTTPS_PORT="$value"
@@ -102,7 +112,7 @@ export_yaml_as_env() {
     set -u # Restore 'nounset'
 
     # Pass 2: Now that all variables are exported, re-evaluate and export with substitution.
-    set +u # Temporarily disable 'nounset'
+    set +u # Temporarily disable 'nounset' for variable assignment
     while IFS='=' read -r key value; do
         [[ -z "$key" ]] && continue
         local env_var_name
@@ -166,7 +176,7 @@ load_configuration() {
 
     # Export variables using the new helper function.
     # The yq dependency check is now handled inside export_yaml_as_env.
-    export_yaml_as_env "${yq_files[@]}"
+    export_yaml_as_env "${yq_files[@]}" > /dev/null
 
 }
 
@@ -229,7 +239,7 @@ stop_keycloak() {
     if [[ -f "$DOCKER_COMPOSE_FILE" ]]; then
         DOCKER_COMPOSE_COMMAND="$(detect_docker_compose)"
         log "Stopping and removing database container..."
-        eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" down -v db" || \
+        eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" down -v"
             warn "Failed to stop/remove database container or volume. You may need to clean manually."
         log "Database container and volume removed."
     else
@@ -314,4 +324,5 @@ init_script() {
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
 export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
+
 
