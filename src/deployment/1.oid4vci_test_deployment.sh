@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # OID4VCI configuration script
 # - Ensures Keycloak is running
 # - Creates realm, registers key providers and clients
-# - Configures client scopes, SAML IdP, and validates OID4VCI config
+# - Configures client scopes and validates OID4VCI config
 # -----------------------------------------------------------------------------
 
 # WORK_DIR is set by the CLI
@@ -139,26 +139,6 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Configure SAML Identity Provider
-# -----------------------------------------------------------------------------
-SAML_CONFIG_FILE="$WORK_DIR/src/config/saml-idp-config.json"
-if [[ -f "$SAML_CONFIG_FILE" ]]; then
-    jq -c '.identityProviders[]' "$SAML_CONFIG_FILE" | while read -r idp; do
-        echo "$idp" | "$KCADM" create identity-provider/instances -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
-          warn "SAML Identity Provider already exists; skipping."
-    done
-
-    if jq -e '.identityProviderMappers' "$SAML_CONFIG_FILE" >/dev/null 2>&1; then
-        jq -c '.identityProviderMappers[]' "$SAML_CONFIG_FILE" | while read -r mapper; do
-            echo "$mapper" | "$KCADM" create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
-              warn "SAML mapper already exists: $(echo "$mapper" | jq -r '.name')"
-        done
-    fi
-else
-    warn "SAML configuration file not found; skipping SAML IdP configuration."
-fi
-
-# -----------------------------------------------------------------------------
 # Create clients
 # -----------------------------------------------------------------------------
 log "Creating clients..."
@@ -199,14 +179,6 @@ else
   warn "clients-config.json or client-scope-config.json not found; skipping client creation."
 fi
 
-# -----------------------------------------------------------------------------
-# Ensure SD-JWT authenticator VCT
-# -----------------------------------------------------------------------------
-log "Ensuring SD-JWT authenticator VCT is configured..."
-[[ -f "$WORK_DIR/src/utils/update_sdjwt_vct.sh" ]] && \
-  "$WORK_DIR/src/utils/update_sdjwt_vct.sh" >/dev/null 2>&1 || warn "SD-JWT VCT update failed or script missing; skipping."
-
-# -----------------------------------------------------------------------------
 # Validate OID4VCI configuration
 # -----------------------------------------------------------------------------
 log "Validating OID4VCI configuration..."

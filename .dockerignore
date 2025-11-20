@@ -8,8 +8,6 @@ docs/
 
 # Target folders not needed in container
 target/
-infrastructure/keycloak-chart/
-infrastructure/terraform/
 
 # AWS and other configs
 .aws/

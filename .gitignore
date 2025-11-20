@@ -8,6 +8,7 @@ target/
 /.idea/
 .vscode/
 
+
 # Keycloak chart env and package files
 infrastructure/keycloak-chart/**/*.tgz
 
@@ -22,3 +23,4 @@ terraform.tfstate.backup
 
 # Docker Compose environment file (generated from config.yaml)
 .env
+

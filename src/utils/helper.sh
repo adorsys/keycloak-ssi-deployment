@@ -128,6 +128,9 @@ export_yaml_as_env() {
             "keycloak.realm")
                 export KEYCLOAK_REALM="$resolved_value"
                 ;;
+            "keycloak_endpoints.issuer_did")
+                export ISSUER_DID="$resolved_value"
+                ;;
         esac
     done <<< "$raw_props_output"
     set -u # Restore 'nounset'
@@ -183,15 +186,17 @@ inject_environment_variables() {
 # Keycloak Process Management
 # -----------------------------------------------------------------------------
 get_keycloak_pid() {
+    local pid
     if command -v pgrep &>/dev/null; then
-        pgrep -f keycloak | head -n1 || true
+        pid=$(pgrep -f keycloak | head -n1 || true)
     else
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            ps aux | grep -i '[q]uarkus' | awk 'NR==1{print $2}' || true
+            pid=$(ps aux | grep -i '[q]uarkus' | awk 'NR==1{print $2}' || true)
         else
-            ps aux | grep -i '[k]eycloak' | awk 'NR==1{print $2}' || true
+            pid=$(ps aux | grep -i '[k]eycloak' | awk 'NR==1{print $2}' || true)
         fi
     fi
+    echo "$pid"
 }
 
 stop_keycloak() {
@@ -200,13 +205,17 @@ stop_keycloak() {
 
     if [[ -n "$keycloak_pid" ]]; then
         log "Keycloak instance found (PID: $keycloak_pid). Shutting it down..."
-        kill "$keycloak_pid" || warn "Failed to kill process $keycloak_pid"
+        if ! kill "$keycloak_pid"; then
+            return 1
+        fi
         # Wait for process to terminate
         sleep 2
         if kill -0 "$keycloak_pid" 2>/dev/null; then
-            warn "Process still running, force killing..."
             kill -9 "$keycloak_pid" 2>/dev/null || true
             sleep 1
+        fi
+        if kill -0 "$keycloak_pid" 2>/dev/null; then
+            return 1
         fi
         log "Keycloak stopped."
     else

@@ -61,8 +61,10 @@ cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
      -DKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" \
      -DKEYSTORE_PATH="$KEYSTORE_PATH" \
      -DKEYCLOAK_REALM="$KEYCLOAK_REALM" \
-     -DISSUER_DID="$KEYCLOAK_ISSUER_DID" \
-     -DSAML_ENTITYID="$KEYCLOAK_ISSUER_DID" \
+     -DISSUER_BACKEND_URL="$ISSUER_BACKEND_URL" \
+     -DISSUER_FRONTEND_URL="$ISSUER_FRONTEND_URL" \
+     -DISSUER_DID="$ISSUER_DID" \
+     -DTEST_CLIENT_URL="$TEST_CLIENT_URL" \
      -jar "$KC_CLI_PROJECT_DIR/target/$KC_CLI_JAR_FILE" \
      -Dimport-realm=true \
      --import.var-substitution.enabled=true \
@@ -74,8 +76,3 @@ cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
      --import.files.locations="$CLI_REALM_FILE"
 
 log "Realm configuration imported successfully."
-
-# ---------------------------------------------------------------------------
-# Update SD-JWT authenticator configuration
-# ---------------------------------------------------------------------------
-source "$WORK_DIR/src/utils/update_sdjwt_vct.sh"

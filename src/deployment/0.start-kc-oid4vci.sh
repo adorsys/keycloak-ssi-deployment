@@ -59,8 +59,14 @@ fi
 # Inject providers
 # ---------------------------------------------------------------------------
 log "Injecting Keycloak providers..."
-mkdir -p "$KEYCLOAK_INSTALL_DIR/providers"
-cp "$WORK_DIR/providers/"*.jar "$KEYCLOAK_INSTALL_DIR/providers"
+
+if [ -d "$WORK_DIR/providers" ]; then
+  echo "Injecting Keycloak providers..."
+  mkdir -p "$KEYCLOAK_INSTALL_DIR/providers"
+  cp "$WORK_DIR/providers/"*.jar "$KEYCLOAK_INSTALL_DIR/providers"
+else
+  echo "No providers folder found at $WORK_DIR/providers — skipping injection."
+fi
 
 # ---------------------------------------------------------------------------
 # Start Keycloak (foreground by default; '-d' to detach and log to file)
@@ -81,10 +87,11 @@ if [[ "$DETACH_MODE" == "true" ]]; then
   LOG_FILE="$LOG_DIR/keycloak.log"
   log "Detaching Keycloak; logs will be written to $LOG_FILE"
   KEYCLOAK_ADMIN="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
-  nohup bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci,oid4vc-vpauth" \
+  nohup bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci" \
     >"$LOG_FILE" 2>&1 &
   disown || true
 else
   KEYCLOAK_ADMIN="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
-  exec bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci,oid4vc-vpauth"
+  exec bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci"
+
 fi
