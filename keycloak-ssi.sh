@@ -71,7 +71,7 @@ show_help() {
 "" \
 "${CLI_CYAN}COMMANDS${CLI_NC}" \
 "  ${CLI_GREEN}setup [-d]${CLI_NC}                  Build and start Keycloak with OID4VCI features" \
-"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., 'kc compose up -d')" \
+"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., 'keycloak-ssi compose up -d')" \
 "  ${CLI_GREEN}config${CLI_NC}                      Configure realm, key providers, clients, and users" \
 "  ${CLI_GREEN}test${CLI_NC}                        <preauth|authcode> <CredentialType>   Test credential flows" \
 "  ${CLI_GREEN}import${CLI_NC}                      Import ready realm configuration" \
@@ -85,7 +85,7 @@ show_help() {
 "  keycloak-ssi setup" \
 "  keycloak-ssi setup -d" \
 "  keycloak-ssi compose up -d" \
-"  keycloak-ssi compose down" \
+"  keycloak-ssi compose down -v" \
 "  keycloak-ssi config" \
 "  keycloak-ssi test preauth IdentityCredential" \
 "  keycloak-ssi test authcode IdentityCredential" \
@@ -246,21 +246,30 @@ cmd_compose() {
     env_content=$(export_yaml_as_env "$WORK_DIR/config.yaml" "$WORK_DIR/config.override.yaml")
     echo "$env_content" > "$env_file"
 
-    # Detect docker-compose command
-    local DOCKER_COMPOSE_CMD=()
-    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        # Docker Compose v2 (plugin)
-        DOCKER_COMPOSE_CMD=(docker compose)
-    elif command -v docker-compose &> /dev/null; then
-        # Docker Compose v1 (standalone)
-        DOCKER_COMPOSE_CMD=(docker-compose)
-    else
-        error "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is installed."
+    local DOCKER_COMPOSE_CMD
+    DOCKER_COMPOSE_CMD="$(detect_docker_compose)"
+
+    local args=("$@")
+    local new_args=()
+    local found_down=false
+    local found_v=false
+
+    for arg in "${args[@]}"; do
+        if [[ "$arg" == "down" ]]; then
+            found_down=true
+        elif [[ "$arg" == "-v" || "$arg" == "--volumes" ]]; then
+            found_v=true
+        fi
+        new_args+=("$arg")
+    done
+
+    if "$found_down" && ! "$found_v"; then
+        log "Adding -v flag to 'docker compose down' command."
+        new_args+=("-v")
     fi
 
     # Execute docker-compose with all passed arguments, using the generated .env file
-    # Docker Compose automatically picks up .env in the current directory
-    "${DOCKER_COMPOSE_CMD[@]}" "$@"
+    eval "$DOCKER_COMPOSE_CMD" "${new_args[@]}"
 
     local compose_exit_code=$?
 

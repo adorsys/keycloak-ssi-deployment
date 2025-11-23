@@ -57,8 +57,11 @@ setup_environment() {
         fi
     fi
 
-    # Load configuration from YAML with environment variable overrides
-    load_configuration
+    # Load configuration from YAML with environment variable overrides, only if not already loaded
+    if [[ -z "${_CONFIGURATION_LOADED:-}" ]]; then
+        load_configuration
+        export _CONFIGURATION_LOADED="true"
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -69,11 +72,6 @@ export_yaml_as_env() {
     local yaml_files=("$@")
     local merged_props
 
-    # Check if yq is available
-    if ! command -v yq &>/dev/null; then
-        error "yq is required for configuration management. Please install yq (version 4+)."
-        return 1
-    fi
 
     # Define the merge command: merge all files, with later files overriding earlier ones
     local yq_merge_command=". as \$item ireduce ({}; . * \$item)"
@@ -177,7 +175,6 @@ load_configuration() {
     # Export variables using the new helper function.
     # The yq dependency check is now handled inside export_yaml_as_env.
     export_yaml_as_env "${yq_files[@]}" > /dev/null
-
 }
 
 # -----------------------------------------------------------------------------
@@ -190,7 +187,6 @@ inject_environment_variables() {
     # This handles ${VAR_NAME} and ${VAR_NAME:-default} syntax
     echo "$yaml_content" | yq '(.. | select(tag == "!!str")) |= envsubst'
 }
-
 
 # -----------------------------------------------------------------------------
 # Keycloak Process Management
@@ -239,7 +235,7 @@ stop_keycloak() {
     if [[ -f "$DOCKER_COMPOSE_FILE" ]]; then
         DOCKER_COMPOSE_COMMAND="$(detect_docker_compose)"
         log "Stopping and removing database container..."
-        eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" down -v"
+        eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" down -v db" || \
             warn "Failed to stop/remove database container or volume. You may need to clean manually."
         log "Database container and volume removed."
     else
@@ -324,5 +320,3 @@ init_script() {
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
 export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
-
-

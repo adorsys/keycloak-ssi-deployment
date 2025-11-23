@@ -103,6 +103,7 @@ keycloak-ssi <command> [options]
 | ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `install`                                  | Install CLI to system PATH                     | -                                                                                                                         |
 | `uninstall`                                | Remove CLI from system PATH                    | -                                                                                                                         |
+| `compose`                                  | Run docker compose commands (e.g., 'keycloak-ssi compose up -d', 'keycloak-ssi compose down -v'  | -                                                                                                                         |
 | `setup [-d]`                               | Build and start Keycloak with OID4VCI          | `src/deployment/0.start-kc-oid4vci.sh`                                                                                    |
 | `config`                                   | Configure realm, keys, clients, and test users | `src/deployment/1.oid4vci_test_deployment.sh`, `src/deployment/2.configure_user_4_account_client.sh`                      |
 | `test <preauth/authcode> <CredentialType>` | Test credential issuance flows                 | `src/credentials/request_credential.sh` (preauth), `src/credentials/request_credential_with_auth_code_flow.sh` (authcode) |
@@ -133,6 +134,9 @@ keycloak-ssi test authcode IdentityCredential
 
 # 4️⃣ Stop the Keycloak server
 keycloak-ssi stop
+
+# Stop the Docker Compose stack and remove volumes
+keycloak-ssi compose down
 
 # 5️⃣ Uninstall the CLI
 keycloak-ssi uninstall

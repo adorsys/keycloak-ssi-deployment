@@ -33,15 +33,12 @@ FROM eclipse-temurin:21-jdk-jammy
 
 # Set working directory
 WORKDIR /opt/keycloak
-ENV JAVA_TMPDIR=/tmp
 
 # Create a non-privileged user
 RUN groupadd -r keycloak && useradd -r -g keycloak keycloak
 
-
 # Copy the built Keycloak target from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
-
 
 # Ensure proper permissions
 RUN chown -R keycloak:keycloak /opt/keycloak
