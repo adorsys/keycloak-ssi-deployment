@@ -34,11 +34,27 @@ FROM eclipse-temurin:21-jdk-jammy
 # Set working directory
 WORKDIR /opt/keycloak
 
+# Install runtime dependencies required by helper scripts
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends jq gettext-base && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create a non-privileged user
 RUN groupadd -r keycloak && useradd -r -g keycloak keycloak
 
+# Copy helper utilities needed at runtime
+COPY --from=builder /app/src/utils /opt/keycloak/src/utils
+COPY --from=builder /usr/bin/yq /usr/bin/yq
+
 # Copy the built Keycloak target from the build stage
 COPY --from=builder /app/target /opt/keycloak/target
+
+# Copy the config file to runtime
+COPY --from=builder /app/config.yaml /opt/keycloak/
+
+# Copy entrypoint script and ensure execution permissions
+COPY docker-entrypoint.sh /opt/keycloak/docker-entrypoint.sh
+RUN chmod +x /opt/keycloak/docker-entrypoint.sh
 
 # Ensure proper permissions
 RUN chown -R keycloak:keycloak /opt/keycloak
@@ -50,4 +66,4 @@ USER keycloak
 EXPOSE 8443
 
 # Set entrypoint script
-ENTRYPOINT ["/bin/sh", "-c", "cd $KEYCLOAK_INSTALL_DIR && exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci"]
+ENTRYPOINT ["/opt/keycloak/docker-entrypoint.sh"]

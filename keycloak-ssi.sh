@@ -71,7 +71,7 @@ show_help() {
 "" \
 "${CLI_CYAN}COMMANDS${CLI_NC}" \
 "  ${CLI_GREEN}setup [-d]${CLI_NC}                  Build and start Keycloak with OID4VCI features" \
-"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., 'keycloak-ssi compose up -d')" \
+"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., './keycloak-ssi compose up -d')" \
 "  ${CLI_GREEN}config${CLI_NC}                      Configure realm, key providers, clients, and users" \
 "  ${CLI_GREEN}test${CLI_NC}                        <preauth|authcode> <CredentialType>   Test credential flows" \
 "  ${CLI_GREEN}import${CLI_NC}                      Import ready realm configuration" \

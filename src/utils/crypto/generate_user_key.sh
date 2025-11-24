@@ -7,7 +7,6 @@ IFS=$'\n\t'
 # -----------------------------------------------------------------------------
 
 # WORK_DIR is set by the CLI
-TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -36,13 +35,13 @@ log "Extracting public key in DER format..."
 cat "$USERS_FRANCIS_KEYSTORE_PATH" | openssl ec \
     -passin pass:"$USERS_FRANCIS_KEYSTORE_PASSWORD" \
     -pubout -outform der \
-    -out "$TARGET_DIR/francis_pub.der"
+    -out "$PROJECT_TARGET_DIR/francis_pub.der"
 
 # -----------------------------------------------------------------------------
 # Extract X and Y coordinates from DER
 # -----------------------------------------------------------------------------
 # Get last 64 bytes (public key coordinates for P-256)
-hex=$(dd if="$TARGET_DIR/francis_pub.der" bs=1 skip=$(($(wc -c < "$TARGET_DIR/francis_pub.der") - 64)) count=64 2>/dev/null | xxd -p | tr -d '\n')
+hex=$(dd if="$PROJECT_TARGET_DIR/francis_pub.der" bs=1 skip=$(($(wc -c < "$PROJECT_TARGET_DIR/francis_pub.der") - 64)) count=64 2>/dev/null | xxd -p | tr -d '\n')
 
 # Split into X and Y (each 32 bytes / 64 hex chars)
 x_hex="${hex:0:64}"
@@ -59,6 +58,6 @@ y_b64=$(echo "$y_hex" | xxd -r -p | openssl base64 -A | tr '+/' '-_' | tr -d '='
 # -----------------------------------------------------------------------------
 cat "$WORK_DIR/src/config/user_key_proof_header.json" | jq --arg x "$x_b64" --arg y "$y_b64" \
     '.jwk.x = $x | .jwk.y = $y' \
-    > "$TARGET_DIR/user_key_proof_header.json"
+    > "$PROJECT_TARGET_DIR/user_key_proof_header.json"
 
-log "User key proof header generated at: $TARGET_DIR/user_key_proof_header.json"
+log "User key proof header generated at: $PROJECT_TARGET_DIR/user_key_proof_header.json"

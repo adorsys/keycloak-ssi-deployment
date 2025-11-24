@@ -3,7 +3,6 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # WORK_DIR is set by the CLI
-TARGET_DIR="${PROJECT_TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -11,7 +10,7 @@ init_script
 # Hardcoded Configuration Variables
 # These values are project-specific and unlikely to change across environments
 # =============================================================================
-KC_CLI_PROJECT_DIR="$TARGET_DIR/keycloak-config-cli"
+KC_CLI_PROJECT_DIR="$PROJECT_TARGET_DIR/keycloak-config-cli"
 KC_CLI_JAR_FILE="keycloak-config-cli.jar"
 REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
 
@@ -19,7 +18,7 @@ REPO_URL="https://github.com/adorsys/keycloak-config-cli.git"
 # Determine keystore path dynamically
 # -----------------------------------------------------------------------------
 if [[ "$KEYCLOAK_ADMIN_ADDR" == *"localhost"* || "$KEYCLOAK_ADMIN_ADDR" == *"127.0.0.1"* ]]; then
-    KEYSTORE_PATH="$TARGET_DIR/kc_keystore.pkcs12"
+    KEYSTORE_PATH="$PROJECT_TARGET_DIR/kc_keystore.pkcs12"
     log "Detected local Keycloak instance. Using keystore path: $KEYSTORE_PATH"
 else
     KEYSTORE_PATH="/opt/keycloak/target/kc_keystore.pkcs12"

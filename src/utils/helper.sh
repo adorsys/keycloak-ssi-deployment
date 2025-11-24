@@ -150,6 +150,7 @@ export_yaml_as_env() {
     [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
     [[ -n "${CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${CLIENTS_TEST_CLIENT}"
 }
+
 # -----------------------------------------------------------------------------
 # Configuration Loading
 # -----------------------------------------------------------------------------
@@ -243,15 +244,12 @@ stop_keycloak() {
     fi
 }
 
-
 # -----------------------------------------------------------------------------
 # Utility Functions
 # -----------------------------------------------------------------------------
 urlencode() {
     jq -nr --arg str "$1" '$str|@uri'
 }
-
-
 
 # -----------------------------------------------------------------------------
 # Docker Compose Detection
@@ -299,10 +297,6 @@ check_dependencies() {
 init_script() {
     # Ensure environment and WORK_DIR are initialized
     setup_environment
-
-    # Export shorthand variables for convenience, as used in config.yaml
-    export TARGET_DIR="${PROJECT_TARGET_DIR}"
-    export TOOLS_DIR="${PROJECT_TOOLS_DIR}"
 
     # Log script start
     local script_name

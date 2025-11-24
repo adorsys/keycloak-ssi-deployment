@@ -9,8 +9,6 @@ IFS=$'\n\t'
 # - Prepares keystore and SSL certificates
 # -----------------------------------------------------------------------------
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Load helper (init_script loads env)
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
