@@ -276,6 +276,41 @@ ensure_directory_exists() {
 }
 
 # -----------------------------------------------------------------------------
+# Keycloak Cryptographic Material
+# -----------------------------------------------------------------------------
+ensure_keycloak_crypto_materials() {
+    KEYSTORE_PATH="${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
+
+    if [[ -z "${SSL_TRUST_STORE:-}" ]]; then
+        error "SSL_TRUST_STORE is not defined. Ensure configuration is loaded."
+    fi
+
+    ensure_directory_exists "$(dirname "$SSL_TRUST_STORE")"
+    if [[ ! -f "$SSL_TRUST_STORE" ]]; then
+        log "Generating SSL keys..."
+        source "$WORK_DIR/src/utils/crypto/generate-kc-certs.sh" || error "Failed to generate SSL certificates."
+    else
+        log "Trust store exists at $SSL_TRUST_STORE. Skipping SSL key generation."
+    fi
+
+    ensure_directory_exists "$(dirname "$KEYSTORE_PATH")"
+    local keystore_basename
+    keystore_basename="$(basename "$KEYSTORE_PATH")"
+    local keystore_cache="$WORK_DIR/src/utils/crypto/$keystore_basename"
+
+    if [[ -f "$keystore_cache" ]]; then
+        log "Reusing existing keystore $keystore_cache..."
+        cp "$keystore_cache" "$KEYSTORE_PATH"
+    else
+        log "Generating new keystore..."
+        source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore."
+        if [[ -f "$KEYSTORE_PATH" ]]; then
+            cp "$KEYSTORE_PATH" "$keystore_cache"
+        fi
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Prerequisite Checks
 # -----------------------------------------------------------------------------
 check_dependencies() {
@@ -314,3 +349,4 @@ init_script() {
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
 export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
+export -f ensure_keycloak_crypto_materials

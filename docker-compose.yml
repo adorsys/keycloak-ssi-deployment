@@ -20,8 +20,8 @@ services:
       - db
     ports:
       - "${KEYCLOAK_HTTPS_PORT}:${KEYCLOAK_HTTPS_PORT}"
-    # volumes:
-    #   - ./config.override.yaml:/opt/keycloak/config.override.yaml
+    volumes:
+      - ./config.override.yaml:/opt/keycloak/config.override.yaml
 
 volumes:
   db_data:

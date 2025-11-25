@@ -106,25 +106,8 @@ fi
 cd "$WORK_DIR" || error "Cannot return to working directory"
 
 # ---------------------------------------------------------------------------
-# Generate SSL keys if trust store does not exist
+# Ensure SSL certificates and keystore are available
 # ---------------------------------------------------------------------------
-if [[ ! -f "$SSL_TRUST_STORE" ]]; then
-    log "Generating SSL keys..."
-    source "$WORK_DIR/src/utils/crypto/generate-kc-certs.sh"
-else
-    log "Trust store exists. Skipping SSL key generation."
-fi
-
-# ---------------------------------------------------------------------------
-# Generate or reuse keystore
-# ---------------------------------------------------------------------------
-KEYSTORE_BASENAME=$(basename "$KEYSTORE_PATH")
-if [[ -f "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" ]]; then
-    log "Reusing existing keystore $WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME..."
-    cp "$WORK_DIR/src/utils/crypto/$KEYSTORE_BASENAME" "$KEYSTORE_PATH"
-else
-    log "Generating new keystore..."
-    source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore"
-fi
+ensure_keycloak_crypto_materials
 
 log "Setup completed successfully."

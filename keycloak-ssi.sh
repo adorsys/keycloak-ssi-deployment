@@ -237,6 +237,22 @@ cmd_stop() {
 cmd_compose() {
     log "Running docker compose command: docker compose $@"
 
+    local args=("$@")
+    local ensure_crypto=false
+    for arg in "${args[@]}"; do
+        case "$arg" in
+            up|start)
+                ensure_crypto=true
+                break
+                ;;
+        esac
+    done
+
+    if "$ensure_crypto"; then
+        log "Ensuring Keycloak certificates and keystore are present..."
+        ensure_keycloak_crypto_materials
+    fi
+
     local env_file=".env.generated" # Use a temporary file name
     
     # Generate .env file from config.yaml
@@ -249,7 +265,6 @@ cmd_compose() {
     local DOCKER_COMPOSE_CMD
     DOCKER_COMPOSE_CMD="$(detect_docker_compose)"
 
-    local args=("$@")
     local new_args=()
     local found_down=false
     local found_v=false
