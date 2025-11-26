@@ -238,58 +238,71 @@ cmd_compose() {
     log "Running docker compose command: docker compose $@"
 
     local args=("$@")
-    local ensure_crypto=false
+    local is_starting=false
+    
+    # Check if this is a start command (up/start)
     for arg in "${args[@]}"; do
         case "$arg" in
             up|start)
-                ensure_crypto=true
+                is_starting=true
                 break
                 ;;
         esac
     done
 
-    if "$ensure_crypto"; then
+    # Ensure crypto materials only when starting
+    if "$is_starting"; then
         log "Ensuring Keycloak certificates and keystore are present..."
         ensure_keycloak_crypto_materials
     fi
 
-    local env_file=".env.generated" # Use a temporary file name
+    # Generate .env file from merged config files
+    local env_file=".env.generated"
+    if "$is_starting"; then
+        log "Generating temporary .env file from config.yaml..."
+    fi
     
-    # Generate .env file from config.yaml
-    log "Generating temporary .env file from config.yaml..."
+    # Build config file array: base config + optional override (same pattern as load_configuration)
+    local config_files=("$WORK_DIR/config.yaml")
+    local override_file="$WORK_DIR/config.override.yaml"
+    [[ -f "$override_file" ]] && config_files+=("$override_file")
+    
+    # Generate .env content from merged YAML configs
     rm -f "$env_file"
-    local env_content
-    env_content=$(export_yaml_as_env "$WORK_DIR/config.yaml" "$WORK_DIR/config.override.yaml")
-    echo "$env_content" > "$env_file"
+    export_yaml_as_env "${config_files[@]}" > "$env_file"
 
+    # Prepare docker compose command
     local DOCKER_COMPOSE_CMD
     DOCKER_COMPOSE_CMD="$(detect_docker_compose)"
 
+    # Process arguments: add -v to 'down' if not present
     local new_args=()
-    local found_down=false
-    local found_v=false
-
+    local has_down=false
+    local has_volumes=false
+    
     for arg in "${args[@]}"; do
-        if [[ "$arg" == "down" ]]; then
-            found_down=true
-        elif [[ "$arg" == "-v" || "$arg" == "--volumes" ]]; then
-            found_v=true
-        fi
+        case "$arg" in
+            down)
+                has_down=true
+                ;;
+            -v|--volumes)
+                has_volumes=true
+                ;;
+        esac
         new_args+=("$arg")
     done
-
-    if "$found_down" && ! "$found_v"; then
+    
+    # Auto-add -v to 'down' command if not specified
+    if "$has_down" && ! "$has_volumes"; then
         log "Adding -v flag to 'docker compose down' command."
         new_args+=("-v")
     fi
 
-    # Execute docker-compose with all passed arguments, using the generated .env file
+    # Execute docker compose with generated .env file
     eval "$DOCKER_COMPOSE_CMD" "${new_args[@]}"
-
     local compose_exit_code=$?
 
-    # Clean up the temporary .env file
-    log "Cleaning up temporary .env file..."
+    # Clean up temporary .env file (silently)
     rm -f "$env_file"
 
     return "$compose_exit_code"

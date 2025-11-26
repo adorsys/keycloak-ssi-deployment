@@ -12,7 +12,7 @@ init_script
 
 if [[ -f "$KEYSTORE_PATH" ]]; then
     log "Keystore $KEYSTORE_PATH already exists. Skipping generation."
-    exit 0
+    return 0
 fi
 
 log "Generating keystore $KEYSTORE_PATH..."

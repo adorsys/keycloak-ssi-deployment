@@ -1,5 +1,4 @@
 {
-    "realm": "oid4vc-vci",
     "enabled": true,
     "verifiableCredentialsEnabled": true,
     "attributes": {

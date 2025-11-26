@@ -70,16 +70,28 @@ setup_environment() {
 # -----------------------------------------------------------------------------
 export_yaml_as_env() {
     local yaml_files=("$@")
-    local merged_props
-
-
-    # Define the merge command: merge all files, with later files overriding earlier ones
-    local yq_merge_command=". as \$item ireduce ({}; . * \$item)"
-
+    
+    # Filter to only existing files (defensive check)
+    local existing_files=()
+    for file in "${yaml_files[@]}"; do
+        [[ -f "$file" ]] && existing_files+=("$file")
+    done
+    
+    # Require at least one file
+    if [[ ${#existing_files[@]} -eq 0 ]]; then
+        error "No valid YAML configuration files provided"
+        return 1
+    fi
+    
     # 1. Merge config files, flatten to properties, and clean up for shell export.
     #    Store this raw output for two passes.
+    # Strategy: Merge files sequentially where later files override earlier ones
+    # Use unified approach: ireduce works for both single and multiple files
     set +u # Temporarily disable 'nounset' for yq and sed pipeline
-    local raw_props_output=$(yq eval-all "$yq_merge_command | to_props" "${yaml_files[@]}" | \
+    
+    # Merge files using yq: later files override earlier ones
+    # This works for both single file (no-op merge) and multiple files (actual merge)
+    local raw_props_output=$(yq eval-all '. as $item ireduce ({}; . * $item) | to_props' "${existing_files[@]}" | \
         sed -E 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/' | \
         grep -vE '^\s*#' | \
         grep -E '^[a-zA-Z_][a-zA-Z0-9_.]*='
