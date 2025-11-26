@@ -10,3 +10,4 @@ target/
 
 # Docker Compose environment file (generated from config.yaml)
 .env*
+config.override.yaml
