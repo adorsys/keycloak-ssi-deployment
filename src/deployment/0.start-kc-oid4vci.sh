@@ -10,8 +10,6 @@ IFS=$'\n\t'
 # - Injects providers and starts Keycloak
 # -----------------------------------------------------------------------------
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Load helpers (init_script loads env)
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
@@ -37,7 +35,7 @@ DOCKER_COMPOSE_COMMAND="$(detect_docker_compose)"
 log "Docker Compose detected: $DOCKER_COMPOSE_COMMAND"
 
 # ---------------------------------------------------------------------------
-# Start database container if not using manual KC_DB_OPTS
+# Start database container if not using manual DATABASE_OPTS
 # ---------------------------------------------------------------------------
 DOCKER_COMPOSE_FILE="${WORK_DIR}/docker-compose.yml"
 
@@ -86,12 +84,12 @@ if [[ "$DETACH_MODE" == "true" ]]; then
   ensure_directory_exists "$LOG_DIR"
   LOG_FILE="$LOG_DIR/keycloak.log"
   log "Detaching Keycloak; logs will be written to $LOG_FILE"
-  KEYCLOAK_ADMIN="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
+  KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
   nohup bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci" \
     >"$LOG_FILE" 2>&1 &
   disown || true
 else
-  KEYCLOAK_ADMIN="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
+  KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
   exec bash -c "exec bin/kc.sh $START_COMMAND $DATABASE_OPTS --features=oid4vc-vci"
 
 fi

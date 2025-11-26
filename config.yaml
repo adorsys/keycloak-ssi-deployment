@@ -12,7 +12,7 @@ project:
 # -----------------------------------------------------------------------------
 keycloak:
   # Branch to use for custom Keycloak
-  target_branch: "datev/develop"
+  target_branch: "main"
   # Keycloak version
   version: "999.0.0-SNAPSHOT"
   # Directory name for cloned Keycloak repo
@@ -35,6 +35,8 @@ keycloak:
 # -----------------------------------------------------------------------------
 keystore:
   # Keycloak keystore file path
+  # Default ${PROJECT_TARGET_DIR}/kc_keystore.pkcs12
+  # 👉 Change this to "/opt/keycloak/target/kc_keystore.pkcs12" when running Keycloak inside Docker.
   path: "${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
   # Keystore type
   type: "PKCS12"
@@ -111,7 +113,7 @@ ssl:
 # -----------------------------------------------------------------------------
 database:
   # Database exposed port
-  exposed_port: "5432"
+  exposed_port: "5433"
   # Database name
   name: "keycloak"
   # Database username

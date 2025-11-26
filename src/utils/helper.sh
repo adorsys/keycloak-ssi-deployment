@@ -70,16 +70,28 @@ setup_environment() {
 # -----------------------------------------------------------------------------
 export_yaml_as_env() {
     local yaml_files=("$@")
-    local merged_props
-
-
-    # Define the merge command: merge all files, with later files overriding earlier ones
-    local yq_merge_command=". as \$item ireduce ({}; . * \$item)"
-
+    
+    # Filter to only existing files (defensive check)
+    local existing_files=()
+    for file in "${yaml_files[@]}"; do
+        [[ -f "$file" ]] && existing_files+=("$file")
+    done
+    
+    # Require at least one file
+    if [[ ${#existing_files[@]} -eq 0 ]]; then
+        error "No valid YAML configuration files provided"
+        return 1
+    fi
+    
     # 1. Merge config files, flatten to properties, and clean up for shell export.
     #    Store this raw output for two passes.
+    # Strategy: Merge files sequentially where later files override earlier ones
+    # Use unified approach: ireduce works for both single and multiple files
     set +u # Temporarily disable 'nounset' for yq and sed pipeline
-    local raw_props_output=$(yq eval-all "$yq_merge_command | to_props" "${yaml_files[@]}" | \
+    
+    # Merge files using yq: later files override earlier ones
+    # This works for both single file (no-op merge) and multiple files (actual merge)
+    local raw_props_output=$(yq eval-all '. as $item ireduce ({}; . * $item) | to_props' "${existing_files[@]}" | \
         sed -E 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/' | \
         grep -vE '^\s*#' | \
         grep -E '^[a-zA-Z_][a-zA-Z0-9_.]*='
@@ -150,6 +162,7 @@ export_yaml_as_env() {
     [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
     [[ -n "${CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${CLIENTS_TEST_CLIENT}"
 }
+
 # -----------------------------------------------------------------------------
 # Configuration Loading
 # -----------------------------------------------------------------------------
@@ -243,15 +256,12 @@ stop_keycloak() {
     fi
 }
 
-
 # -----------------------------------------------------------------------------
 # Utility Functions
 # -----------------------------------------------------------------------------
 urlencode() {
     jq -nr --arg str "$1" '$str|@uri'
 }
-
-
 
 # -----------------------------------------------------------------------------
 # Docker Compose Detection
@@ -278,6 +288,41 @@ ensure_directory_exists() {
 }
 
 # -----------------------------------------------------------------------------
+# Keycloak Cryptographic Material
+# -----------------------------------------------------------------------------
+ensure_keycloak_crypto_materials() {
+    KEYSTORE_PATH="${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
+
+    if [[ -z "${SSL_TRUST_STORE:-}" ]]; then
+        error "SSL_TRUST_STORE is not defined. Ensure configuration is loaded."
+    fi
+
+    ensure_directory_exists "$(dirname "$SSL_TRUST_STORE")"
+    if [[ ! -f "$SSL_TRUST_STORE" ]]; then
+        log "Generating SSL keys..."
+        source "$WORK_DIR/src/utils/crypto/generate-kc-certs.sh" || error "Failed to generate SSL certificates."
+    else
+        log "Trust store exists at $SSL_TRUST_STORE. Skipping SSL key generation."
+    fi
+
+    ensure_directory_exists "$(dirname "$KEYSTORE_PATH")"
+    local keystore_basename
+    keystore_basename="$(basename "$KEYSTORE_PATH")"
+    local keystore_cache="$WORK_DIR/src/utils/crypto/$keystore_basename"
+
+    if [[ -f "$keystore_cache" ]]; then
+        log "Reusing existing keystore $keystore_cache..."
+        cp "$keystore_cache" "$KEYSTORE_PATH"
+    else
+        log "Generating new keystore..."
+        source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore."
+        if [[ -f "$KEYSTORE_PATH" ]]; then
+            cp "$KEYSTORE_PATH" "$keystore_cache"
+        fi
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Prerequisite Checks
 # -----------------------------------------------------------------------------
 check_dependencies() {
@@ -300,10 +345,6 @@ init_script() {
     # Ensure environment and WORK_DIR are initialized
     setup_environment
 
-    # Export shorthand variables for convenience, as used in config.yaml
-    export TARGET_DIR="${PROJECT_TARGET_DIR}"
-    export TOOLS_DIR="${PROJECT_TOOLS_DIR}"
-
     # Log script start
     local script_name
     if [[ ${#BASH_SOURCE[@]} -gt 1 ]]; then
@@ -320,3 +361,4 @@ init_script() {
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
 export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
+export -f ensure_keycloak_crypto_materials

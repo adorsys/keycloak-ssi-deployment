@@ -2,7 +2,6 @@
 
 # Source common env variables
 # WORK_DIR is set by the CLI
-TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -13,7 +12,7 @@ if [ -z "$CREDENTIAL_ACCESS_TOKEN" ]; then
 fi
 
 # Ensure user_key_proof_header exists; if not, run the provisioning script
-if [ ! -f "$TARGET_DIR/user_key_proof_header.json" ]; then
+if [ ! -f "$PROJECT_TARGET_DIR/user_key_proof_header.json" ]; then
     echo "user_key_proof_header.json not found. Running user provisioning to generate it..."
     if [ -x "$WORK_DIR/src/deployment/2.configure_user_4_account_client.sh" ]; then
         WORK_DIR="$WORK_DIR" bash "$WORK_DIR/src/deployment/2.configure_user_4_account_client.sh"
@@ -36,13 +35,13 @@ fi
 nonce="$C_NONCE"
 
 aud=$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM
-cat $WORK_DIR/src/config/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $TARGET_DIR/user_key_proof_payload.json
+cat $WORK_DIR/src/config/user_key_proof_payload.json | jq --argjson iat $iat --arg nonce "$nonce" --arg aud "$aud" '.iat = $iat | .nonce=$nonce | .aud=$aud' > $PROJECT_TARGET_DIR/user_key_proof_payload.json
 
 # -----------------------------------------------------------------------------
 # Encode header and payload (exact same approach as original script)
 # -----------------------------------------------------------------------------
-KEY_PROOF_HEADER_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_header.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
-KEY_PROOF_PAYLOAD_BASE64URL=$(openssl base64 -in $TARGET_DIR/user_key_proof_payload.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
+KEY_PROOF_HEADER_BASE64URL=$(openssl base64 -in $PROJECT_TARGET_DIR/user_key_proof_header.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
+KEY_PROOF_PAYLOAD_BASE64URL=$(openssl base64 -in $PROJECT_TARGET_DIR/user_key_proof_payload.json | tr '+/' '-_' | tr -d '=' | tr -d '\n')
 
 SIGN_INPUT=$(echo -n $KEY_PROOF_HEADER_BASE64URL.$KEY_PROOF_PAYLOAD_BASE64URL)
 
@@ -52,16 +51,16 @@ SIGN_INPUT=$(echo -n $KEY_PROOF_HEADER_BASE64URL.$KEY_PROOF_PAYLOAD_BASE64URL)
 openssl pkcs12 \
   -in "$USERS_FRANCIS_KEYSTORE_PATH" \
   -nocerts -nodes \
-  -out "$TARGET_DIR/francis_private_key.pem" \
+  -out "$PROJECT_TARGET_DIR/francis_private_key.pem" \
   -passin pass:"$USERS_FRANCIS_KEYSTORE_PASSWORD"
 
 # -----------------------------------------------------------------------------
 # Sign input and extract R/S values
 # -----------------------------------------------------------------------------
-echo -n "$SIGN_INPUT" | openssl dgst -sha256 -sign "$TARGET_DIR/francis_private_key.pem" -out "$TARGET_DIR/signature.der"
+echo -n "$SIGN_INPUT" | openssl dgst -sha256 -sign "$PROJECT_TARGET_DIR/francis_private_key.pem" -out "$PROJECT_TARGET_DIR/signature.der"
 
-R_HEX=$(openssl asn1parse -inform DER -in $TARGET_DIR/signature.der | grep -A 1 'INTEGER' | head -n 1 | awk '{print $7}' | tr -d ':')
-S_HEX=$(openssl asn1parse -inform DER -in $TARGET_DIR/signature.der | grep -A 1 'INTEGER' | tail -n 1 | awk '{print $7}' | tr -d ':')
+R_HEX=$(openssl asn1parse -inform DER -in $PROJECT_TARGET_DIR/signature.der | grep -A 1 'INTEGER' | head -n 1 | awk '{print $7}' | tr -d ':')
+S_HEX=$(openssl asn1parse -inform DER -in $PROJECT_TARGET_DIR/signature.der | grep -A 1 'INTEGER' | tail -n 1 | awk '{print $7}' | tr -d ':')
 
 # -----------------------------------------------------------------------------
 # Concatenate R and S and base64url encode

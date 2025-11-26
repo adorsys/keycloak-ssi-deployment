@@ -15,7 +15,7 @@ services:
     build:
       context: .
     environment:
-      - KC_DB_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/${DATABASE_NAME} --db-username ${DATABASE_USERNAME} --db-password ${DATABASE_PASSWORD}
+      - DATABASE_OPTS=--db postgres --db-url jdbc:postgresql://db:5432/${DATABASE_NAME} --db-username ${DATABASE_USERNAME} --db-password ${DATABASE_PASSWORD}
     depends_on:
       - db
     ports:

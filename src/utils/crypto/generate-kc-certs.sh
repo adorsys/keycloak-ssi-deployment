@@ -3,7 +3,6 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # WORK_DIR is set by the CLI
-TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
