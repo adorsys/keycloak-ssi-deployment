@@ -13,6 +13,32 @@ CLI Tool • Deployment • Configuration • Testing
 
 ---
 
+## Overview
+
+The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
+It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
+
+---
+
+## Prerequisites
+
+Before using the CLI tool, ensure the following dependencies are installed on your system:
+
+- **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
+- **Keytool** — Java key and certificate management utility (included with JDK)
+- **jq** — lightweight and flexible command-line JSON processor
+- **yq** — portable command-line YAML processor (used for configuration management)
+- **figlet** — ASCII art generator for an enhanced CLI display
+- **Java Version:**
+  - A minimum of Java 17 is required.
+  - For compatibility with the `keycloak-ssi import` feature (which uses the [Keycloak Config CLI](https://github.com/adorsys/keycloak-config-cli)), Java 21 is recommended.
+    Make sure to set your JAVA_HOME environment variable accordingly:
+    ```bash
+    export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64/
+    ```
+
+---
+
 ## Configuration
 
 The CLI uses a configuration system based on shell environment variables for better organization and maintainability. Configuration is managed through `config.yaml` in the project root.
@@ -34,32 +60,6 @@ Configuration values support environment variable injection using `${VAR_NAME}` 
 The project manages configuration primarily through [`config.yaml`](config.yaml) and [`config.override.yaml`](config.override.yaml). To configure new variables, add them to either of these YAML files.
 
 Variables defined in these files are automatically loaded as environment variables. For example, a YAML property like `keycloak.realm` will be available as the environment variable `KEYCLOAK_REALM`. You can also use environment variable injection within the YAML files using the `${VAR_NAME}` syntax.
-
----
-
-## Overview
-
-The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
-It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
-
----
-
-## Prerequisites
-
-Before using the CLI tool, ensure the following dependencies are installed on your system:
-
-- **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
-- **Keytool** — Java key and certificate management utility (included with JDK)
-- **jq** — lightweight and flexible command-line JSON processor
-- **yq** — portable command-line YAML processor (used for configuration management)
-- **figlet** — ASCII art generator for an enhanced CLI display
-- **Java Version:**
-  - A minimum of Java 17 is required.
-  - For compatibility with the `keycloak-ssi import` feature (which uses the Keycloak config CLI), Java 21 is recommended.
-    Make sure to set your JAVA_HOME environment variable accordingly:
-    ```bash
-    export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64/
-    ```
 
 ---
 
