@@ -1,6 +1,3 @@
-# DEPRECATED BUT KEPT AS REFERENCE SINCE IT CONTAINS IMPORTANT CONCEPTS THAT MIGHT BE USEFUL. 
-
-
 # Keycloak as a Verifiable Credential Issuer with OID4VCI
 
 This guide walks you through configuring Keycloak to issue Verifiable Credentials (VCs) using the OpenID for Verifiable Credential Issuance (OID4VCI) protocol.
