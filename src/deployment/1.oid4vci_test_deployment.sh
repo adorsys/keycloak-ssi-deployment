@@ -25,7 +25,7 @@ log "Keycloak is running (PID: $keycloak_pid)."
 # -----------------------------------------------------------------------------
 # Helper for executing kcadm
 # -----------------------------------------------------------------------------
-KCADM="$KC_INSTALL_DIR/bin/kcadm.sh"
+KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
 if [[ ! -x "$KCADM" ]]; then
   error "kcadm.sh not found or not executable at: $KCADM"
 fi
@@ -34,9 +34,9 @@ fi
 # Authenticate admin
 # -----------------------------------------------------------------------------
 log "Authenticating admin user..."
-"$KCADM" config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
+"$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
 "$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
-    --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD"
+    --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
 
 # -----------------------------------------------------------------------------
 # Create realm
@@ -61,11 +61,11 @@ configure_key_provider() {
     error "Key provider template not found: $json_template"
   fi
 
-  jq --arg keystore "$KEYCLOAK_KEYSTORE_FILE" \
-     --arg keystorePassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
-     --arg keystoreType "$KEYCLOAK_KEYSTORE_TYPE" \
+  jq --arg keystore "$KEYSTORE_PATH" \
+     --arg keystorePassword "$KEYSTORE_PASSWORD" \
+     --arg keystoreType "$KEYSTORE_TYPE" \
      --arg keyAlias "$alias" \
-     --arg keyPassword "$KEYCLOAK_KEYSTORE_PASSWORD" \
+     --arg keyPassword "$KEYSTORE_PASSWORD" \
      '.config.keystore = [$keystore] |
       .config.keystorePassword = [$keystorePassword] |
       .config.keystoreType = [$keystoreType] |
@@ -93,21 +93,21 @@ register_key_provider() {
 
 # ECDSA
 if [[ -f "$ECDSA_JSON" ]]; then
-  ECDSA_PROVIDER_JSON=$(configure_key_provider "$ECDSA_JSON" "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS")
+  ECDSA_PROVIDER_JSON=$(configure_key_provider "$ECDSA_JSON" "$KEYSTORE_ALIASES_ECDSA_KEY")
   NAME=$(jq -r '.name' "$ECDSA_JSON")
   register_key_provider "$NAME" "$ECDSA_PROVIDER_JSON"
 fi
 
 # RSA Signing
 if [[ -f "$RSA_JSON" ]]; then
-  RSA_PROVIDER_JSON=$(configure_key_provider "$RSA_JSON" "$KEYCLOAK_KEYSTORE_RSA_SIG_KEY_ALIAS")
+  RSA_PROVIDER_JSON=$(configure_key_provider "$RSA_JSON" "$KEYSTORE_ALIASES_RSA_SIG_KEY")
   NAME=$(jq -r '.name' "$RSA_JSON")
   register_key_provider "$NAME" "$RSA_PROVIDER_JSON"
 fi
 
 # RSA Encryption
 if [[ -f "$RSA_ENC_JSON" ]]; then
-  RSA_ENC_PROVIDER_JSON=$(configure_key_provider "$RSA_ENC_JSON" "$KEYCLOAK_KEYSTORE_RSA_ENC_KEY_ALIAS")
+  RSA_ENC_PROVIDER_JSON=$(configure_key_provider "$RSA_ENC_JSON" "$KEYSTORE_ALIASES_RSA_ENC_KEY")
   NAME=$(jq -r '.name' "$RSA_ENC_JSON")
   register_key_provider "$NAME" "$RSA_ENC_PROVIDER_JSON"
 fi
@@ -129,7 +129,7 @@ fi
 # -----------------------------------------------------------------------------
 log "Creating client scopes..."
 if [[ -f "$WORK_DIR/src/config/client-scope-config.json" ]]; then
-  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
+  CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$KEYCLOAK_ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
   echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
     echo "$scope" | "$KCADM" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
       warn "Client scope already exists; skipping."
@@ -157,7 +157,7 @@ if [[ -f "$CLIENTS_CONFIG_FILE" && -f "$CLIENT_SCOPE_CONFIG_FILE" ]]; then
 
     if [[ "$CLIENT_ID" == "openid4vc-rest-api" ]]; then
       MODIFIED_CLIENT=$(echo "$MODIFIED_CLIENT" | jq \
-        --arg CLIENT_SECRET "$CLIENT_SECRET" \
+        --arg CLIENT_SECRET "$CLIENTS_SECRET" \
         --arg ISSUER_BACKEND_URL "$ISSUER_BACKEND_URL" \
         --arg ISSUER_FRONTEND_URL "$ISSUER_FRONTEND_URL" \
         '.secret = $CLIENT_SECRET |

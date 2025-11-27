@@ -7,3 +7,7 @@ target/
 # IDE and editor configs
 /.idea/
 .vscode/
+
+# Docker Compose environment file (generated from config.yaml)
+.env*
+config.override.yaml

@@ -5,19 +5,19 @@
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
     "keystore": [
-      "$KEYCLOAK_KEYSTORE_FILE"
+      "$KEYSTORE_PATH"
     ],
     "keystoreType": [
-      "$KEYCLOAK_KEYSTORE_TYPE"
+      "$KEYSTORE_TYPE"
     ],
     "keystorePassword": [
-      "$KEYCLOAK_KEYSTORE_PASSWORD"
+      "$KEYSTORE_PASSWORD"
     ],
     "keyAlias":[
-      "$KEYCLOAK_KEYSTORE_ECDSA_KEY_ALIAS"
+      "$KEYSTORE_ALIASES_ECDSA_KEY"
     ],
     "keyPassword": [
-      "$KEYCLOAK_KEYSTORE_PASSWORD"
+      "$KEYSTORE_PASSWORD"
     ],
     "active": ["true"],
     "priority": ["200"],

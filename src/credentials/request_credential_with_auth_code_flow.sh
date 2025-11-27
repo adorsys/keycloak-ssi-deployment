@@ -14,7 +14,7 @@ init_script
 # ===============================
 WORK_DIR_CONFIG="$WORK_DIR/src/config"
 UTILS_DIR="$WORK_DIR/src/utils/crypto"
-TARGET_DIR="${TARGET_DIR:-/tmp}"
+TARGET_DIR="${PROJECT_TARGET_DIR:-/tmp}"
 
 # ===============================
 # Argument Validation
@@ -31,15 +31,15 @@ CREDENTIAL_TYPE="$1"
 # Configure Admin
 # ===============================
 log "Configuring Keycloak admin credentials..."
-$KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass "$KC_TRUST_STORE_PASS" "$KC_TRUST_STORE"
+$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
 
-if ! $KC_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
+if ! $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh get realms --server "$KEYCLOAK_ADMIN_ADDR" --realm master > /dev/null 2>&1; then
   log "No existing admin credentials found. Configuring new credentials..."
-  $KC_INSTALL_DIR/bin/kcadm.sh config credentials \
+  $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh config credentials \
     --server "$KEYCLOAK_ADMIN_ADDR" \
     --realm master \
-    --user "$KC_BOOTSTRAP_ADMIN_USERNAME" \
-    --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" || {
+    --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" \
+    --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" || {
       error "Failed to configure Keycloak admin credentials"
       exit 1
     }
@@ -51,7 +51,7 @@ fi
 # Check User 'francis'
 # ===============================
 log "Verifying user 'francis'..."
-if ! $KC_INSTALL_DIR/bin/kcadm.sh get users -r "$KEYCLOAK_REALM" --fields username | jq -e '.[] | select(.username=="francis")' > /dev/null; then
+if ! $KEYCLOAK_INSTALL_DIR/bin/kcadm.sh get users -r "$KEYCLOAK_REALM" --fields username | jq -e '.[] | select(.username=="francis")' > /dev/null; then
   error "User 'francis' does not exist. Run 2.configure_user_4_account_client.sh first."
   exit 1
 fi
@@ -131,7 +131,7 @@ request_credential() {
     --data-urlencode "grant_type=authorization_code" \
     --data-urlencode "code=${auth_code}" \
     --data-urlencode "client_id=openid4vc-rest-api" \
-    --data-urlencode "client_secret=${CLIENT_SECRET}" \
+    --data-urlencode "client_secret=${CLIENTS_SECRET}" \
     --data-urlencode "redirect_uri=https://localhost:8443/callback" \
     --data-urlencode "code_verifier=${code_verifier}" \
     --data-urlencode "authorization_details=$authorization_details_json")
@@ -191,3 +191,4 @@ request_credential() {
 # ===============================
 request_credential "$CREDENTIAL_TYPE"
 success "Credential request process completed successfully!"
+

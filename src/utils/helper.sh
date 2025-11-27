@@ -33,14 +33,23 @@ setup_environment() {
 
     # Use WORK_DIR if already set (by CLI), otherwise determine it
     if [[ -z "${WORK_DIR:-}" ]]; then
-        # Find the project root by looking for a known marker
+        # Find the project root by walking upward
         local search_dir="${PWD}"
-        while [[ "$search_dir" != "/" && "$search_dir" != "" ]]; do
+
+        while true; do
+            # Stop if we reached filesystem root
+            local parent="$(dirname "$search_dir")"
+            [[ "$parent" == "$search_dir" ]] && break
+
+            # Detect project root
             if [[ -f "$search_dir/src/utils/helper.sh" || -f "$search_dir/docker-compose.yml" ]]; then
                 WORK_DIR="$search_dir"
+                export WORK_DIR
                 break
             fi
-            search_dir="$(dirname "$search_dir")"
+
+            # Move up
+            search_dir="$parent"
         done
 
         if [[ -z "${WORK_DIR:-}" ]]; then
@@ -48,16 +57,148 @@ setup_environment() {
         fi
     fi
 
-    # Load environment variables
-    if [[ -f "$WORK_DIR/.env" ]]; then
-        # shellcheck disable=SC1090
-        . "$WORK_DIR/.env"
+    # Load configuration from YAML with environment variable overrides, only if not already loaded
+    if [[ -z "${_CONFIGURATION_LOADED:-}" ]]; then
+        load_configuration
+        export _CONFIGURATION_LOADED="true"
     fi
-    if [[ -f "$WORK_DIR/../env/.env" ]]; then
-        log "Using local properties from $WORK_DIR/../env/.env"
-        # shellcheck disable=SC1090
-        . "$WORK_DIR/../env/.env"
+}
+
+# -----------------------------------------------------------------------------
+# YAML Configuration Export
+# Exports YAML properties as uppercase, underscore-separated environment variables
+# -----------------------------------------------------------------------------
+export_yaml_as_env() {
+    local yaml_files=("$@")
+    
+    # Filter to only existing files (defensive check)
+    local existing_files=()
+    for file in "${yaml_files[@]}"; do
+        [[ -f "$file" ]] && existing_files+=("$file")
+    done
+    
+    # Require at least one file
+    if [[ ${#existing_files[@]} -eq 0 ]]; then
+        error "No valid YAML configuration files provided"
+        return 1
     fi
+    
+    # 1. Merge config files, flatten to properties, and clean up for shell export.
+    #    Store this raw output for two passes.
+    # Strategy: Merge files sequentially where later files override earlier ones
+    # Use unified approach: ireduce works for both single and multiple files
+    set +u # Temporarily disable 'nounset' for yq and sed pipeline
+    
+    # Merge files using yq: later files override earlier ones
+    # This works for both single file (no-op merge) and multiple files (actual merge)
+    local raw_props_output=$(yq eval-all '. as $item ireduce ({}; . * $item) | to_props' "${existing_files[@]}" | \
+        sed -E 's/^[[:space:]]*//; s/[[:space:]]*=[[:space:]]*/=/' | \
+        grep -vE '^\s*#' | \
+        grep -E '^[a-zA-Z_][a-zA-Z0-9_.]*='
+    )
+
+    # Pass 1: Export all variables with their raw values first.
+    # This makes all potential reference targets available as environment variables.
+    set +u
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        local env_var_name
+        env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+        # Export the raw value
+        export "$env_var_name"="$value"
+        echo "$env_var_name=$value"
+        case "$key" in
+            "keycloak_endpoints.https_port")
+                export KEYCLOAK_HTTPS_PORT="$value"
+                ;;
+            "keycloak_endpoints.admin_addr")
+                export KEYCLOAK_ADMIN_ADDR="$value"
+                ;;
+            "keycloak.target_branch")
+                export KEYCLOAK_TARGET_BRANCH="$value"
+                ;;
+        esac
+    done <<< "$raw_props_output"
+    set -u # Restore 'nounset'
+
+    # Pass 2: Now that all variables are exported, re-evaluate and export with substitution.
+    set +u # Temporarily disable 'nounset' for variable assignment
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        local env_var_name
+        env_var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+        # Resolve placeholders using envsubst, now that all variables are in the environment
+        local resolved_value
+        resolved_value=$(echo "$value" | envsubst)
+        # Re-export the variable with its resolved value
+        export "$env_var_name"="$resolved_value"
+        case "$key" in
+            "keycloak_endpoints.https_port")
+                export KEYCLOAK_HTTPS_PORT="$resolved_value"
+                ;;
+            "keycloak_endpoints.admin_addr")
+                export KEYCLOAK_ADMIN_ADDR="$resolved_value"
+                ;;
+            "keycloak.target_branch")
+                export KEYCLOAK_TARGET_BRANCH="$resolved_value"
+                ;;
+            "keycloak.oid4vci_dir")
+                export KEYCLOAK_OID4VCI_DIR="$resolved_value"
+                ;;
+            "keycloak.realm")
+                export KEYCLOAK_REALM="$resolved_value"
+                ;;
+            "keycloak_endpoints.issuer_did")
+                export ISSUER_DID="$resolved_value"
+                ;;
+        esac
+    done <<< "$raw_props_output"
+    set -u # Restore 'nounset'
+
+    # Derived aliases for convenience
+    [[ -n "${KEYCLOAK_ENDPOINTS_ADMIN_ADDR:-}" ]] && export KEYCLOAK_ADMIN_ADDR="${KEYCLOAK_ENDPOINTS_ADMIN_ADDR}"
+    [[ -n "${KEYCLOAK_ENDPOINTS_ISSUER_DID:-}" ]] && export KEYCLOAK_ISSUER_DID="${KEYCLOAK_ENDPOINTS_ISSUER_DID}"
+    [[ -n "${ISSUER_ENDPOINTS_BACKEND:-}" ]] && export ISSUER_BACKEND_URL="${ISSUER_ENDPOINTS_BACKEND}"
+    [[ -n "${ISSUER_ENDPOINTS_FRONTEND:-}" ]] && export ISSUER_FRONTEND_URL="${ISSUER_ENDPOINTS_FRONTEND}"
+    [[ -n "${CLIENTS_TEST_CLIENT:-}" ]] && export TEST_CLIENT_URL="${CLIENTS_TEST_CLIENT}"
+}
+
+# -----------------------------------------------------------------------------
+# Configuration Loading
+# -----------------------------------------------------------------------------
+load_configuration() {
+    local config_file="$WORK_DIR/config.yaml"
+    local override_file="$WORK_DIR/config.override.yaml"
+    local yq_files=("$config_file")
+
+    # Check if config.yaml exists
+    if [[ ! -f "$config_file" ]]; then
+        error "config.yaml not found. Configuration file is required."
+        return 1
+    fi
+
+    log "Loading configuration from $config_file"
+
+    # Apply overrides from config.override.yaml if it exists
+    if [[ -f "$override_file" ]]; then
+        log "Applying overrides from $override_file"
+        yq_files+=("$override_file")
+    fi
+
+    # Export variables using the new helper function.
+    # The yq dependency check is now handled inside export_yaml_as_env.
+    export_yaml_as_env "${yq_files[@]}" > /dev/null
+}
+
+# -----------------------------------------------------------------------------
+# Environment Variable Injection
+# -----------------------------------------------------------------------------
+inject_environment_variables() {
+    local yaml_content="$1"
+
+    # Use yq to process environment variable injection
+    # This handles ${VAR_NAME} and ${VAR_NAME:-default} syntax
+    echo "$yaml_content" | yq '(.. | select(tag == "!!str")) |= envsubst'
 }
 
 # -----------------------------------------------------------------------------
@@ -115,15 +256,12 @@ stop_keycloak() {
     fi
 }
 
-
 # -----------------------------------------------------------------------------
 # Utility Functions
 # -----------------------------------------------------------------------------
 urlencode() {
     jq -nr --arg str "$1" '$str|@uri'
 }
-
-
 
 # -----------------------------------------------------------------------------
 # Docker Compose Detection
@@ -150,11 +288,46 @@ ensure_directory_exists() {
 }
 
 # -----------------------------------------------------------------------------
+# Keycloak Cryptographic Material
+# -----------------------------------------------------------------------------
+ensure_keycloak_crypto_materials() {
+    KEYSTORE_PATH="${PROJECT_TARGET_DIR}/kc_keystore.pkcs12"
+
+    if [[ -z "${SSL_TRUST_STORE:-}" ]]; then
+        error "SSL_TRUST_STORE is not defined. Ensure configuration is loaded."
+    fi
+
+    ensure_directory_exists "$(dirname "$SSL_TRUST_STORE")"
+    if [[ ! -f "$SSL_TRUST_STORE" ]]; then
+        log "Generating SSL keys..."
+        source "$WORK_DIR/src/utils/crypto/generate-kc-certs.sh" || error "Failed to generate SSL certificates."
+    else
+        log "Trust store exists at $SSL_TRUST_STORE. Skipping SSL key generation."
+    fi
+
+    ensure_directory_exists "$(dirname "$KEYSTORE_PATH")"
+    local keystore_basename
+    keystore_basename="$(basename "$KEYSTORE_PATH")"
+    local keystore_cache="$WORK_DIR/src/utils/crypto/$keystore_basename"
+
+    if [[ -f "$keystore_cache" ]]; then
+        log "Reusing existing keystore $keystore_cache..."
+        cp "$keystore_cache" "$KEYSTORE_PATH"
+    else
+        log "Generating new keystore..."
+        source "$WORK_DIR/src/utils/crypto/generate_keystore.sh" || error "Failed to generate keystore."
+        if [[ -f "$KEYSTORE_PATH" ]]; then
+            cp "$KEYSTORE_PATH" "$keystore_cache"
+        fi
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Prerequisite Checks
 # -----------------------------------------------------------------------------
 check_dependencies() {
     local missing_deps=()
-    for dep in openssl keytool jq figlet; do
+    for dep in openssl keytool jq figlet yq; do
         if ! command -v "$dep" &>/dev/null; then
             missing_deps+=("$dep")
         fi
@@ -174,7 +347,11 @@ init_script() {
 
     # Log script start
     local script_name
-    script_name="$(basename "${BASH_SOURCE[1]}")"
+    if [[ ${#BASH_SOURCE[@]} -gt 1 ]]; then
+        script_name="$(basename "${BASH_SOURCE[1]}")"
+    else
+        script_name="$(basename "${BASH_SOURCE[0]}")"
+    fi
     log "Starting $script_name"
 }
 
@@ -183,4 +360,5 @@ init_script() {
 # -----------------------------------------------------------------------------
 export -f log warn error success
 export -f setup_environment get_keycloak_pid stop_keycloak
-export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies
+export -f urlencode detect_docker_compose init_script ensure_directory_exists check_dependencies export_yaml_as_env
+export -f ensure_keycloak_crypto_materials

@@ -1,6 +1,6 @@
 {
   "id": "5aa6d5e1-5ca0-405a-a04d-a0bdeae27358",
-  "realm": "oid4vc-vci",
+  "realm": "$(env:KEYCLOAK_REALM)",
   "enabled": true,
   "attributes": {
     "preAuthorizedCodeLifespanS": "120"
@@ -64,7 +64,7 @@
       "id": "4c486109-a4ab-4207-9028-65d4364459dd",
       "clientId": "openid4vc-rest-api",
       "clientAuthenticatorType": "client-secret",
-      "secret": "$(env:CLIENT_SECRET)",
+      "secret": "$(env:CLIENTS_SECRET)",
       "redirectUris": [
         "$(env:ISSUER_BACKEND_URL)/*",
         "https://localhost:8443/callback",
@@ -634,13 +634,13 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_sig_key"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keystoreType": [
             "PKCS12"
@@ -649,7 +649,7 @@
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"
@@ -668,7 +668,7 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_enc_key"
@@ -680,13 +680,13 @@
             "enc"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "active": [
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"
@@ -705,13 +705,13 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "ecdsa_key"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keystoreType": [
             "PKCS12"
@@ -720,7 +720,7 @@
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
             "200"

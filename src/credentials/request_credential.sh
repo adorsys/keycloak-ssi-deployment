@@ -30,14 +30,14 @@ TARGET_DIR="${TARGET_DIR:-/tmp}"
 # ===============================
 # Get User Token
 # ===============================
-log "Requesting access token for user '$USER_FRANCIS_NAME'..."
+log "Requesting access token for user '$USERS_FRANCIS_NAME'..."
 
 response=$(curl -k -s -o "$TARGET_DIR/response.json" -w "%{http_code}" -X POST \
   "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token" \
   -d "client_id=openid4vc-rest-api" \
-  -d "client_secret=$CLIENT_SECRET" \
-  -d "username=$USER_FRANCIS_NAME" \
-  -d "password=$USER_FRANCIS_PASSWORD" \
+  -d "client_secret=$CLIENTS_SECRET" \
+  -d "username=$USERS_FRANCIS_NAME" \
+  -d "password=$USERS_FRANCIS_PASSWORD" \
   -d "grant_type=password" \
   -d "scope=openid")
 
@@ -107,7 +107,7 @@ CREDENTIAL_BEARER_TOKEN=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REAL
   -d 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code' \
   -d "pre-authorized_code=$PRE_AUTHORIZED_CODE" \
   -d "client_id=openid4vc-rest-api" \
-  -d "client_secret=$CLIENT_SECRET")
+  -d "client_secret=$CLIENTS_SECRET")
 
 CREDENTIAL_ACCESS_TOKEN=$(echo "$CREDENTIAL_BEARER_TOKEN" | jq -r '.access_token')
 
