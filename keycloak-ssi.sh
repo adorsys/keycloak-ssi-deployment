@@ -71,7 +71,7 @@ show_help() {
 "" \
 "${CLI_CYAN}COMMANDS${CLI_NC}" \
 "  ${CLI_GREEN}setup [-d]${CLI_NC}                  Build and start Keycloak with OID4VCI features" \
-"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., 'kc compose up -d')" \
+"  ${CLI_GREEN}compose${CLI_NC}                     Run docker compose commands (e.g., './keycloak-ssi compose up -d')" \
 "  ${CLI_GREEN}config${CLI_NC}                      Configure realm, key providers, clients, and users" \
 "  ${CLI_GREEN}test${CLI_NC}                        <preauth|authcode> <CredentialType>   Test credential flows" \
 "  ${CLI_GREEN}import${CLI_NC}                      Import ready realm configuration" \
@@ -85,7 +85,7 @@ show_help() {
 "  keycloak-ssi setup" \
 "  keycloak-ssi setup -d" \
 "  keycloak-ssi compose up -d" \
-"  keycloak-ssi compose down" \
+"  keycloak-ssi compose down -v" \
 "  keycloak-ssi config" \
 "  keycloak-ssi test preauth IdentityCredential" \
 "  keycloak-ssi test authcode IdentityCredential" \
@@ -237,35 +237,72 @@ cmd_stop() {
 cmd_compose() {
     log "Running docker compose command: docker compose $@"
 
-    local env_file=".env.generated" # Use a temporary file name
+    local args=("$@")
+    local is_starting=false
     
-    # Generate .env file from config.yaml
-    log "Generating temporary .env file from config.yaml..."
-    rm -f "$env_file"
-    local env_content
-    env_content=$(export_yaml_as_env "$WORK_DIR/config.yaml" "$WORK_DIR/config.override.yaml")
-    echo "$env_content" > "$env_file"
+    # Check if this is a start command (up/start)
+    for arg in "${args[@]}"; do
+        case "$arg" in
+            up|start)
+                is_starting=true
+                break
+                ;;
+        esac
+    done
 
-    # Detect docker-compose command
-    local DOCKER_COMPOSE_CMD=()
-    if command -v docker &> /dev/null && docker compose version &> /dev/null; then
-        # Docker Compose v2 (plugin)
-        DOCKER_COMPOSE_CMD=(docker compose)
-    elif command -v docker-compose &> /dev/null; then
-        # Docker Compose v1 (standalone)
-        DOCKER_COMPOSE_CMD=(docker-compose)
-    else
-        error "Neither 'docker compose' (v2) nor 'docker-compose' (v1) is installed."
+    # Ensure crypto materials only when starting
+    if "$is_starting"; then
+        log "Ensuring Keycloak certificates and keystore are present..."
+        ensure_keycloak_crypto_materials
     fi
 
-    # Execute docker-compose with all passed arguments, using the generated .env file
-    # Docker Compose automatically picks up .env in the current directory
-    "${DOCKER_COMPOSE_CMD[@]}" "$@"
+    # Generate .env file from merged config files
+    local env_file=".env.generated"
+    if "$is_starting"; then
+        log "Generating temporary .env file from config.yaml..."
+    fi
+    
+    # Build config file array: base config + optional override (same pattern as load_configuration)
+    local config_files=("$WORK_DIR/config.yaml")
+    local override_file="$WORK_DIR/config.override.yaml"
+    [[ -f "$override_file" ]] && config_files+=("$override_file")
+    
+    # Generate .env content from merged YAML configs
+    rm -f "$env_file"
+    export_yaml_as_env "${config_files[@]}" > "$env_file"
 
+    # Prepare docker compose command
+    local DOCKER_COMPOSE_CMD
+    DOCKER_COMPOSE_CMD="$(detect_docker_compose)"
+
+    # Process arguments: add -v to 'down' if not present
+    local new_args=()
+    local has_down=false
+    local has_volumes=false
+    
+    for arg in "${args[@]}"; do
+        case "$arg" in
+            down)
+                has_down=true
+                ;;
+            -v|--volumes)
+                has_volumes=true
+                ;;
+        esac
+        new_args+=("$arg")
+    done
+    
+    # Auto-add -v to 'down' command if not specified
+    if "$has_down" && ! "$has_volumes"; then
+        log "Adding -v flag to 'docker compose down' command."
+        new_args+=("-v")
+    fi
+
+    # Execute docker compose with generated .env file
+    eval "$DOCKER_COMPOSE_CMD" "${new_args[@]}"
     local compose_exit_code=$?
 
-    # Clean up the temporary .env file
-    log "Cleaning up temporary .env file..."
+    # Clean up temporary .env file (silently)
     rm -f "$env_file"
 
     return "$compose_exit_code"

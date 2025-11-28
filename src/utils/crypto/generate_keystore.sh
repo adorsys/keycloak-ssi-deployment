@@ -7,13 +7,12 @@ IFS=$'\n\t'
 # -----------------------------------------------------------------------------
 
 # WORK_DIR is set by the CLI
-TARGET_DIR="${TARGET_DIR:-$WORK_DIR/target}"
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
 if [[ -f "$KEYSTORE_PATH" ]]; then
     log "Keystore $KEYSTORE_PATH already exists. Skipping generation."
-    exit 0
+    return 0
 fi
 
 log "Generating keystore $KEYSTORE_PATH..."

@@ -1,6 +1,6 @@
 {
   "id": "5aa6d5e1-5ca0-405a-a04d-a0bdeae27358",
-  "realm": "oid4vc-vci",
+  "realm": "$(env:KEYCLOAK_REALM)",
   "enabled": true,
   "attributes": {
     "preAuthorizedCodeLifespanS": "120"

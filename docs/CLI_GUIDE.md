@@ -13,6 +13,32 @@ CLI Tool • Deployment • Configuration • Testing
 
 ---
 
+## Overview
+
+The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
+It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
+
+---
+
+## Prerequisites
+
+Before using the CLI tool, ensure the following dependencies are installed on your system:
+
+- **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
+- **Keytool** — Java key and certificate management utility (included with JDK)
+- **jq** — lightweight and flexible command-line JSON processor
+- **yq** — portable command-line YAML processor (used for configuration management)
+- **figlet** — ASCII art generator for an enhanced CLI display
+- **Java Version:**
+  - A minimum of Java 17 is required.
+  - For compatibility with the `keycloak-ssi import` feature (which uses the [Keycloak Config CLI](https://github.com/adorsys/keycloak-config-cli)), Java 21 is recommended.
+    Make sure to set your JAVA_HOME environment variable accordingly:
+    ```bash
+    export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64/
+    ```
+
+---
+
 ## Configuration
 
 The CLI uses a configuration system based on shell environment variables for better organization and maintainability. Configuration is managed through `config.yaml` in the project root.
@@ -34,32 +60,6 @@ Configuration values support environment variable injection using `${VAR_NAME}` 
 The project manages configuration primarily through [`config.yaml`](config.yaml) and [`config.override.yaml`](config.override.yaml). To configure new variables, add them to either of these YAML files.
 
 Variables defined in these files are automatically loaded as environment variables. For example, a YAML property like `keycloak.realm` will be available as the environment variable `KEYCLOAK_REALM`. You can also use environment variable injection within the YAML files using the `${VAR_NAME}` syntax.
-
----
-
-## Overview
-
-The Keycloak SSI CLI simplifies the setup, configuration, and testing of Self-Sovereign Identity (SSI) environments built on Keycloak with OID4VCI (OpenID for Verifiable Credential Issuance).
-It automates complex tasks such as realm setup, credential flow testing, and environment provisioning — all from a single, portable CLI interface.
-
----
-
-## Prerequisites
-
-Before using the CLI tool, ensure the following dependencies are installed on your system:
-
-- **OpenSSL** — for SSL/TLS certificate generation and cryptographic operations
-- **Keytool** — Java key and certificate management utility (included with JDK)
-- **jq** — lightweight and flexible command-line JSON processor
-- **yq** — portable command-line YAML processor (used for configuration management)
-- **figlet** — ASCII art generator for an enhanced CLI display
-- **Java Version:**
-  - A minimum of Java 17 is required.
-  - For compatibility with the `keycloak-ssi import` feature (which uses the Keycloak config CLI), Java 21 is recommended.
-    Make sure to set your JAVA_HOME environment variable accordingly:
-    ```bash
-    export JAVA_HOME=/usr/lib/jvm/jdk-21-oracle-x64/
-    ```
 
 ---
 
@@ -99,16 +99,18 @@ keycloak-ssi <command> [options]
 
 ## Commands
 
-| Command                                    | Purpose                                        | Script Called                                                                                                             |
-| ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `install`                                  | Install CLI to system PATH                     | -                                                                                                                         |
-| `uninstall`                                | Remove CLI from system PATH                    | -                                                                                                                         |
-| `setup [-d]`                               | Build and start Keycloak with OID4VCI          | `src/deployment/0.start-kc-oid4vci.sh`                                                                                    |
-| `config`                                   | Configure realm, keys, clients, and test users | `src/deployment/1.oid4vci_test_deployment.sh`, `src/deployment/2.configure_user_4_account_client.sh`                      |
-| `test <preauth/authcode> <CredentialType>` | Test credential issuance flows                 | `src/credentials/request_credential.sh` (preauth), `src/credentials/request_credential_with_auth_code_flow.sh` (authcode) |
-| `import`                                   | Import a pre-configured realm                  | `src/utils/import_kc_config.sh`                                                                                           |
-| `stop`                                     | Stop running Keycloak                          | `src/utils/helper.sh` (stop_keycloak function)                                                                            |
-| `help`                                     | Show this help message                         | -                                                                                                                         |
+| Command                                    | Purpose                                                              | Script Called                                                                                                             |
+| ------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `install`                                  | Install CLI to system PATH                                           | -                                                                                                                         |
+| `uninstall`                                | Remove CLI from system PATH                                          | -                                                                                                                         |
+| `compose up [-d]`                          | Start the Docker Compose stack (foreground or detached)              | -                                                                                                                         |
+| `compose down [-v]`                        | Stop and remove the Docker Compose stack (optionally remove volumes) | -                                                                                                                         |
+| `setup [-d]`                               | Build and start Keycloak with OID4VCI                                | `src/deployment/0.start-kc-oid4vci.sh`                                                                                    |
+| `config`                                   | Configure realm, keys, clients, and test users                       | `src/deployment/1.oid4vci_test_deployment.sh`, `src/deployment/2.configure_user_4_account_client.sh`                      |
+| `test <preauth/authcode> <CredentialType>` | Test credential issuance flows                                       | `src/credentials/request_credential.sh` (preauth), `src/credentials/request_credential_with_auth_code_flow.sh` (authcode) |
+| `import`                                   | Import a pre-configured realm                                        | `src/utils/import_kc_config.sh`                                                                                           |
+| `stop`                                     | Stop running Keycloak                                                | `src/utils/helper.sh` (stop_keycloak function)                                                                            |
+| `help`                                     | Show this help message                                               | -                                                                                                                         |
 
 ---
 
@@ -133,6 +135,9 @@ keycloak-ssi test authcode IdentityCredential
 
 # 4️⃣ Stop the Keycloak server
 keycloak-ssi stop
+
+# Stop the Docker Compose stack and remove volumes
+keycloak-ssi compose down -v
 
 # 5️⃣ Uninstall the CLI
 keycloak-ssi uninstall
