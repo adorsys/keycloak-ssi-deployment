@@ -6,21 +6,8 @@ This guide walks you through configuring Keycloak to issue Verifiable Credential
 
 ### Prerequisites
 
-Before proceeding, ensure you have the following tools installed on your system:
-
-- **OpenSSL:** A command-line tool for working with SSL/TLS certificates, keys, and other cryptographic functions.
-- **Keytool:** A Java key and certificate management utility included with the Java Development Kit (JDK).
-- **jq (Optional):** `jq` is a handy command-line JSON processor that can simplify some of the configuration tasks in this guide.
-- **.env File:** Review the `.env` file to ensure all the necessary environment variables are correctly set up.
-
-**Verification:** You can verify that the tools are working by running:
-
-```bash
-openssl version
-keytool -version
-jq --version
-```
-See the [Prerequisites](./CLI_GUIDE.md#prerequisites) before getting started.
+Before proceeding, ensure you have the required tools installed.
+See the [Prerequisites](./CLI_GUIDE.md#prerequisites) section for details.
 
 ### Setting Up Keycloak
 
@@ -30,8 +17,6 @@ You can set up Keycloak in one of two ways, based on your requirements:
 2. **Cloning and Building a Specific Keycloak Branch:** Builds Keycloak from a specific branch.
 
 ### Configuring the Setup Method
-
-**You no longer need to set `KC_USE_UPSTREAM` in your `.env` file.**
 
 The setup behavior is determined automatically by the `setup-kc-oid4vci.sh` script based on the value of the `keycloak.version` variable in your `config.yaml` file.
 
@@ -46,6 +31,7 @@ Set `keycloak.version` to the desired official Keycloak version (e.g., `26.0.7`)
 
 ```bash
 ./keycloak-ssi.sh setup
+```
 
 This will:
 
@@ -59,11 +45,13 @@ Set keycloak version and the desired branch in your `config.yaml` file, for exam
 ```bash
 keycloak.version=999.0.0-SNAPSHOT
 keycloak.target_branch=main
+```
 
 Then run:
 
 ```bash
 ./keycloak-ssi.sh setup
+```
 
 This will:
 
@@ -89,8 +77,14 @@ This file contains the environment variables required for the script to connect 
 ### 2. **Run the Configuration Script**
 
 After verifying your `config.yaml` file, run the following command to configure your Keycloak environment:
+
 ```bash
 ./keycloak-ssi.sh import
+```
+
+This command imports the necessary Keycloak configuration using the settings defined in your `config.yaml` file.
+
+> **Note**: Java 21 is required to run this script and complete the configuration successfully. Make sure your `JAVA_HOME` is set to a **Java 21** installation.
 
 ## Alternative-2: Manual Configuration Keycloak for Verifiable Credential Issuance
 
@@ -103,8 +97,10 @@ Refer to the TLDR section for initial setup requirements.
 ### Script
 
 After checking your `config.yaml` file, run the following command:
+
 ```bash
 ./keycloak-ssi.sh config
+```
 
 ## Requesting Credentials
 
@@ -116,6 +112,7 @@ Uses only curl to access keycloak interfaces. The `-k` of curl disables ssl cert
 
 ```bash
 ./keycloak-ssi.sh test preauth IdentityCredential
+```
 
 This command:
 
@@ -127,6 +124,7 @@ This command:
 
 ```bash
 ./keycloak-ssi.sh test authcode IdentityCredential
+```
 
 This command:
 
@@ -134,6 +132,8 @@ This command:
 - Requests an authorization code via the Keycloak authorization endpoint.
 - Exchanges the authorization code for an access token, including the code_verifier.
 - Requests IdentityCredential with key binding.
+
+> **Note**: To see which scripts the command runs, refer to the [Commands](./CLI_GUIDE.md#commands) section.
 
 # Detailed Description
 
@@ -157,6 +157,9 @@ The `setup-kc-oid4vci.sh` script simplifies the setup process. It either downloa
 
 ```bash
 ./keycloak-ssi.sh setup
+```
+
+This script sets up Keycloak for OID4VCI usage. See [Setting up keycloak](./README_Advanced.MD#setting-up-keycloak)
 
 ```bash
 echo "unpacking keycloak ..."
@@ -176,7 +179,7 @@ The cert config file can be found at: [cert-config.txt](../src/utils/crypto/cert
 
 ```bash
 #!/usr/bin/env bash
-# Source environment variables
+# Load environment variables
 source "$WORK_DIR/src/utils/helper.sh"
 init_script
 
@@ -218,6 +221,7 @@ Recall the start and database commands in `config.yam;` file are:
 ```bash
 start_command: "start --hostname-strict=false --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY}"
 database_opts: "--db postgres --db-url jdbc:postgresql://localhost:5432/keycloak --db-username postgres --db-password postgres"
+```
 
 ## Configuring Keycloak to Service Verifiable Credentials
 
@@ -296,27 +300,18 @@ Next, we'll create a JSON file that describes the key to Keycloak. This file wil
   "providerId": "java-keystore",
   "providerType": "org.keycloak.keys.KeyProvider",
   "config": {
-    "keystore": [
-      "$KEYSTORE_PATH"
-    ],
-    "keystoreType": [
-      "$KEYSTORE_TYPE"
-    ],
-    "keystorePassword": [
-      "$KEYSTORE_PASSWORD"
-    ],
-    "keyAlias":[
-      "$KEYSTORE_ALIASES_ECDSA_KEY"
-    ],
-    "keyPassword": [
-      "$KEYSTORE_PASSWORD"
-    ],
+    "keystore": ["$KEYSTORE_PATH"],
+    "keystoreType": ["$KEYSTORE_TYPE"],
+    "keystorePassword": ["$KEYSTORE_PASSWORD"],
+    "keyAlias": ["$KEYSTORE_ALIASES_ECDSA_KEY"],
+    "keyPassword": ["$KEYSTORE_PASSWORD"],
     "active": ["true"],
     "priority": ["200"],
     "enabled": ["true"],
     "algorithm": ["ES256"]
   }
 }
+```
 
 **Key points:**
 
@@ -343,6 +338,7 @@ cat $WORK_DIR/issuer_key_ecdsa.json | \
    .config.keyAlias = [$keyAlias] |
    .config.keyPassword = [$keyPassword]' \
   > $TARGET_DIR/issuer_key_ecdsa-tmp.json
+
 jq --arg keystore "$KEYSTORE_PATH" \
      --arg keystorePassword "$KEYSTORE_PASSWORD" \
      --arg keystoreType "$KEYSTORE_TYPE" \
@@ -353,6 +349,7 @@ jq --arg keystore "$KEYSTORE_PATH" \
       .config.keystoreType = [$keystoreType] |
       .config.keyAlias = [$keyAlias] |
       .config.keyPassword = [$keyPassword]' "$json_template"
+```
 
 **4. Adding the Key to the Keycloak Realm:**
 
