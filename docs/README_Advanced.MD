@@ -2,10 +2,6 @@
 
 This guide walks you through configuring Keycloak to issue Verifiable Credentials (VCs) using the OpenID for Verifiable Credential Issuance (OID4VCI) protocol.
 
-# TLDR
-
-Checkout this project.
-
 ## Checkout, Build, and Deploy Keycloak
 
 ### Prerequisites
@@ -24,6 +20,7 @@ openssl version
 keytool -version
 jq --version
 ```
+See the [Prerequisites](./CLI_GUIDE.md#prerequisites) before getting started.
 
 ### Setting Up Keycloak
 
@@ -36,16 +33,16 @@ You can set up Keycloak in one of two ways, based on your requirements:
 
 **You no longer need to set `KC_USE_UPSTREAM` in your `.env` file.**
 
-The setup method is now handled automatically by the `setup-kc-oid4vci.sh` script based on the value of the `KC_VERSION` variable in your `.env` file:
+The setup behavior is determined automatically by the `setup-kc-oid4vci.sh` script based on the value of the `keycloak.version` variable in your `config.yaml` file.
 
-- If `KC_VERSION` is not `999.0.0-SNAPSHOT`, the script will use the official Keycloak tarball (upstream).
-- If `KC_VERSION` is `999.0.0-SNAPSHOT`, the script will clone and build the custom Keycloak branch.
+- When `keycloak.version` is anything other than `999.0.0-SNAPSHOT`, the script downloads and installs the official Keycloak tarball (upstream).
+- When `keycloak.version` is set to `999.0.0-SNAPSHOT`, the script clones and builds the custom Keycloak branch instead.
 
-**To control which method is used, simply set the `KC_VERSION` variable in your `.env` file.**
+**To choose which setup method is used, simply set the desired value for `keycloak.version` in your `config.yaml` file.**
 
 ### Option 1: Using the Keycloak Tarball
 
-Set `KC_VERSION` to the desired official Keycloak version (e.g., `26.0.7`) in your `.env` file and run:
+Set `keycloak.version` to the desired official Keycloak version (e.g., `26.0.7`) in your `config.yaml` file and run:
 
 ```bash
 ./0.start-kc-oid4vci.sh
