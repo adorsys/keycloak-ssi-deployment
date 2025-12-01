@@ -54,7 +54,7 @@ success "User Access Token retrieved."
 # ===============================
 log "Requesting credential offer for '$CREDENTIAL_TYPE'..."
 
-CREDENTIAL_OFFER_LINK=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer-uri?credential_configuration_id=$CREDENTIAL_TYPE" \
+CREDENTIAL_OFFER_LINK=$(curl -k -s "$KEYCLOAK_ADMIN_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer-uri?credential_configuration_id=$CREDENTIAL_TYPE&user_id=$USERS_FRANCIS_NAME" \
   -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' | jq -r '"\(.issuer)\(.nonce)"')
@@ -116,6 +116,14 @@ if [ -z "$CREDENTIAL_ACCESS_TOKEN" ] || [ "$CREDENTIAL_ACCESS_TOKEN" == "null" ]
   exit 1
 fi
 
+CREDENTIAL_IDENTIFIER=$(echo "$CREDENTIAL_BEARER_TOKEN" | jq -r '.authorization_details[0].credential_identifiers[0]')
+
+if [ -z "$CREDENTIAL_IDENTIFIER" ] || [ "$CREDENTIAL_IDENTIFIER" == "null" ]; then
+  error "No credential_identifier returned in token response"
+  exit 1
+fi
+
+success "Credential Identifier: $CREDENTIAL_IDENTIFIER"
 success "Credential Access Token retrieved."
 
 # ===============================
@@ -129,7 +137,7 @@ success "Key proof generated."
 # Prepare Request Payload
 # ===============================
 REQ_BODY=$(jq \
-  --arg credential_identifier "$CREDENTIAL_TYPE" \
+  --arg credential_identifier "$CREDENTIAL_IDENTIFIER" \
   --arg proof_jwt "$USER_KEY_PROOF" \
   '.credential_identifier = $credential_identifier | .proofs.jwt = [$proof_jwt]' \
   "$WORK_DIR_CONFIG/credential_request_body.json")
