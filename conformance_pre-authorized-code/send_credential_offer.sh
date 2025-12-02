@@ -10,13 +10,17 @@
 # - This is expected and helps identify configuration issues in Keycloak
 
 # Configuration
-NGROK_URL="https://fe91e433e98b.ngrok-free.app"
+
+NGROK_URL="https://d6791ba89bcf.ngrok-free.app"
 KEYCLOAK_REALM_URL="$NGROK_URL/realms/oid4vc-vci"
 TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
 
+# User configuration for pre-authorized code flow
+USERNAME="francis"
 echo "=== OID4VCI Conformance Test - Send Credential Offer (Interactive) ==="
 echo "Keycloak URL: $KEYCLOAK_REALM_URL"
 echo "Test Suite URL: $TEST_SUITE_BASE_URL"
+echo "Target User: $USERNAME"
 echo ""
 
 # Function to wait for user input
@@ -31,12 +35,11 @@ wait_for_user() {
 echo "Step 1: Getting fresh user access token..."
 echo "Running: curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token ..."
 wait_for_user
-
 USER_ACCESS_TOKEN=$(curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token \
     -d "client_id=openid4vc-rest-api" \
     -d "client_secret=uArydomqOymeF0tBrtipkPYujNNUuDlt" \
-    -d "username=francis" \
-    -d "password=francis" \
+    -d "username=$USERNAME" \
+    -d "password=$USERNAME" \
     -d "grant_type=password" \
     -d "scope=openid" | jq -r '.access_token')
 
@@ -46,17 +49,25 @@ if [ "$USER_ACCESS_TOKEN" = "null" ] || [ -z "$USER_ACCESS_TOKEN" ]; then
 fi
 
 echo "✅ Got fresh user access token: ${USER_ACCESS_TOKEN:0:50}..."
-
-# Step 2: Get a fresh credential offer URI
+# Step 2: Get a fresh credential offer URI with pre-authorized code flow
 echo ""
-echo "Step 2: Getting fresh credential offer URI..."
+echo "Step 2: Getting fresh credential offer URI (pre-authorized code flow)..."
+echo "Note: pre_authorized=true (default) requires user_id parameter"
 echo "Running: curl -k -s -H \"Authorization: Bearer \$USER_ACCESS_TOKEN\" ..."
 wait_for_user
 
-CREDENTIAL_OFFER_URI=$(curl -k -s -H "Authorization: Bearer $USER_ACCESS_TOKEN" "$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&type=uri")
+CREDENTIAL_OFFER_URI=$(curl -k -s -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
+    "$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&type=uri&pre_authorized=true&user_id=$USERNAME")
 
 echo "Fresh Credential Offer URI Response:"
 echo $CREDENTIAL_OFFER_URI | jq .
+
+# Check if we got an error about missing user_id
+if echo "$CREDENTIAL_OFFER_URI" | grep -q "Pre-Authorized credential offer requires a target user"; then
+    echo "❌ Error: Pre-authorized credential offer requires user_id parameter"
+    echo "Make sure you're providing user_id=$USERNAME in the request"
+    exit 1
+fi
 
 # Step 3: Extract the nonce and get the actual credential offer
 echo ""
@@ -73,9 +84,18 @@ echo "Running: curl -k -s \"$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credent
 wait_for_user
 
 CREDENTIAL_OFFER=$(curl -k -s "$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer/$NONCE")
-
 echo "Fresh Credential Offer:"
 echo $CREDENTIAL_OFFER | jq .
+
+# Verify that the credential offer contains pre-authorized code grant
+if echo "$CREDENTIAL_OFFER" | jq -e '.grants.pre_authorized_code' > /dev/null 2>&1; then
+    echo "✅ Credential offer contains pre-authorized code grant"
+    PRE_AUTH_CODE=$(echo $CREDENTIAL_OFFER | jq -r '.grants.pre_authorized_code.pre_authorized_code')
+    echo "Pre-authorized code: ${PRE_AUTH_CODE:0:50}..."
+else
+    echo "⚠️  Warning: Credential offer does not contain pre-authorized code grant"
+    echo "This may indicate pre_authorized=false was used or an issue with the offer creation"
+fi
 
 # Step 4: Construct the credential offer with ngrok URLs
 echo ""
