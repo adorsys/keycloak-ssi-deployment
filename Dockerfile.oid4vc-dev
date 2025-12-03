@@ -29,6 +29,9 @@ RUN tar -xzf /tmp/keycloak.tar.gz -C $KEYCLOAK_HOME --strip-components=1 \
     && rm /tmp/keycloak.tar.gz \
     && chown -R 1000:1000 $KEYCLOAK_HOME
 
+# Inject provider JARs from this repository
+COPY providers/*.jar $KEYCLOAK_HOME/providers/
+
 USER keycloak
 
 EXPOSE 8080

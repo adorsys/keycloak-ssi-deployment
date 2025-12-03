@@ -1,0 +1,3 @@
+[submodule "keycloak-oauth-sig"]
+	path = keycloak-oauth-sig
+	url = https://github.com/keycloak/keycloak-oauth-sig
