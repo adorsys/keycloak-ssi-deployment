@@ -1,48 +1,54 @@
-## Keycloak OpenID4VCI Helm Chart
+# Keycloak OpenID4VCI Helm Chart
 
-This chart deploys a Keycloak instance configured to act as an OpenID for Verifiable Credential Issuance (OpenID4VCI) issuer.
+This Helm chart deploys a **Keycloak instance** configured as an **OpenID for Verifiable Credential Issuance (OpenID4VCI) issuer**.  
 It is designed to work with the images and configuration produced by this repository.
 
-### Prerequisites
+> The chart automates deployment, secrets management, and configuration of Keycloak for OpenID4VCI.
 
-- A container registry containing a Keycloak image with OpenID4VCI support  
-  (for example, built using `Dockerfile.oid4vc-dev` or an equivalent upstream image).
-- A PostgreSQL database or another database supported by your Keycloak image.
-- A Kubernetes cluster with:
-  - Helm v3 installed,
-  - access to the registry where your Keycloak image is published.
+---
 
-### Chart contents
+## Prerequisites
 
-- `Chart.yaml` / `Chart.lock` – chart metadata and dependency lock.
-- `values.yaml` – default configuration values:
-  - image repository, tag, and pull policy,
-  - database connection parameters,
-  - Keycloak admin credentials,
-  - TLS / HTTPS configuration,
-  - additional environment variables for Keycloak.
-- `templates/`:
-  - `create-config-map.yaml` – creates a `ConfigMap` for Keycloak configuration (for example a `config.yaml`).
-  - `external-secrets.yml` – optional integration with External Secrets to pull secrets (passwords, keys, etc.).
-  - `job-rbac.yaml` – RBAC for any Helm hooks or jobs that might need elevated permissions.
-- `local_test_minikube/` – example manifests for local/minikube testing (RBAC and SecretStore).
+Before installing this chart, ensure you have:
 
-### Typical usage
+- A container registry containing a **Keycloak image with OpenID4VCI support**  
+  (e.g., built using `Dockerfile.oid4vc-dev` or an equivalent upstream image)
+- A **PostgreSQL database** or another database supported by your Keycloak image
+- A **Kubernetes cluster** with:
+  - Helm v3 installed
+  - Access to the registry where your Keycloak image is published
 
-1. **Set image and configuration**
+---
 
-   Copy `values.yaml` and adjust at least:
+## Chart Contents
 
-   - `.image.repository` and `.image.tag` to point to your Keycloak image,
-   - database and TLS settings.
+| File / Directory                   | Description                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `Chart.yaml` / `Chart.lock`        | Chart metadata and dependency lock                                                      |
+| `values.yaml`                      | Default configuration values, including image, database, TLS, and environment variables |
+| `templates/create-config-map.yaml` | Creates a `ConfigMap` for Keycloak configuration (e.g., `config.yaml`)                  |
+| `templates/external-secrets.yaml`  | Optional integration for fetching secrets (passwords, keys, etc.) via External Secrets  |
+| `templates/job-rbac.yaml`          | RBAC for Helm hooks or jobs requiring elevated permissions                              |
+| `local_test_minikube/`             | Example manifests for local/Minikube testing (RBAC and SecretStore)                     |
 
-2. **Install or upgrade the release**
+---
 
-   From the repository root:
+## Typical Usage
 
-   ```bash
-   helm upgrade --install keycloak-openid4vci ./infrastructure/keycloak-chart -f my-values.yaml
-   ```
+### 1. Set Image and Configuration
+
+Copy `values.yaml` and adjust at minimum:
+
+- `.image.repository` and `.image.tag` to point to your Keycloak image
+- Database and TLS settings as needed
+
+### 2. Install or Upgrade the Release
+
+From the repository root:
+
+```bash
+helm upgrade --install keycloak-openid4vci ./infrastructure/keycloak-chart -f my-values.yaml
+```
 
 3. **Expose Keycloak**
 

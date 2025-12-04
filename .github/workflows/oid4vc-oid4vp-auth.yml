@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Rename Dockerfile for branch build
         run: mv ${{ env.DOCKERFILE_NAME }} ${{ env.BUILD_DOCKERFILE }}
