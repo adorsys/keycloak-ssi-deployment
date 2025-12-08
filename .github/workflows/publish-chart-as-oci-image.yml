@@ -1,6 +1,9 @@
 name: Publish Helm Chart as OCI Image
 
 on:
+  push:
+    branches:
+      - test
   workflow_dispatch:
 
 permissions:
