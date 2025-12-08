@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         id: builder
@@ -67,7 +68,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./keycloak-oauth-sig/oid4vci-deployment
-          file: ./Dockerfile
+          file: ./keycloak-oauth-sig/oid4vci-deployment/Dockerfile
           builder: ${{ steps.builder.outputs.name }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
