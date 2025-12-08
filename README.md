@@ -7,14 +7,14 @@ The actual OpenID4VCI reference setup lives in the `keycloak-oauth-sig` submodul
 
 ## Repository Layout
 
-| Path                                        | Description                                                                                                                      |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `keycloak-oauth-sig/`                       | Git submodule pointing to the upstream repo (`keycloak/keycloak-oauth-sig`). The OpenID4VCI deployment lives inside this module. |
-| `keycloak-oauth-sig/OpenID4VCI-deployment/` | Contains `config.yaml`, scripts, and docs for running Keycloak as an OpenID4VCI issuer.                                          |
-| `Dockerfile.oid4vc-dev`                     | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
-| `infrastructure/keycloak-chart/`            | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
-| `infrastructure/terraform/`                 | Terraform modules and examples for managing realms, clients, keys, scopes, and users.                                            |
-| `providers/`                                | Extra Keycloak provider JARs to bundle with the deployment image.                                                                |
+| Path                                     | Description                                                                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `keycloak-oauth-sig/`                    | Git submodule pointing to the upstream repo (`keycloak/keycloak-oauth-sig`). The OpenID4VCI deployment lives inside this module. |
+| `keycloak-oauth-sig/oid4vci-deployment/` | Contains `config.yaml`, scripts, and docs for running Keycloak as an OpenID4VCI issuer.                                          |
+| `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
+| `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
+| `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, and users.                                            |
+| `providers/`                             | Extra Keycloak provider JARs to bundle with the deployment image.                                                                |
 
 ---
 
