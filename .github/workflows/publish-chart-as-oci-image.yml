@@ -21,6 +21,11 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
+      - name: Add bjw-s-labs Helm repo
+        run: |
+          helm repo add bjw-s-labs https://bjw-s-labs.github.io/helm-charts
+          helm repo update
+
       - name: Cache Helm dependencies
         uses: actions/cache@v4
         with:
