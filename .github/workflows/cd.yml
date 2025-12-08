@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./keycloak-oauth-sig/oid4vci-deployment
-          file: ./Dockerfile
+          file: ./keycloak-oauth-sig/oid4vci-deployment/Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
