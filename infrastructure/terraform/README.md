@@ -6,10 +6,10 @@ This directory contains Terraform configuration files for deploying and configur
 
 The Terraform configuration automates the setup of a Keycloak realm with:
 
-- **Realm Configuration**: Creates a dedicated realm for OID4VCI operations
+- **Realm Configuration**: Creates a dedicated realm for OpenID4VCI operations
 - **User Management**: Sets up test users with predefined credentials
 - **Client Scopes**: Configures credential-specific client scopes for different credential types
-- **Client Configuration**: Sets up the OID4VCI REST API client
+- **Client Configuration**: Sets up the OpenID4VCI REST API client
 - **Key Management**: Imports and configures cryptographic keys for signing and encryption
 - **SAML Identity Provider**: Configures SAML-based identity provider with user attribute mappers
 
@@ -125,7 +125,7 @@ The configuration automatically disables certain default Keycloak keys:
 - **RSA-OAEP**: Default RSA encryption key
 - **RS256**: Default RSA signing key
 
-This ensures only the custom imported keys are active for OID4VCI operations.
+This ensures only the custom imported keys are active for OpenID4VCI operations.
 
 ### Extensible Credential Configuration
 
