@@ -177,7 +177,8 @@ echo "Creating OID4VCI credential client scopes..."
 # Load and patch the JSON config
 CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json" | jq \
   --arg ISSUER_DID "$ISSUER_DID" \
-  'map(.attributes["vc.issuer_did"] = $ISSUER_DID)')
+  'map(.attributes["vc.issuer_did"] = $ISSUER_DID
+        | .attributes["vc.key_attestations_required"] = "true")')
 
 # Loop through each scope in the JSON array
 echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do

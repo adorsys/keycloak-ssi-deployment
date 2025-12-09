@@ -13,6 +13,7 @@ const qrImage = document.getElementById('qr-code') as HTMLCanvasElement;
 const userInfo = document.getElementById('user-info') as HTMLDivElement;
 
 let accessToken: string | null = null;
+let loggedInUsername: string | null = null;
 
 // Login form handler
 loginForm.addEventListener('submit', async (e) => {
@@ -57,6 +58,7 @@ loginForm.addEventListener('submit', async (e) => {
 
     const tokenData = await tokenResponse.json();
     accessToken = tokenData.access_token;
+    loggedInUsername = username;
 
     if (!accessToken) {
       throw new Error('No access token received');
@@ -78,7 +80,7 @@ loginForm.addEventListener('submit', async (e) => {
 
 // Get credential offer button click
 getOfferButton.addEventListener('click', async () => {
-  if (!accessToken) {
+  if (!accessToken || !loggedInUsername) {
     statusText.textContent = 'Not authenticated. Please login first.';
     statusText.style.color = '#ff6961';
     return;
@@ -92,7 +94,13 @@ getOfferButton.addEventListener('click', async () => {
     // Get credential offer URI (same as script - line 56)
     // Use type=uri to get JSON that we can modify
     // Use proxy to avoid CORS and certificate issues
-    const uriEndpoint = `/api/keycloak/realms/${frontendConfig.realm}/protocol/oid4vc/credential-offer-uri?credential_configuration_id=${frontendConfig.credentialConfigurationId}&type=uri`;
+    const uriParams = new URLSearchParams({
+      credential_configuration_id: frontendConfig.credentialConfigurationId,
+      type: 'uri',
+      pre_authorized: 'true',
+      user_id: loggedInUsername,
+    });
+    const uriEndpoint = `/api/keycloak/realms/${frontendConfig.realm}/protocol/oid4vc/credential-offer-uri?${uriParams.toString()}`;
     const uriResponse = await fetch(uriEndpoint, {
       method: 'GET',
       headers: {
