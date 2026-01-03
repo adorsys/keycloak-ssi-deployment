@@ -22,7 +22,6 @@ error()   { printf "\n${RED}[ERROR]${NC} %s\n" "$*" >&2; exit 1; }
 success() { printf "\n${GREEN}[SUCCESS]${NC} %s\n" "$*"; }
 debug()   { printf "\n${BLUE}[DEBUG]${NC} %s\n" "$*"; }
 
-
 # -----------------------------------------------------------------------------
 # Environment Setup
 # -----------------------------------------------------------------------------
@@ -51,6 +50,12 @@ setup_environment() {
             # Move up
             search_dir="$parent"
         done
+
+        # Fallback for container environment
+        if [[ -z "${WORK_DIR:-}" ]] && [[ -f "/opt/keycloak/src/utils/helper.sh" ]]; then
+            WORK_DIR="/opt/keycloak"
+            export WORK_DIR
+        fi
 
         if [[ -z "${WORK_DIR:-}" ]]; then
             error "Could not determine project root. Run from within the repository."
@@ -206,6 +211,29 @@ inject_environment_variables() {
 # -----------------------------------------------------------------------------
 get_keycloak_pid() {
     local pid
+    # First check if running in Docker Compose
+    if command -v docker &>/dev/null && docker compose version &>/dev/null; then
+        # Check if the 'app' service is running in the current project
+        # We use the directory name as the project name by default in docker compose
+        # But better to use the compose file in the current directory
+        
+        local compose_file="$WORK_DIR/docker-compose.yml"
+        if [[ -f "$compose_file" ]]; then
+             # Try to find the container ID for the 'app' service
+            local container_id
+            container_id=$(docker compose -f "$compose_file" ps -q app 2>/dev/null)
+            
+            if [[ -n "$container_id" ]]; then
+                # Check if it's actually running
+                if docker ps -q --no-trunc | grep -q "$container_id"; then
+                    echo "docker:$container_id"
+                    return
+                fi
+            fi
+        fi
+    fi
+
+    # Fallback to local process check
     if command -v pgrep &>/dev/null; then
         pid=$(pgrep -f keycloak | head -n1 || true)
     else
@@ -223,20 +251,28 @@ stop_keycloak() {
     keycloak_pid="$(get_keycloak_pid || true)"
 
     if [[ -n "$keycloak_pid" ]]; then
-        log "Keycloak instance found (PID: $keycloak_pid). Shutting it down..."
-        if ! kill "$keycloak_pid"; then
-            return 1
+        if [[ "$keycloak_pid" == "docker:"* ]]; then
+            log "Keycloak running in Docker Compose. Stopping container..."
+            DOCKER_COMPOSE_COMMAND="$(detect_docker_compose)"
+            DOCKER_COMPOSE_FILE="${WORK_DIR}/docker-compose.yml"
+            eval "$DOCKER_COMPOSE_COMMAND -f \"$DOCKER_COMPOSE_FILE\" stop app" || warn "Failed to stop app container."
+            log "Keycloak container stopped."
+        else
+            log "Keycloak instance found (PID: $keycloak_pid). Shutting it down..."
+            if ! kill "$keycloak_pid"; then
+                return 1
+            fi
+            # Wait for process to terminate
+            sleep 2
+            if kill -0 "$keycloak_pid" 2>/dev/null; then
+                kill -9 "$keycloak_pid" 2>/dev/null || true
+                sleep 1
+            fi
+            if kill -0 "$keycloak_pid" 2>/dev/null; then
+                return 1
+            fi
+            log "Keycloak stopped."
         fi
-        # Wait for process to terminate
-        sleep 2
-        if kill -0 "$keycloak_pid" 2>/dev/null; then
-            kill -9 "$keycloak_pid" 2>/dev/null || true
-            sleep 1
-        fi
-        if kill -0 "$keycloak_pid" 2>/dev/null; then
-            return 1
-        fi
-        log "Keycloak stopped."
     else
         log "No running Keycloak instance found."
     fi
@@ -320,6 +356,14 @@ ensure_keycloak_crypto_materials() {
             cp "$KEYSTORE_PATH" "$keystore_cache"
         fi
     fi
+    
+    # Ensure permissions if running in Docker or as root
+    if [[ -f "$KEYSTORE_PATH" ]]; then
+        chmod 644 "$KEYSTORE_PATH"
+    fi
+    if [[ -f "$SSL_TRUST_STORE" ]]; then
+        chmod 644 "$SSL_TRUST_STORE"
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -327,7 +371,7 @@ ensure_keycloak_crypto_materials() {
 # -----------------------------------------------------------------------------
 check_dependencies() {
     local missing_deps=()
-    for dep in openssl keytool jq figlet yq; do
+    for dep in openssl keytool jq yq; do
         if ! command -v "$dep" &>/dev/null; then
             missing_deps+=("$dep")
         fi

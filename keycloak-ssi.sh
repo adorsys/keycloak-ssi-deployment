@@ -40,6 +40,11 @@ determine_project_root() {
         echo "$script_dir"
         return
     fi
+    # Check if running inside container
+    if [[ -f "/opt/keycloak/src/utils/helper.sh" ]]; then
+        echo "/opt/keycloak"
+        return
+    fi
     # If installed, use XDG Base Directory
     local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
     local project_root="$xdg_data_home/keycloak-ssi-deployment"
