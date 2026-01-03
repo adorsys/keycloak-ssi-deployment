@@ -25,24 +25,42 @@ log "Keycloak is running (PID: $keycloak_pid)."
 # -----------------------------------------------------------------------------
 # Helper for executing kcadm
 # -----------------------------------------------------------------------------
-KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
-if [[ ! -x "$KCADM" ]]; then
-  error "kcadm.sh not found or not executable at: $KCADM"
+# If running in Docker, we need to execute kcadm inside the container
+if [[ "$keycloak_pid" == "docker:"* ]]; then
+    CONTAINER_ID="${keycloak_pid#docker:}"
+    KCADM_CMD=(docker exec -i $CONTAINER_ID /opt/keycloak/target/tools/keycloak-$KEYCLOAK_VERSION/bin/kcadm.sh)
+else
+    KCADM="$KEYCLOAK_INSTALL_DIR/bin/kcadm.sh"
+    if [[ ! -x "$KCADM" ]]; then
+      error "kcadm.sh not found or not executable at: $KCADM"
+    fi
+    KCADM_CMD=("$KCADM")
 fi
 
 # -----------------------------------------------------------------------------
 # Authenticate admin
 # -----------------------------------------------------------------------------
 log "Authenticating admin user..."
-"$KCADM" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
+if [[ "$keycloak_pid" == "docker:"* ]]; then
 "$KCADM" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
     --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+    
+    CONTAINER_TRUSTSTORE="/opt/keycloak/target/cacerts"
+    
+    "${KCADM_CMD[@]}" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$CONTAINER_TRUSTSTORE"
+    "${KCADM_CMD[@]}" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
+        --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+else
+    "${KCADM_CMD[@]}" config truststore --trustpass "$SSL_TRUST_STORE_PASS" "$SSL_TRUST_STORE"
+    "${KCADM_CMD[@]}" config credentials --server "$KEYCLOAK_ADMIN_ADDR" --realm master \
+        --user "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" --password "$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+fi
 
 # -----------------------------------------------------------------------------
 # Create realm
 # -----------------------------------------------------------------------------
 log "Creating realm '$KEYCLOAK_REALM' (if not exists)..."
-"$KCADM" create realms -s realm="$KEYCLOAK_REALM" -s enabled=true >/dev/null 2>&1 || warn "Realm already exists; continuing."
+"${KCADM_CMD[@]}" create realms -s realm="$KEYCLOAK_REALM" -s enabled=true >/dev/null 2>&1 || warn "Realm already exists; continuing."
 
 # -----------------------------------------------------------------------------
 # Configure key providers
@@ -60,8 +78,14 @@ configure_key_provider() {
   if [[ ! -f "$json_template" ]]; then
     error "Key provider template not found: $json_template"
   fi
+  
+  # Adjust keystore path for container if needed
+  local keystore_path="$KEYSTORE_PATH"
+  if [[ "$keycloak_pid" == "docker:"* ]]; then
+      keystore_path="/opt/keycloak/target/kc_keystore.pkcs12"
+  fi
 
-  jq --arg keystore "$KEYSTORE_PATH" \
+  jq --arg keystore "$keystore_path" \
      --arg keystorePassword "$KEYSTORE_PASSWORD" \
      --arg keystoreType "$KEYSTORE_TYPE" \
      --arg keyAlias "$alias" \
@@ -78,7 +102,7 @@ register_key_provider() {
   local json_content="$2"
 
   local exists
-  exists=$("$KCADM" get components -r "$KEYCLOAK_REALM" --fields name \
+  exists=$("${KCADM_CMD[@]}" get components -r "$KEYCLOAK_REALM" --fields name \
             | jq -r --arg n "$name" '.[]? | select(.name == $n) | .id' | head -n1)
 
   if [[ -n "$exists" ]]; then
@@ -86,7 +110,7 @@ register_key_provider() {
     return 0
   fi
 
-  if ! echo "$json_content" | "$KCADM" create components -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1; then
+  if ! echo "$json_content" | "${KCADM_CMD[@]}" create components -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1; then
     warn "Failed to register key provider '$name'; it already exists."
   fi
 }
@@ -119,7 +143,7 @@ log "Custom key provider registration complete."
 # -----------------------------------------------------------------------------
 log "Updating realm attributes..."
 if [[ -f "$WORK_DIR/src/config/realm-attributes.json" ]]; then
-  cat "$WORK_DIR/src/config/realm-attributes.json" | "$KCADM" update realms/"$KEYCLOAK_REALM" -o -f - >/dev/null || error "Realm update failed"
+  cat "$WORK_DIR/src/config/realm-attributes.json" | "${KCADM_CMD[@]}" update realms/"$KEYCLOAK_REALM" -o -f - >/dev/null || error "Realm update failed"
 else
   warn "realm-attributes.json not found; skipping realm attribute update."
 fi
@@ -131,7 +155,7 @@ log "Creating client scopes..."
 if [[ -f "$WORK_DIR/src/config/client-scope-config.json" ]]; then
   CLIENT_SCOPES_CONFIG=$(jq --arg ISSUER_DID "$KEYCLOAK_ISSUER_DID" 'map(.attributes["vc.issuer_did"] = $ISSUER_DID)' "$WORK_DIR/src/config/client-scope-config.json")
   echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
-    echo "$scope" | "$KCADM" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
+    echo "$scope" | "${KCADM_CMD[@]}" create client-scopes -r "$KEYCLOAK_REALM" -f - >/dev/null 2>&1 || \
       warn "Client scope already exists; skipping."
   done
 else
@@ -172,7 +196,7 @@ if [[ -f "$CLIENTS_CONFIG_FILE" && -f "$CLIENT_SCOPE_CONFIG_FILE" ]]; then
          .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")')
     fi
 
-    echo "$MODIFIED_CLIENT" | "$KCADM" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
+    echo "$MODIFIED_CLIENT" | "${KCADM_CMD[@]}" create clients -r "$KEYCLOAK_REALM" -o -f - >/dev/null 2>&1 || \
       warn "Client '$CLIENT_ID' already exists; skipping."
   done
 else

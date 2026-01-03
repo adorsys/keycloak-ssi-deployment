@@ -39,6 +39,10 @@ fi
 # Run CLI JAR to import realm configuration
 # ---------------------------------------------------------------------------
 log "Running Keycloak Config CLI..."
+keycloak_pid="$(get_keycloak_pid || true)"
+if [[ "$keycloak_pid" == "docker:"* ]]; then
+    log "Keycloak is running in Docker. Proceeding with import from host..."
+fi
 cd "$WORK_DIR" && java -DCLIENT_SECRET="$CLIENTS_SECRET" \
      -DKEYCLOAK_ADMIN_ADDR="$KEYCLOAK_ADMIN_ADDR" \
      -DKEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" \

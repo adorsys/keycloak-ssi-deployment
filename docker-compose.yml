@@ -20,6 +20,10 @@ services:
       - db
     ports:
       - "${KEYCLOAK_HTTPS_PORT}:${KEYCLOAK_HTTPS_PORT}"
+      - ./target/keycloak-server.key.pem:/opt/keycloak/target/keycloak-server.key.pem
+      - ./target/keycloak-server.crt.pem:/opt/keycloak/target/keycloak-server.crt.pem
+      - ./target/kc_keystore.pkcs12:/opt/keycloak/target/kc_keystore.pkcs12
+      - ./target/cacerts:/opt/keycloak/target/cacerts
 
 volumes:
   db_data:
