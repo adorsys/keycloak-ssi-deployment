@@ -35,7 +35,7 @@ WORKDIR /opt/keycloak
 
 # Runtime dependencies required by helper scripts
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gettext-base && \
+    apt-get install -y --no-install-recommends gettext-base curl jq && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a non-privileged user
@@ -57,6 +57,8 @@ RUN chmod +x /opt/keycloak/docker-entrypoint.sh
 
 # Ensure proper permissions
 RUN chown -R keycloak:keycloak /opt/keycloak
+RUN mkdir /home/keycloak
+RUN chown -R keycloak:keycloak /home/keycloak
 
 # Switch to non-privileged user
 USER keycloak
