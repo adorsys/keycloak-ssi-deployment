@@ -19,3 +19,9 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform/
 **/.terraform.lock.hcl
+
+# Wrapper mock binaries
+.bin/
+
+# Terraform state backups
+*.backup
