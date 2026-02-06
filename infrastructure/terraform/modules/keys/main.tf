@@ -66,7 +66,6 @@ resource "null_resource" "disable_generated_keys" {
   depends_on = [null_resource.apply_custom_oid4vc_key_components]
 
   triggers = {
-    realm_id = var.realm_id
   }
 
   provisioner "local-exec" {
