@@ -16,6 +16,7 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
   depends_on = [var.realm_id]
 
   triggers = {
+    realm_id                   = var.realm_id
     oid4vc_key_components_hash = join(",", [local.rsa_issuer_key_json, local.rsa_encryption_key_json, local.ecdsa_issuer_key_json])
   }
 
@@ -66,6 +67,7 @@ resource "null_resource" "disable_generated_keys" {
   depends_on = [null_resource.apply_custom_oid4vc_key_components]
 
   triggers = {
+    realm_id = var.realm_id
   }
 
   provisioner "local-exec" {

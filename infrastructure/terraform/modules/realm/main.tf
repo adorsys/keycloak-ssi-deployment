@@ -23,9 +23,8 @@ resource "null_resource" "enable_verifiable_credentials" {
   provisioner "local-exec" {
     command = <<-EOT
       set -e
-      
-      # Obtain admin token
-      TOKEN=$(curl -k -s -X POST "${var.keycloak_url}/realms/master/protocol/openid-connect/token" \
+
+      TOKEN=$(curl -s -k -X POST "${var.keycloak_url}/realms/master/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=admin-cli" \
         -d "username=admin" \
@@ -37,22 +36,31 @@ resource "null_resource" "enable_verifiable_credentials" {
         exit 1
       fi
 
-      # Enable Verifiable Credentials feature
-      CURRENT_CONFIG=$(curl -k -s -X GET "${var.keycloak_url}/admin/realms/${var.realm}" \
+      CURRENT_CONFIG=$(curl -s -k -X GET "${var.keycloak_url}/admin/realms/${var.realm}" \
         -H "Authorization: Bearer $TOKEN")
         
+      ENABLED=$(echo "$CURRENT_CONFIG" | jq -r '.verifiableCredentialsEnabled')
+      
+      if [ "$ENABLED" = "true" ]; then
+        echo "Verifiable Credentials already enabled (idempotent)."
+        exit 0
+      fi
+      
       NEW_CONFIG=$(echo "$CURRENT_CONFIG" | jq '.verifiableCredentialsEnabled = true')
-      
-      echo "$NEW_CONFIG" > realm_update.json
-      
-      curl -k -s -X PUT "${var.keycloak_url}/admin/realms/${var.realm}" \
+
+      HTTP_CODE=$(curl -s -k -o /dev/null -w "%%{http_code}" -X PUT "${var.keycloak_url}/admin/realms/${var.realm}" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        --data-binary @realm_update.json
+        --data "$NEW_CONFIG")
         
-      rm realm_update.json
+      if [ "$HTTP_CODE" -ge 400 ]; then
+        echo "Failed to update realm. HTTP $HTTP_CODE" >&2
+        exit 1
+      fi
+
       echo "Verifiable Credentials enabled for realm ${var.realm}"
     EOT
+    
     interpreter = ["bash", "-c"]
   }
 }

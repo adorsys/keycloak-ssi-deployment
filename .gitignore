@@ -19,7 +19,4 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform/
 **/.terraform.lock.hcl
-
-
-# Terraform state backups
-*.backup
+config-override.yaml

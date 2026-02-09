@@ -53,7 +53,7 @@ sync_config() {
         log "Applying configuration override from $src..."
         cp "$src" "$dest"
     else
-        # Remove override if it's gone from project root
+
         if [[ -f "$dest" ]]; then
             log "No config-override.yaml found in root, removing stale override from submodule."
             rm -f "$dest"
@@ -81,20 +81,16 @@ cmd_scopes() {
     sync_config
     log "Configuring client scopes independently..."
     
-    # We execute this within the submodule context to reuse its helper.sh and environment variables
     (cd "$TEST_DEPLOYMENT_DIR" && bash -c "
-        # Define colors for the subshell
         S_GREEN=\"\$(printf '\033[0;32m')\"
         S_YELLOW=\"\$(printf '\033[1;33m')\"
         S_BLUE=\"\$(printf '\033[1;34m')\"
         S_RED=\"\$(printf '\033[0;31m')\"
         S_NC=\"\$(printf '\033[0m')\"
 
-        # Load submodule environment
         source src/utils/helper.sh
         setup_environment
         
-        # Check if Keycloak is running
         if ! curl -k -s \"\$KEYCLOAK_ADMIN_ADDR/realms/master\" >/dev/null 2>&1; then
             echo -e \"\${S_RED}[ERROR]\${S_NC} Keycloak is not running. Start it first using './keycloak-ssi.sh setup'.\"
             exit 1
@@ -106,7 +102,6 @@ cmd_scopes() {
             exit 1
         fi
 
-        # Authenticate admin
         \"\$KCADM\" config truststore --trustpass \"\$SSL_TRUST_STORE_PASS\" \"\$SSL_TRUST_STORE\" >/dev/null 2>&1
         \"\$KCADM\" config credentials --server \"\$KEYCLOAK_ADMIN_ADDR\" --realm master \
             --user \"\$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME\" --password \"\$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD\" >/dev/null 2>&1
@@ -155,8 +150,6 @@ cmd_helm() {
         error "Helm chart directory not found at $helm_dir"
     fi
 
-    # Assuming user wants to run helm commands normally, but we provide directory context if needed
-    # For now, just pass through similar to terraform, but helm usually needs more args.
     # We'll just run helm in the chart dir for convenience, though helm usually runs from anywhere with paths.
     (cd "$helm_dir" && helm "$@")
 }
@@ -169,10 +162,16 @@ main() {
     local cmd="${1:-help}"
     shift || true
 
-    # Ensure mocks are in place for any command that might call submodule
-    # If figlet is missing, define a no-op function to satisfy submodule checks
     if ! command -v figlet >/dev/null 2>&1; then
-        function figlet() { echo "$@"; }
+        function figlet() {
+            local last_arg=""
+            for arg in "$@"; do
+                if [[ "$arg" != -* ]]; then
+                    last_arg="$arg"
+                fi
+            done
+            [ -n "$last_arg" ] && echo "$last_arg"
+        }
         export -f figlet
     fi
 
@@ -219,7 +218,7 @@ main() {
             (cd "$TEST_DEPLOYMENT_DIR" && "$SUBMODULE_CLI" compose "$@")
             ;;
 
-        scopes)
+        clientScopes)
             cmd_scopes
             ;;
             
@@ -237,7 +236,7 @@ main() {
             echo ""
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
-            echo "  scopes      Configure client scopes only (direct API)"
+            echo "  clientScopes      Configure client scopes only (direct API)"
             echo "  terraform   Run terraform commands in infrastructure/terraform"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
             echo "  install     Install CLI to system PATH"
