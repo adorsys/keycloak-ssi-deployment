@@ -90,6 +90,7 @@ cmd_scopes() {
 
         source src/utils/helper.sh
         setup_environment
+        ensure_keycloak_install_dir_resolved
         
         if ! curl -k -s \"\$KEYCLOAK_ADMIN_ADDR/realms/master\" >/dev/null 2>&1; then
             echo -e \"\${S_RED}[ERROR]\${S_NC} Keycloak is not running. Start it first using './keycloak-ssi.sh setup'.\"
