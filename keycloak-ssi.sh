@@ -58,6 +58,8 @@ sync_providers() {
     if [[ -d "$src" && "$(ls -A "$src")" ]]; then
         log "Syncing custom providers from $src to $dest..."
         mkdir -p "$dest"
+        # Clean destination to avoid version conflicts
+        rm -f "$dest"/*.jar
         cp "$src"/*.jar "$dest/"
     else
         log "No custom providers found in $src, skipping sync."
