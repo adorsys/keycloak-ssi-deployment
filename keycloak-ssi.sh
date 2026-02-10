@@ -168,9 +168,6 @@ cmd_scopes() {
     ")
 }
 
-# =============================================================================
-
-
 cmd_terraform() {
     local tf_dir="$PROJECT_ROOT/infrastructure/terraform"
     log "Delegating to Terraform in $tf_dir..."
@@ -367,7 +364,6 @@ main() {
             echo ""
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
-            echo "              (Use --clean to wipe database volumes first)"
             echo "  addClientScopes     Configure client scopes only (direct API)"
             echo "  terraform   Run terraform commands (auto-manages credentials)"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
