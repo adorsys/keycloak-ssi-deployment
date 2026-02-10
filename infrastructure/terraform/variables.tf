@@ -74,7 +74,7 @@ variable "clients" {
 variable "optional_client_scopes" {
   description = "List of optional client scope names to assign to clients"
   type        = list(string)
-  default     = ["IdentityCredential"]
+  default     = ["IdentityCredential", "KMACredential", "SteuerberaterCredential"]
 }
 
 variable "pre_authorized_code_lifespanS" {
