@@ -140,6 +140,9 @@ cmd_scopes() {
             fi
         done
 
+        # Fetch existing scopes once for idempotency checks
+        EXISTING_SCOPES=\$(\"\$KCADM\" get client-scopes -r \"\$KEYCLOAK_REALM\" --fields id,name)
+
         SCOPE_FILE=\"$PROJECT_ROOT/client-scopes.json\"
         if [[ -f \"\$SCOPE_FILE\" ]]; then
             # Inject Issuer DID and process each scope
@@ -147,20 +150,37 @@ cmd_scopes() {
             
             echo \"\$CLIENT_SCOPES_CONFIG\" | jq -c '.[]' | while read -r scope; do
                 SCOPE_NAME=\$(echo \"\$scope\" | jq -r .name)
-                # Create scope
-                if echo \"\$scope\" | \"\$KCADM\" create client-scopes -r \"\$KEYCLOAK_REALM\" -f - >/dev/null 2>&1; then
-                    echo -e \"\${S_GREEN}[SUCCESS]\${S_NC} Client scope '\$SCOPE_NAME' created successfully.\"
+
+                # Check if scope already exists
+                SCOPE_UUID=\$(echo \"\$EXISTING_SCOPES\" | jq -r --arg name \"\$SCOPE_NAME\" '.[] | select(.name == \$name) | .id')
+
+                if [[ -n \"\$SCOPE_UUID\" ]]; then
+                    echo -e \"\${S_YELLOW}[SKIP]\${S_NC} Client scope '\$SCOPE_NAME' already exists (id: \$SCOPE_UUID).\"
                 else
-                    echo -e \"\${S_YELLOW}[INFO]\${S_NC} Client scope '\$SCOPE_NAME' already exists (skipping creation).\"
+                    # Create scope
+                    if echo \"\$scope\" | \"\$KCADM\" create client-scopes -r \"\$KEYCLOAK_REALM\" -f - >/dev/null 2>&1; then
+                        echo -e \"\${S_GREEN}[CREATED]\${S_NC} Client scope '\$SCOPE_NAME' created successfully.\"
+                        # Refetch ID after creation
+                        SCOPE_UUID=\$(\"\$KCADM\" get client-scopes -r \"\$KEYCLOAK_REALM\" --fields id,name | jq -r --arg name \"\$SCOPE_NAME\" '.[] | select(.name == \$name) | .id')
+                    else
+                        echo -e \"\${S_RED}[ERROR]\${S_NC} Failed to create client scope '\$SCOPE_NAME'.\"
+                        continue
+                    fi
                 fi
 
-                # Get scope internal ID and assign to target clients
-                SCOPE_UUID=\$(\"\$KCADM\" get client-scopes -r \"\$KEYCLOAK_REALM\" --fields id,name | jq -r --arg name \"\$SCOPE_NAME\" '.[] | select(.name == \$name) | .id')
+                # Assign to target clients only if not already assigned
                 if [[ -n \"\$SCOPE_UUID\" ]]; then
                     for cuuid in \"\${CLIENT_UUIDS[@]}\"; do
-                        \"\$KCADM\" update \"clients/\$cuuid/optional-client-scopes/\$SCOPE_UUID\" -r \"\$KEYCLOAK_REALM\" >/dev/null 2>&1
+                        # Check assignment status
+                        ASSIGNED=\$(\"\$KCADM\" get \"clients/\$cuuid/optional-client-scopes\" -r \"\$KEYCLOAK_REALM\" --fields id | jq -r --arg sid \"\$SCOPE_UUID\" '.[] | select(.id == \$sid) | .id')
+                        
+                        if [[ -n \"\$ASSIGNED\" ]]; then
+                            echo -e \"\${S_YELLOW}[SKIP]\${S_NC} Scope '\$SCOPE_NAME' already assigned to client \$cuuid.\"
+                        else
+                            \"\$KCADM\" update \"clients/\$cuuid/optional-client-scopes/\$SCOPE_UUID\" -r \"\$KEYCLOAK_REALM\" >/dev/null 2>&1
+                            echo -e \"\${S_GREEN}[ASSIGNED]\${S_NC} Scope '\$SCOPE_NAME' assigned to client \$cuuid.\"
+                        fi
                     done
-                    echo -e \"\${S_BLUE}[INFO]\${S_NC} Client scope '\$SCOPE_NAME' assigned to target clients.\"
                 fi
             done
         else
@@ -169,6 +189,7 @@ cmd_scopes() {
         fi
     ")
 }
+
 
 cmd_terraform() {
     local tf_dir="$PROJECT_ROOT/infrastructure/terraform"
