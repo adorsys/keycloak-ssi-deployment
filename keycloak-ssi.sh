@@ -9,7 +9,25 @@ IFS=$'\n\t'
 # =============================================================================
 
 # Determine project root
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+determine_project_root() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Prefer running locally from the cloned repository
+    if [[ -d "$script_dir/keycloak-oauth-sig" ]]; then
+        echo "$script_dir"
+        return
+    fi
+    # If installed, use XDG Base Directory
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local project_root="$xdg_data_home/keycloak-ssi-deployment"
+    if [[ -d "$project_root/keycloak-oauth-sig" ]]; then
+        echo "$project_root"
+        return
+    fi
+    echo "Keycloak SSI project not found. Run from the project root or install with './keycloak-ssi.sh install'." >&2
+    exit 1
+}
+
+PROJECT_ROOT="$(determine_project_root)"
 TEST_DEPLOYMENT_DIR="$PROJECT_ROOT/keycloak-oauth-sig/oid4vci-deployment"
 SUBMODULE_CLI="$TEST_DEPLOYMENT_DIR/keycloak-ssi.sh"
 
@@ -25,6 +43,7 @@ else
 fi
 
 log() { echo -e "${CLI_BLUE}[WRAPPER]${CLI_NC} $1"; }
+success() { echo -e "${CLI_GREEN}[SUCCESS]${CLI_NC} $1"; }
 warn() { echo -e "${CLI_YELLOW}[WARN]${CLI_NC} $1"; }
 error() { echo -e "${CLI_RED}[ERROR]${CLI_NC} $1"; exit 1; }
 
@@ -107,19 +126,39 @@ cmd_scopes() {
         \"\$KCADM\" config credentials --server \"\$KEYCLOAK_ADMIN_ADDR\" --realm master \
             --user \"\$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME\" --password \"\$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD\" >/dev/null 2>&1
 
-        echo -e \"\${S_BLUE}[INFO]\${S_NC} Creating client scopes in realm '\$KEYCLOAK_REALM'...\"
+        echo -e \"\${S_BLUE}[INFO]\${S_NC} Creating and assigning client scopes in realm '\$KEYCLOAK_REALM'...\"
         
-        SCOPE_FILE=\"src/config/client-scope-config.json\"
+        # Determine target clients for assignment
+        TARGET_CLIENTS=(\"openid4vc-rest-api\" \"oid4vc-demo-public\")
+        CLIENT_UUIDS=()
+        for cid in \"\${TARGET_CLIENTS[@]}\"; do
+            uuid=\$(\"\$KCADM\" get clients -r \"\$KEYCLOAK_REALM\" --query clientId=\"\$cid\" --fields id --format csv --noquotes)
+            if [[ -n \"\$uuid\" ]]; then
+                CLIENT_UUIDS+=(\"\$uuid\")
+            fi
+        done
+
+        SCOPE_FILE=\"$PROJECT_ROOT/client-scopes.json\"
         if [[ -f \"\$SCOPE_FILE\" ]]; then
             # Inject Issuer DID and process each scope
             CLIENT_SCOPES_CONFIG=\$(jq --arg ISSUER_DID \"\$KEYCLOAK_ISSUER_DID\" 'map(.attributes[\"vc.issuer_did\"] = \$ISSUER_DID)' \"\$SCOPE_FILE\")
             
             echo \"\$CLIENT_SCOPES_CONFIG\" | jq -c '.[]' | while read -r scope; do
                 SCOPE_NAME=\$(echo \"\$scope\" | jq -r .name)
+                # Create scope
                 if echo \"\$scope\" | \"\$KCADM\" create client-scopes -r \"\$KEYCLOAK_REALM\" -f - >/dev/null 2>&1; then
                     echo -e \"\${S_GREEN}[SUCCESS]\${S_NC} Client scope '\$SCOPE_NAME' created successfully.\"
                 else
-                    echo -e \"\${S_YELLOW}[INFO]\${S_NC} Client scope '\$SCOPE_NAME' already exists (skipping).\"
+                    echo -e \"\${S_YELLOW}[INFO]\${S_NC} Client scope '\$SCOPE_NAME' already exists (skipping creation).\"
+                fi
+
+                # Get scope internal ID and assign to target clients
+                SCOPE_UUID=\$(\"\$KCADM\" get client-scopes -r \"\$KEYCLOAK_REALM\" --fields id,name | jq -r --arg name \"\$SCOPE_NAME\" '.[] | select(.name == \$name) | .id')
+                if [[ -n \"\$SCOPE_UUID\" ]]; then
+                    for cuuid in \"\${CLIENT_UUIDS[@]}\"; do
+                        \"\$KCADM\" update \"clients/\$cuuid/optional-client-scopes/\$SCOPE_UUID\" -r \"\$KEYCLOAK_REALM\" >/dev/null 2>&1
+                    done
+                    echo -e \"\${S_BLUE}[INFO]\${S_NC} Client scope '\$SCOPE_NAME' assigned to target clients.\"
                 fi
             done
         else
@@ -140,7 +179,19 @@ cmd_terraform() {
         error "Terraform directory not found at $tf_dir"
     fi
 
-    (cd "$tf_dir" && terraform "$@")
+    # Load configuration to pass as environment variables to Terraform
+    (
+        cd "$TEST_DEPLOYMENT_DIR"
+        source src/utils/helper.sh
+        setup_environment
+        
+        # Map Keycloak config to TF_VAR equivalents
+        export TF_VAR_keycloak_url="$KEYCLOAK_ADMIN_ADDR"
+        export TF_VAR_admin_password="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+        
+        cd "$tf_dir"
+        terraform "$@"
+    )
 }
 
 cmd_helm() {
@@ -155,6 +206,60 @@ cmd_helm() {
     (cd "$helm_dir" && helm "$@")
 }
 
+cmd_install() {
+    log "Installing keycloak-ssi CLI to system PATH..."
+
+    # Determine install directory
+    local install_dir="/usr/local/bin"
+    if [[ ! -w "$install_dir" ]]; then
+        install_dir="$HOME/.local/bin"
+        mkdir -p "$install_dir"
+    fi
+
+    local install_path="$install_dir/keycloak-ssi"
+
+    # Install project files to XDG Base Directory using symbolic link
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local project_install_dir="$xdg_data_home/keycloak-ssi-deployment"
+    
+    log "Installing project files to $project_install_dir..."
+    mkdir -p "$xdg_data_home"
+    if [[ -e "$project_install_dir" ]]; then
+        rm -rf "$project_install_dir"
+    fi
+    ln -s "$PROJECT_ROOT" "$project_install_dir" || error "Failed to create symbolic link"
+
+    # Install CLI script
+    rm -f "$install_path"
+    cp "$PROJECT_ROOT/keycloak-ssi.sh" "$install_path"
+    chmod +x "$install_path"
+
+    # Check if PATH includes install directory
+    if [[ ":$PATH:" != *":$install_dir:"* ]]; then
+        warn "Please add $install_dir to your PATH:"
+        echo "  export PATH=\"\$PATH:$install_dir\""
+    fi
+
+    success "CLI installed to $install_path"
+}
+
+cmd_uninstall() {
+    log "Uninstalling keycloak-ssi CLI..."
+    local locations=("/usr/local/bin/keycloak-ssi" "$HOME/.local/bin/keycloak-ssi")
+    for location in "${locations[@]}"; do
+        if [[ -f "$location" ]]; then
+            rm -f "$location"
+            success "Removed $location"
+        fi
+    done
+    local xdg_data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local project_install_dir="$xdg_data_home/keycloak-ssi-deployment"
+    if [[ -e "$project_install_dir" ]]; then
+        rm -f "$project_install_dir"
+        success "Removed project files from $project_install_dir"
+    fi
+}
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -164,14 +269,14 @@ main() {
     shift || true
 
     if ! command -v figlet >/dev/null 2>&1; then
-        function figlet() {
+        warn "figlet not found, using fallback (no banner rendering)"
+
+        figlet() {
             local last_arg=""
             for arg in "$@"; do
-                if [[ "$arg" != -* ]]; then
-                    last_arg="$arg"
-                fi
+                [[ "$arg" != -* ]] && last_arg="$arg"
             done
-            [ -n "$last_arg" ] && echo "$last_arg"
+            [[ -n "$last_arg" ]] && echo "$last_arg"
         }
         export -f figlet
     fi
@@ -180,8 +285,25 @@ main() {
         setup)
             check_submodule
             sync_all
+            
+            # Handle --clean flag
+            local setup_args=()
+            local clean_start=false
+            for arg in "$@"; do
+                if [[ "$arg" == "--clean" ]]; then
+                    clean_start=true
+                else
+                    setup_args+=("$arg")
+                fi
+            done
+
+            if [[ "$clean_start" == "true" ]]; then
+                log "Clean start requested. Wiping database and existing volumes..."
+                (cd "$TEST_DEPLOYMENT_DIR" && "$SUBMODULE_CLI" compose down -v)
+            fi
+
             log "Delegating 'setup' to submodule CLI..."
-            (cd "$TEST_DEPLOYMENT_DIR" && "$SUBMODULE_CLI" setup "$@")
+            (cd "$TEST_DEPLOYMENT_DIR" && "$SUBMODULE_CLI" setup "${setup_args[@]}")
             ;;
         
         config)
@@ -219,7 +341,7 @@ main() {
             (cd "$TEST_DEPLOYMENT_DIR" && "$SUBMODULE_CLI" compose "$@")
             ;;
 
-        clientScopes)
+        addClientScopes)
             cmd_scopes
             ;;
             
@@ -230,6 +352,14 @@ main() {
         helm)
             cmd_helm "$@"
             ;;
+
+        install)
+            cmd_install
+            ;;
+
+        uninstall)
+            cmd_uninstall
+            ;;
             
         help|--help|-h)
             echo "Keycloak SSI Wrapper CLI"
@@ -237,8 +367,9 @@ main() {
             echo ""
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
-            echo "  clientScopes      Configure client scopes only (direct API)"
-            echo "  terraform   Run terraform commands in infrastructure/terraform"
+            echo "              (Use --clean to wipe database volumes first)"
+            echo "  addClientScopes     Configure client scopes only (direct API)"
+            echo "  terraform   Run terraform commands (auto-manages credentials)"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
             echo "  install     Install CLI to system PATH"
             echo "  uninstall   Remove CLI from system PATH"
