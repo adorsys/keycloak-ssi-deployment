@@ -49,12 +49,15 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
         -H "Content-Type: application/json" \
         --data-binary @"${path.root}/jsons/scopes/${each.value}")
 
-      if [ "$HTTP_CODE" -ge 400 ]; then
+      if [ "$HTTP_CODE" -eq 409 ]; then
+        echo "Client scope from ${each.value} already exists (HTTP 409). Skipping (idempotent)."
+      elif [ "$HTTP_CODE" -ge 400 ]; then
         echo "Failed to import client scope from ${each.value}. HTTP $HTTP_CODE" >&2
         exit 1
+      else
+        echo "Custom OID4VC client scope from ${each.value} imported successfully."
       fi
 
-      echo "Custom OID4VC client scope from ${each.value} imported."
     EOT
     interpreter = ["bash", "-c"]
   }

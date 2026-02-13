@@ -6,6 +6,8 @@ module "realm" {
   realm                         = var.realm
   pre_authorized_code_lifespanS = var.pre_authorized_code_lifespanS
   status_list_server_url        = var.status_list_server_url
+  admin_password                = urlencode(var.admin_password)
+  keycloak_url                  = var.keycloak_url
 }
 
 module "users" {
@@ -22,10 +24,10 @@ module "client_scopes" {
   providers = {
     keycloak = keycloak
   }
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = urlencode(var.admin_password)
-  keycloak_url   = var.keycloak_url
+  realm_id          = module.realm.realm_id
+  realm_name        = var.realm
+  admin_password    = urlencode(var.admin_password)
+  keycloak_url      = var.keycloak_url
 }
 
 module "clients" {
@@ -49,10 +51,10 @@ module "keys" {
   providers = {
     keycloak = keycloak
   }
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = urlencode(var.admin_password)
-  keycloak_url   = var.keycloak_url
+  realm_id          = module.realm.realm_id
+  realm_name        = var.realm
+  admin_password    = urlencode(var.admin_password)
+  keycloak_url      = var.keycloak_url
 }
 
 module "saml_idp" {
@@ -60,10 +62,10 @@ module "saml_idp" {
   providers = {
     keycloak = keycloak
   }
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = urlencode(var.admin_password)
-  keycloak_url   = var.keycloak_url
+  realm_id          = module.realm.realm_id
+  realm_name        = var.realm
+  admin_password    = urlencode(var.admin_password)
+  keycloak_url      = var.keycloak_url
 
   depends_on = [module.realm]
 }

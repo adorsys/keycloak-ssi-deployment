@@ -12,3 +12,14 @@ variable "status_list_server_url" {
   description = "URL of the status list server"
   type        = string
 }
+
+variable "admin_password" {
+  description = "Keycloak admin password"
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_url" {
+  description = "Keycloak URL"
+  type        = string
+}
