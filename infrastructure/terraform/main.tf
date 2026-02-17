@@ -4,6 +4,7 @@ module "realm" {
     keycloak = keycloak
   }
   realm                         = var.realm
+  login_theme                   = var.login_theme
   pre_authorized_code_lifespanS = var.pre_authorized_code_lifespanS
   status_list_server_url        = var.status_list_server_url
   admin_password                = urlencode(var.admin_password)

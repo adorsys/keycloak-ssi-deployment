@@ -210,6 +210,16 @@ cmd_terraform() {
         export TF_VAR_admin_password="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
         
         cd "$tf_dir"
+
+        # Auto-init if .terraform directory is missing and a state-changing command is requested
+        local subcmd="${1:-}"
+        if [[ "$subcmd" == "apply" || "$subcmd" == "plan" || "$subcmd" == "destroy" ]]; then
+            if [[ ! -d ".terraform" ]]; then
+                log "Running 'terraform init' (first-time setup)..."
+                terraform init
+            fi
+        fi
+
         terraform "$@"
     )
 }
@@ -388,7 +398,7 @@ main() {
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
             echo "  addClientScopes     Configure client scopes only (direct API)"
-            echo "  terraform   Run terraform commands (auto-manages credentials)"
+            echo "  terraform   Run terraform commands (auto-init on first apply/plan/destroy)"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
             echo "  install     Install CLI to system PATH"
             echo "  uninstall   Remove CLI from system PATH"

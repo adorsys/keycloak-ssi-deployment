@@ -23,3 +23,9 @@ variable "keycloak_url" {
   description = "Keycloak URL"
   type        = string
 }
+
+variable "login_theme" {
+  description = "Login theme for the realm"
+  type        = string
+  default     = "keycloak.v2+oid4vp"
+}
