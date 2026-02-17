@@ -12,6 +12,7 @@ resource "keycloak_realm" "oid4vc_vci" {
   attributes = {
     preAuthorizedCodeLifespanS = var.pre_authorized_code_lifespanS
     status-list-server-url     = var.status_list_server_url
+    status-list-enabled        = "false"
   }
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "SteuerberaterCredential",
   "description": "",
-  "protocol": "oid4vc",
+  "protocol": "openid-connect",
   "attributes": {
     "vc.credential_configuration_id": "SteuerberaterCredential",
     "vc.credential_contexts": "stbk_westfalen_lippe",
