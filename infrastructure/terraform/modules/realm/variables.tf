@@ -29,3 +29,8 @@ variable "login_theme" {
   type        = string
   default     = "keycloak.v2+oid4vp"
 }
+
+variable "sdjwt_vct" {
+  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+  type        = string
+}

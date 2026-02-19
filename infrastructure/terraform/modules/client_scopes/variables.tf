@@ -17,3 +17,9 @@ variable "keycloak_url" {
   description = "Keycloak base URL"
   type        = string
 }
+
+variable "status_list_enabled" {
+  description = "Enable status list protocol mapper (requires compatible plugin version)"
+  type        = bool
+  default     = false
+}
