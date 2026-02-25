@@ -23,3 +23,8 @@ variable "keycloak_url" {
   description = "Keycloak URL"
   type        = string
 }
+
+variable "status_list_enabled" {
+  description = "Enable or disable the status list for the realm"
+  type        = bool
+}

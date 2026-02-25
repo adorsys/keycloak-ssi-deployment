@@ -89,6 +89,12 @@ variable "status_list_server_url" {
   default     = "https://statuslist.eudi-adorsys.com"
 }
 
+variable "status_list_enabled" {
+  description = "Enable or disable the status list for the realm"
+  type        = bool
+  default     = false
+}
+
 variable "sdjwt_vct" {
   description = "Comma-separated list of VCT entries for sd-jwt authenticator"
   type        = string

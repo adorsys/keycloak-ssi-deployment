@@ -8,6 +8,7 @@ module "realm" {
   status_list_server_url        = var.status_list_server_url
   admin_password                = urlencode(var.admin_password)
   keycloak_url                  = var.keycloak_url
+  status_list_enabled           = var.status_list_enabled
 }
 
 module "users" {
