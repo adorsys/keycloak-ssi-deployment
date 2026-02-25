@@ -1,7 +1,7 @@
 # Multi-stage build for Keycloak with OID4VCI from datev/develop branch
 FROM eclipse-temurin:21-jdk-jammy AS builder
 
-ARG KC_BRANCH=datev/develop
+ARG KC_BRANCH=develop/oid4vp
 ARG KC_REPO=https://github.com/adorsys/keycloak-oid4vc.git
 
 WORKDIR /build
