@@ -28,3 +28,9 @@ variable "status_list_enabled" {
   description = "Enable or disable the status list for the realm"
   type        = bool
 }
+
+variable "login_theme" {
+  description = "Login theme for the realm (keycloak.v2+oid4vp for OID4VP wallet login)"
+  type        = string
+  default     = "keycloak.v2+oid4vp"
+}

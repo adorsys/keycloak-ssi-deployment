@@ -6,7 +6,6 @@ terraform {
   }
 }
 
-
 resource "keycloak_openid_client" "clients" {
   for_each = var.clients
 
@@ -29,6 +28,7 @@ resource "null_resource" "apply_client_attributes" {
   triggers = {
     client_id       = each.value.id
     attributes_hash = jsonencode(var.clients[each.key].attributes)
+    realm_id        = var.realm_id
   }
 
   provisioner "local-exec" {
