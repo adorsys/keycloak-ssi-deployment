@@ -35,11 +35,6 @@ variable "clients" {
   default = {}
 }
 
-variable "sdjwt_vct" {
-  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
-  type        = string
-}
-
 variable "client_scopes_dependency" {
   description = "A dependency map from the client_scopes module to ensure proper ordering."
   type        = any

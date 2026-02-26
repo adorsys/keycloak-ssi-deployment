@@ -8,6 +8,8 @@ module "realm" {
   status_list_server_url        = var.status_list_server_url
   admin_password                = urlencode(var.admin_password)
   keycloak_url                  = var.keycloak_url
+  status_list_enabled           = var.status_list_enabled
+  sdjwt_vct                     = var.sdjwt_vct
 }
 
 module "users" {
@@ -24,10 +26,10 @@ module "client_scopes" {
   providers = {
     keycloak = keycloak
   }
-  realm_id          = module.realm.realm_id
-  realm_name        = var.realm
-  admin_password    = urlencode(var.admin_password)
-  keycloak_url      = var.keycloak_url
+  realm_id       = module.realm.realm_id
+  realm_name     = var.realm
+  admin_password = urlencode(var.admin_password)
+  keycloak_url   = var.keycloak_url
 }
 
 module "clients" {
@@ -39,7 +41,6 @@ module "clients" {
   realm_name               = var.realm
   admin_password           = urlencode(var.admin_password)
   keycloak_url             = var.keycloak_url
-  sdjwt_vct                = var.sdjwt_vct
   clients                  = var.clients
   optional_client_scopes   = var.optional_client_scopes
   client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
@@ -51,10 +52,10 @@ module "keys" {
   providers = {
     keycloak = keycloak
   }
-  realm_id          = module.realm.realm_id
-  realm_name        = var.realm
-  admin_password    = urlencode(var.admin_password)
-  keycloak_url      = var.keycloak_url
+  realm_id       = module.realm.realm_id
+  realm_name     = var.realm
+  admin_password = urlencode(var.admin_password)
+  keycloak_url   = var.keycloak_url
 }
 
 module "saml_idp" {
@@ -62,10 +63,10 @@ module "saml_idp" {
   providers = {
     keycloak = keycloak
   }
-  realm_id          = module.realm.realm_id
-  realm_name        = var.realm
-  admin_password    = urlencode(var.admin_password)
-  keycloak_url      = var.keycloak_url
+  realm_id       = module.realm.realm_id
+  realm_name     = var.realm
+  admin_password = urlencode(var.admin_password)
+  keycloak_url   = var.keycloak_url
 
   depends_on = [module.realm]
 }
