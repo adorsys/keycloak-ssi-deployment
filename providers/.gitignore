@@ -1,4 +1,4 @@
 *
 !.gitignore
 
-!keycloak-token-status-plugin-*.jar
+!providers/keycloak-token-status-plugin-*.jar
