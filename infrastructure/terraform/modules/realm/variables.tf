@@ -24,13 +24,18 @@ variable "keycloak_url" {
   type        = string
 }
 
-variable "status_list_enabled" {
-  description = "Enable or disable the status list for the realm"
-  type        = bool
+variable "sdjwt_vct" {
+  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+  type        = string
 }
 
 variable "login_theme" {
-  description = "Login theme for the realm (keycloak.v2+oid4vp for OID4VP wallet login)"
+  description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
   type        = string
   default     = "keycloak.v2+oid4vp"
+}
+
+variable "status_list_enabled" {
+  description = "Enable or disable the status list for the realm"
+  type        = bool
 }

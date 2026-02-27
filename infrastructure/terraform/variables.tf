@@ -16,12 +16,6 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
-variable "login_theme" {
-  description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
-  type        = string
-  default     = "keycloak.v2+oid4vp"
-}
-
 variable "clients" {
   description = "A map of client configurations."
   type = map(object({
@@ -43,20 +37,12 @@ variable "clients" {
       access_type                  = "PUBLIC"
       standard_flow_enabled        = true
       direct_access_grants_enabled = false
-      valid_redirect_uris          = [
-        "http://localhost:4200/*",
-        "http://localhost:4200",
-        "http://localhost:5000/*",
-        "http://localhost:5000"
-      ]
-      web_origins                  = [
-        "http://localhost:4200",
-        "http://localhost:5000"
-      ]
+      valid_redirect_uris          = ["http://localhost:4200/*"]
+      web_origins                  = ["http://localhost:4200"]
       full_scope_allowed           = true
       attributes = {
         "oid4vci.enabled"           = "true"
-        "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*##http://localhost:5000##http://localhost:5000/*##http://localhost:3000##http://localhost:3000/*"
+        "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*"
       }
     },
     "openid4vc-rest-api" = {
@@ -103,12 +89,6 @@ variable "status_list_server_url" {
   default     = "https://statuslist.eudi-adorsys.com"
 }
 
-variable "status_list_enabled" {
-  description = "Enable status list protocol mapper (requires compatible plugin version)"
-  type        = bool
-  default     = false
-}
-
 variable "sdjwt_vct" {
   description = "Comma-separated list of VCT entries for sd-jwt authenticator"
   type        = string
@@ -119,4 +99,10 @@ variable "initial_password" {
   description = "Initial password for user"
   type        = string
   default     = "francis"
+}
+
+variable "status_list_enabled" {
+  description = "Enable or disable the status list for the realm"
+  type        = bool
+  default     = false
 }

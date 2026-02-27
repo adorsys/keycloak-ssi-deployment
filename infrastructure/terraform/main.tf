@@ -1,22 +1,16 @@
-data "keycloak_realm" "master" {
-  realm = "master"
-}
-
 module "realm" {
   source = "./modules/realm"
   providers = {
     keycloak = keycloak
   }
-
+  
   realm                         = var.realm
-  login_theme                   = var.login_theme
   pre_authorized_code_lifespanS = var.pre_authorized_code_lifespanS
   status_list_server_url        = var.status_list_server_url
-  status_list_enabled           = var.status_list_enabled
   admin_password                = urlencode(var.admin_password)
   keycloak_url                  = var.keycloak_url
-
-  depends_on = [data.keycloak_realm.master]
+  status_list_enabled           = var.status_list_enabled
+  sdjwt_vct                     = var.sdjwt_vct
 }
 
 module "users" {
@@ -24,11 +18,8 @@ module "users" {
   providers = {
     keycloak = keycloak
   }
-
   realm_id         = module.realm.realm_id
   initial_password = var.initial_password
-
-  depends_on = [module.realm]
 }
 
 module "client_scopes" {
@@ -41,8 +32,6 @@ module "client_scopes" {
   realm_name     = var.realm
   admin_password = urlencode(var.admin_password)
   keycloak_url   = var.keycloak_url
-
-  depends_on = [module.realm]
 }
 
 module "clients" {
@@ -52,15 +41,13 @@ module "clients" {
   }
 
   realm_id                 = module.realm.realm_id
-  realm_name                = var.realm
-  admin_password            = urlencode(var.admin_password)
-  keycloak_url              = var.keycloak_url
-  sdjwt_vct                 = var.sdjwt_vct
-  clients                   = var.clients
-  optional_client_scopes    = var.optional_client_scopes
-  client_scopes_dependency  = module.client_scopes.client_scopes_applied_trigger
-
-  depends_on = [module.realm, module.client_scopes]
+  realm_name               = var.realm
+  admin_password           = urlencode(var.admin_password)
+  keycloak_url             = var.keycloak_url
+  clients                  = var.clients
+  optional_client_scopes   = var.optional_client_scopes
+  client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
+  depends_on               = [module.realm, module.client_scopes]
 }
 
 module "keys" {
@@ -73,8 +60,6 @@ module "keys" {
   realm_name     = var.realm
   admin_password = urlencode(var.admin_password)
   keycloak_url   = var.keycloak_url
-
-  depends_on = [module.realm]
 }
 
 module "saml_idp" {
