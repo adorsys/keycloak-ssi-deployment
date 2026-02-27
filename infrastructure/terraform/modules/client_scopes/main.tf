@@ -62,4 +62,3 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
     interpreter = ["bash", "-c"]
   }
 }
-

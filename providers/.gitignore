@@ -1,3 +1,4 @@
 *
 !.gitignore
 !keycloak-token-status-plugin-*.jar
+!keycloak-oid4vp-plugin-*.jar

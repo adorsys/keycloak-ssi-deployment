@@ -100,3 +100,9 @@ variable "initial_password" {
   type        = string
   default     = "francis"
 }
+
+variable "status_list_enabled" {
+  description = "Enable or disable the status list for the realm"
+  type        = bool
+  default     = false
+}
