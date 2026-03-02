@@ -13,8 +13,8 @@ The actual OpenID4VCI reference setup lives in the `keycloak-oauth-sig` submodul
 | `keycloak-oauth-sig/oid4vci-deployment/` | Contains `config.yaml`, scripts, and docs for running Keycloak as an OpenID4VCI issuer.                                          |
 | `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
 | `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
-| `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, and users.                                            |
-| `providers/`                             | Extra Keycloak provider JARs to bundle with the deployment image.                                                                |
+| `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, users, and status list support.                       |
+| `providers/`                             | Extra Keycloak provider JARs (e.g. status list and OID4VP plugins) to bundle with the deployment image.                          |
 
 ---
 
@@ -49,7 +49,9 @@ For local OpenID4VCI experiments, work inside the submodule’s deployment folde
 cd keycloak-oauth-sig/oid4vci-deployment
 ```
 
-If you have any custom provider JARs in this repository’s `providers/` directory and want them available when using the submodule CLI, copy them into the submodule deployment before running scripts:
+If you have any custom provider JARs in this repository’s `providers/` directory (for example the status list plugin or
+the `keycloak-oid4vp-plugin-*.jar`) and want them available when using the submodule CLI, copy them into the submodule
+deployment before running scripts:
 
 ```bash
 mkdir -p keycloak-oauth-sig/oid4vci-deployment/providers

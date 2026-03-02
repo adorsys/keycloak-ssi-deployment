@@ -49,21 +49,31 @@ infrastructure/terraform/
 
 ### Variables
 
-The following variables can be customized in `variables.tf`:
+The main variables are defined in the root `variables.tf` and module-specific `variables.tf` files. Commonly used ones include:
 
-| Variable         | Description             | Default Value            |
-| ---------------- | ----------------------- | ------------------------ |
-| `keycloak_url`   | Keycloak base URL       | `https://localhost:8443` |
-| `admin_password` | Keycloak admin password | `admin`                  |
-| `realm`          | Keycloak realm name     | `oid4vc-vci`             |
+| Variable                    | Description                                                                                  | Default Value                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `keycloak_url`             | Keycloak base URL                                                                            | `https://localhost:8443`                                                                           |
+| `admin_password`           | Keycloak admin password                                                                      | `admin`                                                                                            |
+| `realm`                    | Keycloak realm name used for the OID4VCI issuer                                              | `oid4vc-vci`                                                                                       |
+| `login_theme`              | Login theme for the realm (e.g. OID4VP-enabled wallet login theme)                          | `keycloak.v2+oid4vp`                                                                              |
+| `pre_authorized_code_lifespanS` | Pre-authorized code lifespan in seconds                                                 | `120`                                                                                              |
+| `status_list_server_url`   | Base URL of the status list server used for revocation / suspension                          | `https://statuslist.eudi-adorsys.com`                                                              |
+| `status_list_enabled`      | Enables the status list protocol mapper in the realm and relevant client scopes              | `false`                                                                                            |
+| `optional_client_scopes`   | List of additional client scopes to attach to OID4VCI clients                                | `["IdentityCredential", "KMACredential", "SteuerberaterCredential"]`                               |
+| `sdjwt_vct`                | Comma-separated list of VCT entries for the sd-jwt authenticator                             | `stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct`             |
+| `initial_password`         | Initial password assigned to the seeded demo user(s)                                         | `francis`                                                                                          |
 
-### Key Configuration
+### Key and Status List Configuration
 
 The keys module imports three types of cryptographic keys:
 
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
+
+If you set `status_list_enabled` to `true`, Keycloak adds status information to issued credentials using
+`status_list_server_url`. This lets wallets and verifiers check whether a credential is still valid, revoked, or suspended.
 
 ### SAML Identity Provider Configuration
 
