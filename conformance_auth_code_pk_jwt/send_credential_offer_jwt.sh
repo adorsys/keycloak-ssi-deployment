@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # OID4VCI Conformance Test - Send Credential Offer Script (JWT Client)
 # This script sends the credential offer to the OpenID Foundation conformance test suite
@@ -6,26 +8,26 @@
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Source load_env.sh from the parent directory
 source "$SCRIPT_DIR/../load_env.sh"
 
-# Configuration
-NGROK_URL="https://d6791ba89bcf.ngrok-free.app"
-KEYCLOAK_REALM_URL="$NGROK_URL/realms/oid4vc-vci"
-TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
-
-# Function to log messages with consistent formatting and spacing
+# Function to log messages
 log_message() {
-    local message=$1
-    echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] $message"
+    echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
 # Function to exit with error message
 exit_with_error() {
-    local message=$1
-    log_message "ERROR: $message"
+    log_message "❌ ERROR: $1"
     exit 1
 }
+
+# Derive URLs from environment
+# We use the public hostname to ensure consistency with Keycloak's issuer URL
+NGROK_URL="https://$KEYCLOAK_HOSTNAME"
+KEYCLOAK_REALM_URL="$NGROK_URL/realms/$KEYCLOAK_REALM"
+TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
 
 log_message "=== OID4VCI Conformance Test - Send Credential Offer (JWT Client) ==="
 log_message "Keycloak URL: $KEYCLOAK_REALM_URL"
@@ -42,47 +44,68 @@ wait_for_user() {
     echo ""
 }
 
-# Step 1: Get a fresh user access token
-log_message "Step 1: Getting fresh user access token..."
-log_message "Running: curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token ..."
+# Step 1: Get a fresh user access token using Private Key JWT authentication
+log_message "Step 1: Getting fresh user access token (Private Key JWT auth)..."
+
+TOKEN_ENDPOINT="$NGROK_URL/realms/$KEYCLOAK_REALM/protocol/openid-connect/token"
+
+# Generate client_assertion JWT signed with ES256
+log_message "Generating client_assertion JWT..."
+log_message "Audience for assertion: $TOKEN_ENDPOINT"
+CLIENT_ASSERTION=$(python3 "$SCRIPT_DIR/generate_client_assertion.py" "openid4vc-rest-api-jwt" "$TOKEN_ENDPOINT")
+
+if [ -z "$CLIENT_ASSERTION" ]; then
+    exit_with_error "Failed to generate client_assertion JWT"
+fi
+
+log_message "Client assertion generated (first 50 chars): ${CLIENT_ASSERTION:0:50}..."
+log_message "Running: curl -k -s -X POST $TOKEN_ENDPOINT ..."
 wait_for_user
 
-USER_ACCESS_TOKEN=$(curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token \
-    -d "client_id=openid4vc-rest-api" \
-    -d "client_secret=uArydomqOymeF0tBrtipkPYujNNUuDlt" \
-    -d "username=francis" \
-    -d "password=francis" \
+TOKEN_RESPONSE=$(curl -k -s -X POST "$TOKEN_ENDPOINT" \
+    -d "client_id=openid4vc-rest-api-jwt" \
+    -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+    -d "client_assertion=$CLIENT_ASSERTION" \
+    -d "username=$USER_FRANCIS_NAME" \
+    -d "password=$USER_FRANCIS_PASSWORD" \
     -d "grant_type=password" \
-    -d "scope=openid" | jq -r '.access_token')
+    -d "scope=openid")
+
+USER_ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token')
 
 if [ "$USER_ACCESS_TOKEN" = "null" ] || [ -z "$USER_ACCESS_TOKEN" ]; then
+    log_message "Token Response: $TOKEN_RESPONSE"
     exit_with_error "Failed to get user access token"
 fi
 
 log_message "✅ Got fresh user access token: ${USER_ACCESS_TOKEN:0:50}..."
 
-# Step 2: Create authorization code flow credential offer
+
+# Step 2: Create a registered credential offer via Keycloak
 log_message ""
-log_message "Step 2: Creating authorization code flow credential offer..."
-log_message "This will create a credential offer that uses authorization_code grant type"
+log_message "Step 2: Creating registered credential offer via Keycloak..."
+log_message "This will create an internal CredentialOfferState in Keycloak."
 wait_for_user
 
-# Create a credential offer for authorization code flow
-CREDENTIAL_OFFER=$(cat <<EOF
-{
-  "credential_issuer": "$KEYCLOAK_REALM_URL",
-  "credential_configuration_ids": ["IdentityCredential"],
-  "grants": {
-    "authorization_code": {
-      "authorization_server": "$KEYCLOAK_REALM_URL"
-    }
-  }
-}
-EOF
-)
+# 1. First, get the offer URI (this creates the session state in Keycloak)
+OFFER_URI_RESPONSE=$(curl -k -s -X GET "$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&pre_authorized=false&client_id=openid4vc-rest-api-jwt&type=uri" \
+    -H "Authorization: Bearer $USER_ACCESS_TOKEN")
 
-log_message "Authorization Code Flow Credential Offer:"
-echo $CREDENTIAL_OFFER | jq .
+NONCE=$(echo "$OFFER_URI_RESPONSE" | jq -r '.nonce')
+if [ "$NONCE" = "null" ] || [ -z "$NONCE" ]; then
+    exit_with_error "Failed to create offer session in Keycloak. Response: $OFFER_URI_RESPONSE"
+fi
+
+# 2. Fetch the actual Credential Offer JSON from Keycloak using the nonce
+# This ensures we send the exact JSON that Keycloak expects
+CREDENTIAL_OFFER=$(curl -k -s -X GET "$NGROK_URL/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer/$NONCE")
+
+if [ "$CREDENTIAL_OFFER" = "null" ] || [ -z "$CREDENTIAL_OFFER" ]; then
+    exit_with_error "Failed to fetch credential offer JSON from Keycloak for nonce: $NONCE"
+fi
+
+log_message "✅ Fetched Registered Credential Offer from Keycloak:"
+echo "$CREDENTIAL_OFFER" | jq .
 
 # Step 3: URL encode the credential offer and send to test suite
 log_message ""
@@ -91,15 +114,17 @@ CREDENTIAL_OFFER_ENCODED=$(echo "$CREDENTIAL_OFFER" | jq -c . | jq -rR @uri)
 
 log_message "Encoded credential offer: ${CREDENTIAL_OFFER_ENCODED:0:100}..."
 log_message "Sending to: $TEST_SUITE_BASE_URL/credential_offer"
-log_message "Running: curl -k -s -X POST \"$TEST_SUITE_BASE_URL/credential_offer?credential_offer=\$CREDENTIAL_OFFER_ENCODED\" ..."
 wait_for_user
 
-log_message "Sending credential offer to test suite..."
 RESPONSE=$(curl -k -s -X POST "$TEST_SUITE_BASE_URL/credential_offer?credential_offer=$CREDENTIAL_OFFER_ENCODED" \
     -H "Content-Type: application/json")
 
 log_message "Test suite response:"
-echo $RESPONSE
+if echo "$RESPONSE" | jq . > /dev/null 2>&1; then
+    echo "$RESPONSE" | jq .
+else
+    echo "$RESPONSE"
+fi
 
 # Check the response
 log_message ""

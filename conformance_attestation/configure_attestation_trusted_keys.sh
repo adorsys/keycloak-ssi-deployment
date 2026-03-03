@@ -8,6 +8,18 @@
 # Example:
 #   ./configure_attestation_trusted_keys.sh attestation_trusted_keys.json
 
+# Capture the original JWKS file path and resolve it relative to CWD if exist
+JWKS_FILE_INPUT="$1"
+JWKS_FILE_RESOLVED=""
+
+if [ -n "$JWKS_FILE_INPUT" ]; then
+    if [[ "$JWKS_FILE_INPUT" == /* ]]; then
+        JWKS_FILE_RESOLVED="$JWKS_FILE_INPUT"
+    elif [ -f "$JWKS_FILE_INPUT" ]; then
+        JWKS_FILE_RESOLVED="$(cd "$(dirname "$JWKS_FILE_INPUT")" && pwd)/$(basename "$JWKS_FILE_INPUT")"
+    fi
+fi
+
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR/.."
@@ -61,10 +73,15 @@ if [ $# -ne 1 ]; then
 fi
 
 # Get JWKS file path
-JWKS_FILE="$1"
-# If path is relative, make it relative to script directory
-if [[ "$JWKS_FILE" != /* ]]; then
-    JWKS_FILE="$SCRIPT_DIR/$JWKS_FILE"
+JWKS_FILE="$JWKS_FILE_RESOLVED"
+
+# If not resolved early, try relative to script dir
+if [ -z "$JWKS_FILE" ] && [ -n "$JWKS_FILE_INPUT" ]; then
+    if [ -f "$SCRIPT_DIR/$JWKS_FILE_INPUT" ]; then
+        JWKS_FILE="$SCRIPT_DIR/$JWKS_FILE_INPUT"
+    else
+        JWKS_FILE="$JWKS_FILE_INPUT" # Fallback for error message
+    fi
 fi
 
 if [ ! -f "$JWKS_FILE" ]; then

@@ -3,6 +3,7 @@
     "enabled": true,
     "attributes": {
         "status-list-server-url": "https://statuslist.eudi-adorsys.com/",
-        "preAuthorizedCodeLifespanS": "120"
+        "preAuthorizedCodeLifespanS": "120",
+        "verifiableCredentialsEnabled": "true"
     }
 }

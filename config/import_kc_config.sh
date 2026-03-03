@@ -44,6 +44,37 @@ else
   fi
 fi
 
+# Export environment variables used by the realm JSON substitution
+# these are referenced as env:KEYSTORE_PATH and env:KEYSTORE_PASSWORD in the JSON
+export KEYSTORE_PATH="$KC_KEYSTORE_PATH"
+export KEYSTORE_PASSWORD="$KEYCLOAK_KEYSTORE_PASSWORD"
+export CLIENT_SECRET="$CLIENT_SECRET"
+export ISSUER_BACKEND_URL="$ISSUER_BACKEND_URL"
+export ISSUER_FRONTEND_URL="$ISSUER_FRONTEND_URL"
+export ISSUER_DID="$ISSUER_DID"
+export TEST_CLIENT_URL="$TEST_CLIENT_URL"
+
+# If the realm already exists, remove it so the import can recreate it cleanly.
+# This prevents HTTP 400 errors from the config CLI when updating components.
+echo "Deleting existing realm $KEYCLOAK_REALM (if present)"
+$KC_INSTALL_DIR/bin/kcadm.sh config credentials --server "$KEYCLOAK_URL" --realm master \
+    --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
+
+# Use get realms and grep for the exact realm name
+if $KC_INSTALL_DIR/bin/kcadm.sh get realms --fields realm | grep -q "\"realm\" : \"$KEYCLOAK_REALM\""; then
+    echo "Realm $KEYCLOAK_REALM detected. Initiating complete deletion..."
+    $KC_INSTALL_DIR/bin/kcadm.sh delete realms/$KEYCLOAK_REALM
+    if [ $? -eq 0 ]; then
+        echo "Realm $KEYCLOAK_REALM deleted successfully. Waiting for cleanup..."
+        sleep 5
+    else
+        echo "Failed to delete realm $KEYCLOAK_REALM. Check if it was already deleted or if there are other issues."
+    fi
+else
+    echo "Realm $KEYCLOAK_REALM not found. Proceeding with import."
+fi
+
+
 # Run the JAR file with the specified parameters
 # When running locally, let the option keycloak.ssl-verify be false otherwise let it be true.
 echo "Running the JAR file..."
@@ -68,7 +99,7 @@ java -DCLIENT_SECRET="$CLIENT_SECRET" \
      --import.files.locations="$KC_REALM_FILE" || { echo "Failed to run the JAR file"; exit 1; }
 
 # After import, update sd-jwt authenticator
-echo "Ensuring sd-jwt authenticator VCT is configured"
-. ./update_sdjwt_vct.sh
+# echo "Ensuring sd-jwt authenticator VCT is configured"
+# . ./update_sdjwt_vct.sh
 
 echo "Script completed successfully."

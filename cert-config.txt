@@ -9,7 +9,7 @@ ST = Bavaria
 L = Nuremberg
 O = adorsys
 OU = Innovation Lab
-CN = localhost 
+CN = keycloak-conformance.eudi-adorsys.com 
 
 [v3_req]
 keyUsage = keyEncipherment, dataEncipherment, digitalSignature
@@ -17,4 +17,5 @@ extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = localhost 
+DNS.1 = keycloak-conformance.eudi-adorsys.com
+DNS.2 = localhost

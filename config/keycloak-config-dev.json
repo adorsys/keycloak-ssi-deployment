@@ -14,6 +14,9 @@
       "email": "fpo@mail.de",
       "createdTimestamp": 1732781977982,
       "enabled": true,
+      "realmRoles": [
+        "credential-offer-create"
+      ],
       "credentials": [
         {
           "id": "0a16e61d-c379-4f99-acdd-48aa57752e65",
@@ -45,6 +48,15 @@
         "oid4vci.enabled": "true",
         "post.logout.redirect.uris": "$(env:TEST_CLIENT_URL)##$(env:TEST_CLIENT_URL)/*"
       },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "basic",
+        "email"
+      ],
       "optionalClientScopes": [
         "IdentityCredential",
         "SteuerberaterCredential",
@@ -86,9 +98,8 @@
       "attributes": {
         "vc.credential_configuration_id": "IdentityCredential",
         "vc.credential_contexts": "https://credentials.example.com/identity_credential",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
-        "vc.proof_signing_alg_values_supported": "ES256,ES384",
-        "vc.credential_signing_alg_values_supported": "ES256",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
+        "vc.credential_signing_alg": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "identity_credential",
         "vc.format": "dc+sd-jwt",
@@ -136,15 +147,10 @@
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-subject-id-mapper",
           "consentRequired": false,
-          "config": {}
-        },
-        {
-          "id": "102b0638-6382-44de-ba29-79da000a4471",
-          "name": "status-list-claim-mapper",
-          "protocol": "oid4vc",
-          "protocolMapper": "oid4vc-status-list-claim-mapper",
-          "consentRequired": false,
-          "config": {}
+          "config": {
+            "claim.name": "id",
+            "userAttribute": "id"
+          }
         },
         {
           "id": "3559e36d-f013-4bc8-aa4c-1f937fa5d06b",
@@ -202,14 +208,13 @@
       "attributes": {
         "vc.credential_configuration_id": "KMACredential",
         "vc.credential_contexts": "person_vct",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
-        "vc.proof_signing_alg_values_supported": "ES256",
-        "vc.credential_signing_alg_values_supported": "ES256",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
+        "vc.credential_signing_alg": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "person_vct",
         "vc.format": "dc+sd-jwt",
         "include.in.token.scope": "true",
-        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Person Credential\",\"logo\":{\"uri\":\"$(env:ISSUER_FRONTEND_URL)/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Person Credential\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
+        "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SteuerberaterIdentität\",\"logo\":{\"uri\":\"https://steuerberaterplattform-bstbk.de/typo3conf/ext/webtemp/Resources/Public/Images/logo-stb-plattform.jpg\",\"alt_text\":\"SteuerberaterIdentität\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"SteuerberaterIdentität\",\"logo\":{\"uri\":\"https://steuerberaterplattform-bstbk.de/typo3conf/ext/webtemp/Resources/Public/Images/logo-stb-plattform.jpg\",\"alt_text\":\"SteuerberaterIdentität\"},\"background_color\":\"#f0f0f0\",\"text_color\":\"#000000\"}]",
         "vc.cryptographic_binding_methods_supported": "jwk",
         "vc.issuer_did": "$(env:ISSUER_DID)",
         "vc.expiry_in_seconds": "31536000",
@@ -247,14 +252,10 @@
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-subject-id-mapper",
           "consentRequired": false,
-          "config": {}
-        },
-        {
-          "name": "status-list-claim-mapper-kma",
-          "protocol": "oid4vc",
-          "protocolMapper": "oid4vc-status-list-claim-mapper",
-          "consentRequired": false,
-          "config": {}
+          "config": {
+            "claim.name": "id",
+            "userAttribute": "id"
+          }
         },
         {
           "name": "person-mapper-kma",
@@ -268,89 +269,89 @@
           }
         },
         {
-          "name": "titel-mapper-kma",
+          "name": "title-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "titel",
+            "claim.name": "title",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Titel / Vortitel / Nachtitel\"},{\"locale\":\"en-US\",\"name\":\"Title / Pre-title / Post-title\"}]",
-            "userAttribute": "titel"
+            "userAttribute": "title"
           }
         },
         {
-          "name": "vorname-mapper-kma",
+          "name": "first-name-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "vorname",
+            "claim.name": "first_name",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Vorname\"},{\"locale\":\"en-US\",\"name\":\"First Name\"}]",
             "userAttribute": "firstName"
           }
         },
         {
-          "name": "name-mapper-kma",
+          "name": "last-name-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "name",
+            "claim.name": "last_name",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Name\"},{\"locale\":\"en-US\",\"name\":\"Surname\"}]",
             "userAttribute": "lastName"
           }
         },
         {
-          "name": "berufstraegereigenschaft-mapper-kma",
+          "name": "professional-status-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "berufstraegereigenschaft",
+            "claim.name": "professional_status",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Berufsträgereigenschaft\"},{\"locale\":\"en-US\",\"name\":\"Professional Status\"}]",
-            "userAttribute": "berufstraegereigenschaft"
+            "userAttribute": "professional_status"
           }
         },
         {
-          "name": "kammer-mapper-kma",
+          "name": "chamber-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "kammer",
+            "claim.name": "chamber",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kammer\"},{\"locale\":\"en-US\",\"name\":\"Chamber\"}]",
-            "userAttribute": "kammer"
+            "userAttribute": "chamber"
           }
         },
         {
-          "name": "geburtsdatum-mapper-kma",
+          "name": "date-of-birth-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "geburtsdatum",
+            "claim.name": "date_of_birth",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Geburtsdatum\"},{\"locale\":\"en-US\",\"name\":\"Date of Birth\"}]",
-            "userAttribute": "birthdate"
+            "userAttribute": "date_of_birth"
           }
         },
         {
-          "name": "ausgestellt_am-mapper-kma",
+          "name": "issued-on-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "ausgestellt_am",
+            "claim.name": "issued_on",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Ausgestellt am\"},{\"locale\":\"en-US\",\"name\":\"Issued on\"}]",
-            "userAttribute": "ausgestellt_am"
+            "userAttribute": "issued_on"
           }
         },
         {
-          "name": "mitgliedsnummer-mapper-kma",
+          "name": "member-id-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "mitgliedsnummer",
+            "claim.name": "member_id",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Mitgliedsnummer\"},{\"locale\":\"en-US\",\"name\":\"Member ID\"}]",
             "userAttribute": "member_id"
           }
@@ -367,58 +368,58 @@
           }
         },
         {
-          "name": "kundennummer-mapper-kma",
+          "name": "customer-number-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "kundennummer",
+            "claim.name": "customer_number",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Kundennummer\"},{\"locale\":\"en-US\",\"name\":\"Customer Number\"}]",
-            "userAttribute": "kundennummer"
+            "userAttribute": "customer_number"
           }
         },
         {
-          "name": "safeid-mapper-kma",
+          "name": "safe-id-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "safeid",
+            "claim.name": "safe_id",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"SAFEID\"},{\"locale\":\"en-US\",\"name\":\"SAFEID\"}]",
-            "userAttribute": "safeid"
+            "userAttribute": "safe_id"
           }
         },
         {
-          "name": "kammerid-mapper-kma",
+          "name": "chamber-id-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "kammerid",
+            "claim.name": "chamber_id",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerID\"},{\"locale\":\"en-US\",\"name\":\"Chamber ID\"}]",
-            "userAttribute": "kammerid"
+            "userAttribute": "chamber_id"
           }
         },
         {
-          "name": "kammername-mapper-kma",
+          "name": "chamber-name-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "kammername",
+            "claim.name": "chamber_name",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"KammerName\"},{\"locale\":\"en-US\",\"name\":\"Chamber Name\"}]",
-            "userAttribute": "kammername"
+            "userAttribute": "chamber_name"
           }
         },
         {
-          "name": "rollenid-mapper-kma",
+          "name": "role-id-mapper-kma",
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-user-attribute-mapper",
           "consentRequired": false,
           "config": {
-            "claim.name": "rollenid",
+            "claim.name": "role_id",
             "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"RollenID\"},{\"locale\":\"en-US\",\"name\":\"Role ID\"}]",
-            "userAttribute": "rollenid"
+            "userAttribute": "role_id"
           }
         },
         {
@@ -441,9 +442,8 @@
       "attributes": {
         "vc.credential_configuration_id": "SteuerberaterCredential",
         "vc.credential_contexts": "stbk_westfalen_lippe",
-        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti,status",
-        "vc.proof_signing_alg_values_supported": "ES256",
-        "vc.credential_signing_alg_values_supported": "ES256",
+        "vc.credential_build_config.sd_jwt.visible_claims": "id,iat,nbf,exp,jti",
+        "vc.credential_signing_alg": "ES256",
         "vc.credential_build_config.hash_algorithm": "sha-256",
         "vc.supported_credential_types": "stbk_westfalen_lippe",
         "vc.format": "dc+sd-jwt",
@@ -501,15 +501,10 @@
           "protocol": "oid4vc",
           "protocolMapper": "oid4vc-subject-id-mapper",
           "consentRequired": false,
-          "config": {}
-        },
-        {
-          "id": "bc96abbe-d539-4e4c-a134-4638d8b65f4e",
-          "name": "status-list-claim-mapper-bsk",
-          "protocol": "oid4vc",
-          "protocolMapper": "oid4vc-status-list-claim-mapper",
-          "consentRequired": false,
-          "config": {}
+          "config": {
+            "claim.name": "id",
+            "userAttribute": "id"
+          }
         },
         {
           "id": "16a20d5f-c862-4195-a85a-c7cae1530b7c",
@@ -620,134 +615,6 @@
       ]
     }
   ],
-  "identityProviders": [
-    {
-      "alias": "saml",
-      "providerId": "saml",
-      "enabled": true,
-      "updateProfileFirstLoginMode": "on",
-      "config": {
-        "postBindingResponse": "true",
-        "xmlSigKeyInfoKeyNameTransformer": "KEY_ID",
-        "idpEntityId": "https://saml.example.com/entityid",
-        "allowCreate": "true",
-        "syncMode": "LEGACY",
-        "singleSignOnServiceUrl": "https://mocksaml.com/api/saml/sso",
-        "wantAuthnRequestsSigned": "true",
-        "validateSignature": "true",
-        "signingCertificate": "MIIC4jCCAcoCCQC33wnybT5QZDANBgkqhkiG9w0BAQsFADAyMQswCQYDVQQGEwJV\nSzEPMA0GA1UECgwGQm94eUhRMRIwEAYDVQQDDAlNb2NrIFNBTUwwIBcNMjIwMjI4\nMjE0NjM4WhgPMzAyMTA3MDEyMTQ2MzhaMDIxCzAJBgNVBAYTAlVLMQ8wDQYDVQQK\nDAZCb3h5SFExEjAQBgNVBAMMCU1vY2sgU0FNTDCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBALGfYettMsct1T6tVUwTudNJH5Pnb9GGnkXi9Zw/e6x45DD0\nRuRONbFlJ2T4RjAE/uG+AjXxXQ8o2SZfb9+GgmCHuTJFNgHoZ1nFVXCmb/Hg8Hpd\n4vOAGXndixaReOiq3EH5XvpMjMkJ3+8+9VYMzMZOjkgQtAqO36eAFFfNKX7dTj3V\npwLkvz6/KFCq8OAwY+AUi4eZm5J57D31GzjHwfjH9WTeX0MyndmnNB1qV75qQR3b\n2/W5sGHRv+9AarggJkF+ptUkXoLtVA51wcfYm6hILptpde5FQC8RWY1YrswBWAEZ\nNfyrR4JeSweElNHg4NVOs4TwGjOPwWGqzTfgTlECAwEAATANBgkqhkiG9w0BAQsF\nAAOCAQEAAYRlYflSXAWoZpFfwNiCQVE5d9zZ0DPzNdWhAybXcTyMf0z5mDf6FWBW\n5Gyoi9u3EMEDnzLcJNkwJAAc39Apa4I2/tml+Jy29dk8bTyX6m93ngmCgdLh5Za4\nkhuU3AM3L63g7VexCuO7kwkjh/+LqdcIXsVGO6XDfu2QOs1Xpe9zIzLpwm/RNYeX\nUjbSj5ce/jekpAw7qyVVL4xOyh8AtUW1ek3wIw1MJvEgEPt0d16oshWJpoS1OT8L\nr/22SvYEo3EmSGdTVGgk3x3s+A0qWAqTcyjr7Q4s/GKYRFfomGwz0TZ4Iw1ZN99M\nm0eo2USlSRTVl7QHRTuiuSThHpLKQQ==",
-        "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-        "entityId": "$(env:SAML_ENTITYID)",
-        "signatureAlgorithm": "RSA_SHA256",
-        "metadataDescriptorUrl": "https://mocksaml.com/api/saml/metadata"
-      }
-    }
-  ],
-  "identityProviderMappers": [
-    {
-      "name": "email",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "email",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "email"
-      }
-    },
-    {
-      "name": "firstName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "firstName",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "firstName"
-      }
-    },
-    {
-      "name": "lastName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "saml-user-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "user.attribute": "lastName",
-        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
-        "attribute.name": "lastName"
-      }
-    },
-    {
-      "name": "displayName",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "John Doe",
-        "attribute": "displayName"
-      }
-    },
-    {
-      "name": "department",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "IT Department",
-        "attribute": "department"
-      }
-    },
-    {
-      "name": "organization",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Example Organization",
-        "attribute": "organization"
-      }
-    },
-    {
-      "name": "title",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "Employee",
-        "attribute": "title"
-      }
-    },
-    {
-      "name": "phoneNumber",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "+1-555-123-4567",
-        "attribute": "phoneNumber"
-      }
-    },
-    {
-      "name": "address",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "123 Main St, City, State 12345",
-        "attribute": "address"
-      }
-    },
-    {
-      "name": "roles",
-      "identityProviderAlias": "saml",
-      "identityProviderMapper": "hardcoded-attribute-idp-mapper",
-      "config": {
-        "syncMode": "INHERIT",
-        "attribute.value": "user",
-        "attribute": "roles"
-      }
-    }
-  ],
   "components": {
     "org.keycloak.keys.KeyProvider": [
       {
@@ -756,13 +623,13 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_sig_key"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keystoreType": [
             "PKCS12"
@@ -771,10 +638,10 @@
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"
@@ -790,7 +657,7 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "rsa_enc_key"
@@ -802,16 +669,16 @@
             "enc"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "active": [
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"
@@ -827,13 +694,13 @@
         "providerId": "java-keystore",
         "config": {
           "keystorePassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keyAlias": [
             "ecdsa_key"
           ],
           "keyPassword": [
-            "$(env:KEYCLOAK_KEYSTORE_PASSWORD)"
+            "$(env:KEYSTORE_PASSWORD)"
           ],
           "keystoreType": [
             "PKCS12"
@@ -842,10 +709,10 @@
             "true"
           ],
           "keystore": [
-            "$(env:KC_KEYSTORE_PATH)"
+            "$(env:KEYSTORE_PATH)"
           ],
           "priority": [
-            "0"
+            "200"
           ],
           "enabled": [
             "true"
@@ -857,5 +724,5 @@
       }
     ]
   },
-  "keycloakVersion": "999.0.0-SNAPSHOT"
+  "verifiableCredentialsEnabled": true
 }

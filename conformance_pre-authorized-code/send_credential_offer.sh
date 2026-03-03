@@ -1,27 +1,39 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
-# OID4VCI Conformance Test - Send Credential Offer Script (Interactive)
+# OID4VCI Conformance Test - Send Credential Offer Script (Pre-Authorized Code)
 # This script sends the credential offer to the OpenID Foundation conformance test suite
-# Runs one command at a time for better debugging and control
-#
-# Expected behavior:
-# - The test suite will receive the credential offer successfully
-# - It may return a 400 error about missing authorization_details in token response
-# - This is expected and helps identify configuration issues in Keycloak
+# using the pre-authorized code flow.
 
-# Configuration
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-NGROK_URL="https://d6791ba89bcf.ngrok-free.app"
-KEYCLOAK_REALM_URL="$NGROK_URL/realms/oid4vc-vci"
+# Source load_env.sh from the parent directory
+source "$SCRIPT_DIR/../load_env.sh"
+
+# Function to log messages
+log_message() {
+    echo -e "\n[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Function to exit with error message
+exit_with_error() {
+    log_message "❌ ERROR: $1"
+    exit 1
+}
+
+# Derive URLs from environment
+NGROK_URL="https://$KEYCLOAK_HOSTNAME"
+KEYCLOAK_REALM_URL="$NGROK_URL/realms/$KEYCLOAK_REALM"
 TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
+USERNAME="$USER_FRANCIS_NAME"
 
-# User configuration for pre-authorized code flow
-USERNAME="francis"
-echo "=== OID4VCI Conformance Test - Send Credential Offer (Interactive) ==="
-echo "Keycloak URL: $KEYCLOAK_REALM_URL"
-echo "Test Suite URL: $TEST_SUITE_BASE_URL"
-echo "Target User: $USERNAME"
-echo ""
+log_message "=== OID4VCI Conformance Test - Send Credential Offer (Pre-Authorized Code) ==="
+log_message "Keycloak URL: $KEYCLOAK_REALM_URL"
+log_message "Test Suite URL: $TEST_SUITE_BASE_URL"
+log_message "Target User: $USERNAME"
+log_message ""
 
 # Function to wait for user input
 wait_for_user() {
@@ -32,124 +44,121 @@ wait_for_user() {
 }
 
 # Step 1: Get a fresh user access token
-echo "Step 1: Getting fresh user access token..."
-echo "Running: curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token ..."
+log_message "Step 1: Getting fresh user access token..."
+
+TOKEN_ENDPOINT="$KEYCLOAK_REALM_URL/protocol/openid-connect/token"
+
+log_message "Running: curl -k -s -X POST $TOKEN_ENDPOINT ..."
 wait_for_user
-USER_ACCESS_TOKEN=$(curl -k -s -X POST $NGROK_URL/realms/oid4vc-vci/protocol/openid-connect/token \
+
+USER_ACCESS_TOKEN=$(curl -k -s -X POST "$TOKEN_ENDPOINT" \
     -d "client_id=openid4vc-rest-api" \
-    -d "client_secret=uArydomqOymeF0tBrtipkPYujNNUuDlt" \
+    -d "client_secret=$CLIENT_SECRET" \
     -d "username=$USERNAME" \
-    -d "password=$USERNAME" \
+    -d "password=$USER_FRANCIS_PASSWORD" \
     -d "grant_type=password" \
     -d "scope=openid" | jq -r '.access_token')
 
 if [ "$USER_ACCESS_TOKEN" = "null" ] || [ -z "$USER_ACCESS_TOKEN" ]; then
-    echo "❌ Failed to get user access token"
-    exit 1
+    exit_with_error "Failed to get user access token"
 fi
 
-echo "✅ Got fresh user access token: ${USER_ACCESS_TOKEN:0:50}..."
+log_message "✅ Got fresh user access token: ${USER_ACCESS_TOKEN:0:50}..."
+
 # Step 2: Get a fresh credential offer URI with pre-authorized code flow
-echo ""
-echo "Step 2: Getting fresh credential offer URI (pre-authorized code flow)..."
-echo "Note: pre_authorized=true (default) requires user_id parameter"
-echo "Running: curl -k -s -H \"Authorization: Bearer \$USER_ACCESS_TOKEN\" ..."
+log_message ""
+log_message "Step 2: Getting fresh credential offer URI (pre-authorized code flow)..."
+log_message "Note: pre_authorized=true (default) requires username parameter"
+log_message "Running: curl -k -s -H \"Authorization: Bearer \$USER_ACCESS_TOKEN\" ..."
 wait_for_user
 
 CREDENTIAL_OFFER_URI=$(curl -k -s -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
-    "$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&type=uri&pre_authorized=true&user_id=$USERNAME")
+    "$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&type=uri&pre_authorized=true&username=$USERNAME")
 
-echo "Fresh Credential Offer URI Response:"
-echo $CREDENTIAL_OFFER_URI | jq .
 
-# Check if we got an error about missing user_id
+
 if echo "$CREDENTIAL_OFFER_URI" | grep -q "Pre-Authorized credential offer requires a target user"; then
-    echo "❌ Error: Pre-authorized credential offer requires user_id parameter"
-    echo "Make sure you're providing user_id=$USERNAME in the request"
-    exit 1
+    exit_with_error "Pre-authorized credential offer requires username parameter. Response: $CREDENTIAL_OFFER_URI"
 fi
 
-# Step 3: Extract the nonce and get the actual credential offer
-echo ""
-echo "Step 3: Extracting nonce and getting credential offer..."
-NONCE=$(echo $CREDENTIAL_OFFER_URI | jq -r '.nonce')
-
+NONCE=$(echo "$CREDENTIAL_OFFER_URI" | jq -r '.nonce')
 if [ "$NONCE" = "null" ] || [ -z "$NONCE" ]; then
-    echo "❌ Failed to extract nonce from credential offer URI"
-    exit 1
+    exit_with_error "Failed to extract nonce from credential offer URI. Response: $CREDENTIAL_OFFER_URI"
 fi
 
-echo "Extracted nonce: $NONCE"
-echo "Running: curl -k -s \"$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer/\$NONCE\""
+log_message "✅ Got offer session in Keycloak. Nonce: $NONCE"
+
+# Step 3: Fetch the actual Credential Offer JSON from Keycloak using the nonce
+log_message ""
+log_message "Step 3: Fetching the actual Credential Offer JSON from Keycloak..."
+log_message "Running: curl -k -s \"$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer/\$NONCE\""
 wait_for_user
 
-CREDENTIAL_OFFER=$(curl -k -s "$NGROK_URL/realms/oid4vc-vci/protocol/oid4vc/credential-offer/$NONCE")
-echo "Fresh Credential Offer:"
-echo $CREDENTIAL_OFFER | jq .
+CREDENTIAL_OFFER=$(curl -k -s "$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer/$NONCE")
+
+if [ "$CREDENTIAL_OFFER" = "null" ] || [ -z "$CREDENTIAL_OFFER" ]; then
+    exit_with_error "Failed to fetch credential offer JSON from Keycloak for nonce: $NONCE"
+fi
+
+log_message "✅ Fetched Registered Credential Offer from Keycloak:"
+echo "$CREDENTIAL_OFFER" | jq .
 
 # Verify that the credential offer contains pre-authorized code grant
-if echo "$CREDENTIAL_OFFER" | jq -e '.grants.pre_authorized_code' > /dev/null 2>&1; then
-    echo "✅ Credential offer contains pre-authorized code grant"
-    PRE_AUTH_CODE=$(echo $CREDENTIAL_OFFER | jq -r '.grants.pre_authorized_code.pre_authorized_code')
-    echo "Pre-authorized code: ${PRE_AUTH_CODE:0:50}..."
+if echo "$CREDENTIAL_OFFER" | jq -e '.grants."urn:ietf:params:oauth:grant-type:pre-authorized_code"' > /dev/null 2>&1; then
+    log_message "✅ Credential offer contains pre-authorized code grant"
+    PRE_AUTH_CODE=$(echo "$CREDENTIAL_OFFER" | jq -r '.grants."urn:ietf:params:oauth:grant-type:pre-authorized_code"."pre-authorized_code"')
+    log_message "Pre-authorized code: ${PRE_AUTH_CODE:0:50}..."
 else
-    echo "⚠️  Warning: Credential offer does not contain pre-authorized code grant"
-    echo "This may indicate pre_authorized=false was used or an issue with the offer creation"
+    log_message "⚠️  Warning: Credential offer does not contain pre-authorized code grant"
 fi
 
-# Step 4: Construct the credential offer with ngrok URLs
-echo ""
-echo "Step 4: Constructing credential offer with ngrok URLs..."
-CREDENTIAL_OFFER_JSON=$(echo $CREDENTIAL_OFFER | jq --arg issuer "$KEYCLOAK_REALM_URL" '.credential_issuer = $issuer')
+# Step 4: URL encode the credential offer and send to test suite
+log_message ""
+log_message "Step 4: URL encoding and sending credential offer to test suite..."
+CREDENTIAL_OFFER_ENCODED=$(echo "$CREDENTIAL_OFFER" | jq -c . | jq -rR @uri)
 
-echo "Credential Offer to send:"
-echo $CREDENTIAL_OFFER_JSON | jq .
-
-# Step 5: URL encode the credential offer and send to test suite
-echo ""
-echo "Step 5: URL encoding and sending credential offer to test suite..."
-CREDENTIAL_OFFER_ENCODED=$(echo "$CREDENTIAL_OFFER_JSON" | jq -c . | jq -rR @uri)
-
-echo "Encoded credential offer: ${CREDENTIAL_OFFER_ENCODED:0:100}..."
-echo "Sending to: $TEST_SUITE_BASE_URL/credential_offer"
-echo "Running: curl -k -s -X POST \"$TEST_SUITE_BASE_URL/credential_offer?credential_offer=\$CREDENTIAL_OFFER_ENCODED\" ..."
+log_message "Encoded credential offer: ${CREDENTIAL_OFFER_ENCODED:0:100}..."
+log_message "Sending to: $TEST_SUITE_BASE_URL/credential_offer"
 wait_for_user
 
-echo "Sending credential offer to test suite..."
 RESPONSE=$(curl -k -s -X POST "$TEST_SUITE_BASE_URL/credential_offer?credential_offer=$CREDENTIAL_OFFER_ENCODED" \
     -H "Content-Type: application/json")
 
-echo "Test suite response:"
-echo $RESPONSE
+log_message "Test suite response:"
+if echo "$RESPONSE" | jq . > /dev/null 2>&1; then
+    echo "$RESPONSE" | jq .
+else
+    echo "$RESPONSE"
+fi
 
 # Check the response
-echo ""
-echo "=== Response Analysis ==="
+log_message ""
+log_message "=== Response Analysis ==="
 if echo "$RESPONSE" | grep -q "authorization_details"; then
-    echo "✅ SUCCESS: Test suite received the credential offer!"
-    echo ""
-    echo "📋 Next Steps:"
-    echo "1. Check the test suite dashboard for detailed results"
-    echo "2. This helps identify what needs to be fixed in your Keycloak setup"
-    echo ""
-    echo "🔗 Test Suite Dashboard: $TEST_SUITE_BASE_URL"
+    log_message "✅ SUCCESS: Test suite received the credential offer!"
+    log_message ""
+    log_message "📋 Next Steps:"
+    log_message "1. Check the test suite dashboard for detailed results"
+    log_message ""
+    log_message "🔗 Test Suite Dashboard: $TEST_SUITE_BASE_URL"
 elif echo "$RESPONSE" | grep -q "error"; then
-    echo "⚠️  Test suite returned an error:"
-    echo $RESPONSE | jq .
+    log_message "⚠️  Test suite returned an error:"
+    echo "$RESPONSE" | jq .
 else
-    echo "✅ Credential offer sent successfully!"
-    echo "The test suite should now be processing the credential offer."
-    echo ""
-    echo "📋 Next Steps:"
-    echo "1. Check the test suite dashboard"
-    echo ""
-    echo "🔗 Test Suite Dashboard: $TEST_SUITE_BASE_URL"
+    log_message "✅ Pre-authorized code flow credential offer sent successfully!"
+    log_message "The test suite should now be processing the pre-authorized code flow."
+    log_message ""
+    log_message "📋 Next Steps:"
+    log_message "1. Check the test suite dashboard"
+    log_message ""
+    log_message "🔗 Test Suite Dashboard: $TEST_SUITE_BASE_URL"
 fi
 
 # Summary
-echo ""
-echo "=== Script Completed ==="
-echo "🔗 Key URLs:"
-echo "- Test Suite: $TEST_SUITE_BASE_URL"
-echo "- Keycloak Admin: $NGROK_URL/admin"
-echo "- Credential Issuer: $KEYCLOAK_REALM_URL/.well-known/openid-credential-issuer"
+log_message ""
+log_message "=== Script Completed ==="
+log_message "🔗 Key URLs:"
+log_message "- Test Suite: $TEST_SUITE_BASE_URL"
+log_message "- Keycloak Admin: $NGROK_URL/admin"
+log_message "- Credential Issuer: $KEYCLOAK_REALM_URL/.well-known/openid-credential-issuer"
+log_message ""

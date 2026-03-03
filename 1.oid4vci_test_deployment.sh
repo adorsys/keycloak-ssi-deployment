@@ -32,21 +32,57 @@ echo "Obtaining admin token..."
 $KC_INSTALL_DIR/bin/kcadm.sh config truststore --trustpass $KC_TRUST_STORE_PASS $KC_TRUST_STORE
 $KC_INSTALL_DIR/bin/kcadm.sh config credentials --server $KEYCLOAK_ADMIN_ADDR --realm master --user $KC_BOOTSTRAP_ADMIN_USERNAME --password $KC_BOOTSTRAP_ADMIN_PASSWORD
 
-# Create new realm
-$KC_INSTALL_DIR/bin/kcadm.sh create realms -s realm=$KEYCLOAK_REALM -s enabled=true
+# Helper: try create resource, skip when duplicate
+create_or_skip() {
+  local payload="$1"
+  local desc="$2"
+  local endpoint="$3"
+  # run create and capture output; realm creation must not use -r
+  rc=0
+  if [ "$endpoint" = "realms" ]; then
+    resp=$(echo "$payload" | $KC_INSTALL_DIR/bin/kcadm.sh create "$endpoint" -f - 2>&1) || rc=$?
+  else
+    resp=$(echo "$payload" | $KC_INSTALL_DIR/bin/kcadm.sh create "$endpoint" -r "$KEYCLOAK_REALM" -f - 2>&1) || rc=$?
+  fi
+
+  if [ "$rc" -ne 0 ]; then
+    # Accept several possible duplicate/conflict messages from kcadm
+    if echo "$resp" | grep -Eiq "Duplicate resource|already exists|conflict|409"; then
+      echo "$desc already exists, skipping"
+      return 0
+    else
+      echo "$desc registration failed: $resp"
+      exit 1
+    fi
+  else
+    echo "$desc registered"
+  fi
+}
+
+# Create new realm (idempotent)
+REALM_PAYLOAD=$(jq -n --arg r "$KEYCLOAK_REALM" '{realm:$r,enabled:true}')
+create_or_skip "$REALM_PAYLOAD" "Realm $KEYCLOAK_REALM" "realms"
 
 # Collect the 4 active keys to be disabled.
-RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RSA-OAEP)' | jq -r '.active."RSA-OAEP"')
-RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
-echo "Generated RSA-OAEP key will be disabled... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
+RSA_OAEP_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RSA-OAEP)' 2>/dev/null | jq -r '.active."RSA-OAEP" // empty')
+if [ -n "$RSA_OAEP_KID" ]; then
+  RSA_OAEP_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM 2>/dev/null | jq --arg kid "$RSA_OAEP_KID" -r '.keys[] | select(.kid == $kid) | .providerId' || true)
+else
+  RSA_OAEP_PROV_ID=""
+fi
+echo "Generated RSA-OAEP key will be disabled... KID=${RSA_OAEP_KID:-<not-found>} PROV_ID=${RSA_OAEP_PROV_ID:-<not-found>}"
 
 # HS512_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(HS512)' | jq -r '.active.HS512')
 # HS512_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$HS512_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
 # echo "Generated HS512 key will be disbled... KID=$HS512_KID PROV_ID=$HS512_PROV_ID"
 
-RS256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RS256)' | jq -r '.active.RS256')
-RS256_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
-echo "Generated RS256 key will be disabled... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
+RS256_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM --fields 'active(RS256)' 2>/dev/null | jq -r '.active.RS256 // empty')
+if [ -n "$RS256_KID" ]; then
+  RS256_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM 2>/dev/null | jq --arg kid "$RS256_KID" -r '.keys[] | select(.kid == $kid) | .providerId' || true)
+else
+  RS256_PROV_ID=""
+fi
+echo "Generated RS256 key will be disabled... KID=${RS256_KID:-<not-found>} PROV_ID=${RS256_PROV_ID:-<not-found>}"
 
 # AES_KID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys --fields 'active(AES)' | jq -r '.active.AES')
 # AES_PROV_ID=$($KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$AES_KID" '.keys[] | select(.kid == $kid)' | jq -r '.providerId')
@@ -132,15 +168,17 @@ RSA_ENC_KEY_PROVIDER=$(cat $WORK_DIR/encryption_key_rsa.json | \
 #    .config.keyPassword = [$keyPassword]' \
 #   > $TARGET_DIR/encryption_key_aes-tmp.json 
 
+
+
 # Register the EC-key with Keycloak
 echo "Registering issuer key ecdsa..."
-echo "$ECDSA_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'ECDSA Issuer Key registration failed' ; exit 1; }
+create_or_skip "$ECDSA_KEY_PROVIDER" "ECDSA Issuer Key" "components"
 
 echo "Registering issuer key rsa..."
-echo "$RSA_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'RSA Issuer Key registration failed' ; exit 1; }
+create_or_skip "$RSA_KEY_PROVIDER" "RSA Issuer Key" "components"
 
 echo "Registering encryption key rsa..."
-echo "$RSA_ENC_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - || { echo 'RSA Encryption Key registration failed' ; exit 1; }
+create_or_skip "$RSA_ENC_KEY_PROVIDER" "RSA Encryption Key" "components"
 
 # echo "Registering signature key hmac..."
 # $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < $TARGET_DIR/signature_key_hmac-tmp.json || { echo 'Hmac Signature Key registration failed' ; exit 1; }
@@ -148,17 +186,25 @@ echo "$RSA_ENC_KEY_PROVIDER" | $KC_INSTALL_DIR/bin/kcadm.sh create components -r
 # $KC_INSTALL_DIR/bin/kcadm.sh create components -r $KEYCLOAK_REALM -o -f - < $TARGET_DIR/encryption_key_aes-tmp.json || { echo 'AES Encryption Key registration failed' ; exit 1; }
 
 # Disable generated keys
-echo "Deactivating generated RSA-OAEP... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
-$KC_INSTALL_DIR/bin/kcadm.sh update components/$RSA_OAEP_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RSA_OAEP provider failed' ; exit 1; }
-$KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)'
+if [ -n "$RSA_OAEP_PROV_ID" ] && [ "$RSA_OAEP_KID" != "null" ]; then
+  echo "Deactivating generated RSA-OAEP... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
+  $KC_INSTALL_DIR/bin/kcadm.sh update components/$RSA_OAEP_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RSA_OAEP provider failed' ; exit 1; }
+  $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid)'
+else
+  echo "No RSA-OAEP key/provider found to deactivate, skipping"
+fi
 
 # echo "Deactivating generated HS512 key... KID=$HS512_KID PROV_ID=$HS512_PROV_ID"
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$HS512_PROV_ID -s 'config.active=["false"]' || { echo 'Updating HS512 provider failed' ; exit 1; }
 # $KC_INSTALL_DIR/bin/kcadm.sh get keys | jq --arg kid "$HS512_KID" '.keys[] | select(.kid == $kid)'
 
-echo "Deactivating generated RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
-$KC_INSTALL_DIR/bin/kcadm.sh update components/$RS256_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RS256 provider failed' ; exit 1; }
-$KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)'
+if [ -n "$RS256_PROV_ID" ] && [ "$RS256_KID" != "null" ]; then
+  echo "Deactivating generated RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
+  $KC_INSTALL_DIR/bin/kcadm.sh update components/$RS256_PROV_ID -r $KEYCLOAK_REALM -s 'config.active=["false"]' || { echo 'Updating RS256 provider failed' ; exit 1; }
+  $KC_INSTALL_DIR/bin/kcadm.sh get keys -r $KEYCLOAK_REALM | jq --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid)'
+else
+  echo "No RS256 key/provider found to deactivate, skipping"
+fi
 
 # echo "Deactivating generated AES key will... KID=$AES_KID PROV_ID=$AES_PROV_ID"
 # $KC_INSTALL_DIR/bin/kcadm.sh update components/$AES_PROV_ID -s 'config.active=["false"]' || { echo 'Updating AES provider failed' ; exit 1; }
@@ -182,8 +228,7 @@ CLIENT_SCOPES_CONFIG=$(cat "$WORK_DIR/client-scope-config.json" | jq \
 
 # Loop through each scope in the JSON array
 echo "$CLIENT_SCOPES_CONFIG" | jq -c '.[]' | while read -r scope; do
-  echo "$scope" | $KC_INSTALL_DIR/bin/kcadm.sh create client-scopes -r "$KEYCLOAK_REALM" -f - \
-    || { echo 'Client scope creation failed'; exit 1; }
+  create_or_skip "$scope" "Client scope" "client-scopes"
 done
 
 echo "Creating SAML Identity Provider..."
@@ -197,15 +242,24 @@ SAML_IDP_CONFIG=$(cat "$WORK_DIR/saml-idp-config.json" | jq \
 
 # Create the IdP
 echo "$SAML_IDP_CONFIG" | jq -c '.identityProviders[]' | while read -r idp; do
-  echo "$idp" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances -r "$KEYCLOAK_REALM" -f - \
-    || { echo 'SAML Identity Provider creation failed'; exit 1; }
+  create_or_skip "$idp" "SAML Identity Provider" "identity-provider/instances"
 done
 
 # Create the mappers
 echo "Creating SAML Identity Provider Mappers..."
 echo "$SAML_IDP_CONFIG" | jq -c '.identityProviderMappers[]' | while read -r mapper; do
-  echo "$mapper" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances/saml/mappers -r "$KEYCLOAK_REALM" -f - \
-    || { echo 'SAML Identity Provider Mapper creation failed'; exit 1; }
+  name=$(echo "$mapper" | jq -r '.name')
+  idp_alias=$(echo "$mapper" | jq -r '.identityProviderAlias')
+
+  # Check if mapper already exists for this identity provider
+  existing=$($KC_INSTALL_DIR/bin/kcadm.sh get identity-provider/instances/$idp_alias/mappers -r "$KEYCLOAK_REALM" 2>/dev/null || echo "")
+  if echo "$existing" | jq -e --arg name "$name" '.[] | select(.name == $name)' >/dev/null 2>&1; then
+    echo "Mapper '$name' already exists for IDP '$idp_alias', skipping"
+    continue
+  fi
+
+  # Create mapper under the specific identity-provider alias
+  echo "$mapper" | $KC_INSTALL_DIR/bin/kcadm.sh create identity-provider/instances/$idp_alias/mappers -r "$KEYCLOAK_REALM" -f - || { echo "SAML Identity Provider Mapper creation failed: $name"; exit 1; }
 done
 
 # Creating the OID4VCI REST API client and assigning credential client scopes...
@@ -222,7 +276,7 @@ CONFIG=$(cat "$WORK_DIR/openid4vc-rest-api.json" | jq \
 
 # Create client for openid4vc-rest-api
 echo "Creating OPENID4VC-REST-API client..."
-echo "$CONFIG" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'OPENID4VC-REST-API client creation failed' ; exit 1; }
+create_or_skip "$CONFIG" "OPENID4VC-REST-API client" "clients"
 
 # Create oid4vc-demo-public client from JSON template
 echo "Creating oid4vc-demo-public client..."
@@ -230,7 +284,7 @@ PUBLIC_CLIENT=$(cat "$WORK_DIR/oid4vc-demo-public.json" | jq \
   --arg TEST_CLIENT_URL "$TEST_CLIENT_URL" \
   '.rootUrl = $TEST_CLIENT_URL | .baseUrl = $TEST_CLIENT_URL | .redirectUris = [$TEST_CLIENT_URL + "/*"] | .webOrigins = [$TEST_CLIENT_URL] | .attributes["post.logout.redirect.uris"] = ($TEST_CLIENT_URL + "##" + $TEST_CLIENT_URL + "/*")')
 
-echo "$PUBLIC_CLIENT" | $KC_INSTALL_DIR/bin/kcadm.sh create clients -r $KEYCLOAK_REALM -o -f - || { echo 'oid4vc-demo-public client may already exist' ; exit 1; }
+create_or_skip "$PUBLIC_CLIENT" "oid4vc-demo-public client" "clients"
 
 echo "Ensuring sd-jwt authenticator VCT is configured"
 cd "$WORK_DIR" && ./update_sdjwt_vct.sh || echo "Skipping sd-jwt VCT update (not critical)"
