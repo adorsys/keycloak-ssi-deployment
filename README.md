@@ -1,6 +1,6 @@
 ## Keycloak OpenID4VCI Deployment Wrapper
 
-This repository is now a **thin deployment and infrastructure wrapper** around the upstream OAuth SIG / OpenID4VCI work.
+This repository is now a **thin deployment and infrastructure wrapper** around the upstream [Keycloak OAuth SIG](https://github.com/keycloak/keycloak-oauth-sig/tree/main/oid4vci-deployment).
 The actual OpenID4VCI reference setup lives in the `keycloak-oauth-sig` submodule.
 
 ---
@@ -40,6 +40,46 @@ git submodule update --remote --merge   # Pull latest commit from remote branch 
 ```
 
 ---
+
+### Quick setup
+
+From the repository root, run in order:
+
+```bash
+./keycloak-ssi.sh setup    # Start DB + Keycloak (wait until ready)
+./keycloak-ssi.sh config   # Configure realm, clients, keys, users
+```
+
+Then run a credential test, e.g. `./keycloak-ssi.sh test preauth IdentityCredential`.
+
+---
+
+#### Adding custom client scopes
+
+You can add your own client scopes without touching the submodule by:
+
+1. Creating a `client-scopes.json` file at the **repository root**.  
+   - Use the same JSON structure as the scope definitions under  
+     `infrastructure/terraform/jsons/scopes/*.json` (name, protocol, protocolMappers, attributes, etc.).
+   - Each entry in the top-level JSON array represents one client scope to create..
+2. Running:
+
+   ```bash
+   ./keycloak-ssi.sh addClientScopes
+   ```
+
+This command reads `client-scopes.json`, **creates any missing client scopes**, and **assigns them as optional scopes** to the
+clients you configure (see below). By default those are `openid4vc-rest-api` and `oid4vc-demo-public` (skipping scopes or assignments that already exist).
+
+You can create or edit `config-override.yaml` at the **repository root** and define which client IDs receive the optional scopes. The script reads the variable from that file and uses it when you run `./keycloak-ssi.sh addClientScopes`. Example:
+
+```yaml
+# config-override.yaml (repo root, gitignored)
+add_client_scopes:
+  target_clients: "openid4vc-rest-api oid4vc-demo-public"
+```
+
+Use a space- or comma-separated list of client IDs. The wrapper syncs this file into the submodule before running, so changes take effect on the next `addClientScopes` run.
 
 ### Using the wrapper CLI
 
