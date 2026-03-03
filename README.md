@@ -41,21 +41,34 @@ git submodule update --remote --merge   # Pull latest commit from remote branch 
 
 ---
 
+### Using the wrapper CLI
+
+From the repository root you can use the wrapper script instead of calling the submodule directly:
+
+```bash
+./keycloak-ssi.sh setup         
+./keycloak-ssi.sh config        
+./keycloak-ssi.sh test preauth ...
+./keycloak-ssi.sh test authcode ...      
+./keycloak-ssi.sh terraform destroy -auto-approve         
+./keycloak-ssi.sh terraform apply -auto-approve          
+./keycloak-ssi.sh addClientScopes          
+./keycloak-ssi.sh install         
+./keycloak-ssi.sh uninstall         
+./keycloak-ssi.sh help          
+```
+
+The wrapper keeps configuration and custom providers in sync with the submodule, so you usually do **not** need to copy
+files into `keycloak-oauth-sig/oid4vci-deployment` manually.
+
+---
+
 ### Running the OpenID4VCI deployment (submodule)
 
 For local OpenID4VCI experiments, work inside the submodule’s deployment folder:
 
 ```bash
 cd keycloak-oauth-sig/oid4vci-deployment
-```
-
-If you have any custom provider JARs in this repository’s `providers/` directory (for example the status list plugin or
-the `keycloak-oid4vp-plugin-*.jar`) and want them available when using the submodule CLI, copy them into the submodule
-deployment before running scripts:
-
-```bash
-mkdir -p keycloak-oauth-sig/oid4vci-deployment/providers
-cp providers/*.jar keycloak-oauth-sig/oid4vci-deployment/providers/
 ```
 
 From there, follow the upstream documentation in:
