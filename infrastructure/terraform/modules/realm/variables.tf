@@ -29,6 +29,26 @@ variable "sdjwt_vct" {
   type        = string
 }
 
+variable "sdjwt_enforce_nbf_claim" {
+  description = "Enforce nbf claim for SD-JWT"
+  type        = string
+}
+
+variable "sdjwt_enforce_exp_claim" {
+  description = "Enforce exp claim for SD-JWT"
+  type        = string
+}
+
+variable "sdjwt_kb_jwt_max_age" {
+  description = "Max age globally for kb-jwt for SD-JWT"
+  type        = string
+}
+
+variable "sdjwt_enforce_revocation_status" {
+  description = "Enforce revocation status for SD-JWT"
+  type        = string
+}
+
 variable "login_theme" {
   description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
   type        = string
