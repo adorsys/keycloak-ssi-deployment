@@ -67,8 +67,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v5
         with:
-          context: ./keycloak-oauth-sig/oid4vci-deployment
-          file: ./keycloak-oauth-sig/oid4vci-deployment/Dockerfile
+          context: .
+          file: ./Dockerfile
           builder: ${{ steps.builder.outputs.name }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
