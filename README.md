@@ -46,29 +46,16 @@ git submodule update --remote --merge   # Pull latest commit from remote branch 
 From the repository root you can use the wrapper script instead of calling the submodule directly:
 
 ```bash
-./keycloak-ssi.sh setup         
-./keycloak-ssi.sh config        
-./keycloak-ssi.sh test preauth ...
-./keycloak-ssi.sh test authcode ...      
-./keycloak-ssi.sh terraform destroy -auto-approve         
-./keycloak-ssi.sh terraform apply -auto-approve          
-./keycloak-ssi.sh addClientScopes          
-./keycloak-ssi.sh install         
-./keycloak-ssi.sh uninstall         
-./keycloak-ssi.sh help          
-```
-
-The wrapper keeps configuration and custom providers in sync with the submodule, so you usually do **not** need to copy
-files into `keycloak-oauth-sig/oid4vci-deployment` manually.
-
----
-
-### Running the OpenID4VCI deployment (submodule)
-
-For local OpenID4VCI experiments, work inside the submodule’s deployment folder:
-
-```bash
-cd keycloak-oauth-sig/oid4vci-deployment
+./keycloak-ssi.sh setup                               # Start the OID4VCI test deployment (DB + Keycloak via submodule)
+./keycloak-ssi.sh config                              # Configure realm, clients, keys, and users in the running Keycloak
+./keycloak-ssi.sh test preauth IdentityCredential     # Run a pre-authorized code flow test for a given credential type
+./keycloak-ssi.sh test authcode IdentityCredential    # Run an authorization code flow test for a given credential type
+./keycloak-ssi.sh terraform destroy -auto-approve     # Run Terraform destroy against the configured Keycloak
+./keycloak-ssi.sh terraform apply -auto-approve       # Run Terraform apply against the configured Keycloak
+./keycloak-ssi.sh addClientScopes                     # Create and assign client scopes using the direct API helper
+./keycloak-ssi.sh install                             # Install the wrapper CLI as a global `keycloak-ssi` command
+./keycloak-ssi.sh uninstall                           # Remove the globally installed `keycloak-ssi` command
+./keycloak-ssi.sh help                                # Show available wrapper and delegated submodule commands
 ```
 
 From there, follow the upstream documentation in:
