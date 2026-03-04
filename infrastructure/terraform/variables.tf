@@ -95,6 +95,30 @@ variable "sdjwt_vct" {
   default     = "stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct"
 }
 
+variable "sdjwt_enforce_nbf_claim" {
+  description = "Enforce nbf claim for SD-JWT"
+  type        = string
+  default     = "false"
+}
+
+variable "sdjwt_enforce_exp_claim" {
+  description = "Enforce exp claim for SD-JWT"
+  type        = string
+  default     = "false"
+}
+
+variable "sdjwt_kb_jwt_max_age" {
+  description = "Max age globally for kb-jwt for SD-JWT"
+  type        = string
+  default     = "60"
+}
+
+variable "sdjwt_enforce_revocation_status" {
+  description = "Enforce revocation status for SD-JWT"
+  type        = string
+  default     = "false"
+}
+
 variable "initial_password" {
   description = "Initial password for user"
   type        = string
