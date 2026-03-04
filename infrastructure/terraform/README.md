@@ -49,21 +49,29 @@ infrastructure/terraform/
 
 ### Variables
 
-The following variables can be customized in `variables.tf`:
+The main variables are defined in the root `variables.tf` and module-specific `variables.tf` files. The most important ones are:
 
-| Variable         | Description             | Default Value            |
-| ---------------- | ----------------------- | ------------------------ |
-| `keycloak_url`   | Keycloak base URL       | `https://localhost:8443` |
-| `admin_password` | Keycloak admin password | `admin`                  |
-| `realm`          | Keycloak realm name     | `oid4vc-vci`             |
+| Variable                  | Description                                           | Default Value            |
+| ------------------------- | ----------------------------------------------------- | ------------------------ |
+| `keycloak_url`           | Keycloak base URL                                     | `https://localhost:8443` |
+| `admin_password`         | Keycloak admin password                               | `admin`                  |
+| `realm`                  | Keycloak realm name used for the OID4VCI issuer       | `oid4vc-vci`             |
+| `status_list_server_url` | Base URL of the status list server                    | `https://statuslist.eudi-adorsys.com` |
+| `status_list_enabled`    | Turns status list support on or off for the realm     | `false`                  |
 
-### Key Configuration
+Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
+settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
+
+### Key and Status List Configuration
 
 The keys module imports three types of cryptographic keys:
 
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
+
+If you set `status_list_enabled` to `true`, Keycloak adds status information to issued credentials using
+`status_list_server_url`. This lets wallets and verifiers check whether a credential is still valid, revoked, or suspended.
 
 ### SAML Identity Provider Configuration
 

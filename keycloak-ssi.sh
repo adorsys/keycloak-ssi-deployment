@@ -101,7 +101,6 @@ cmd_scopes() {
     check_submodule
     sync_config
     log "Configuring client scopes independently..."
-    
     (cd "$TEST_DEPLOYMENT_DIR" && bash -c "
         S_GREEN=\"\$(printf '\033[0;32m')\"
         S_YELLOW=\"\$(printf '\033[1;33m')\"
@@ -112,7 +111,6 @@ cmd_scopes() {
         source src/utils/helper.sh
         setup_environment
         ensure_keycloak_install_dir_resolved
-        
         if ! curl -k -s \"\$KEYCLOAK_ADMIN_ADDR/realms/master\" >/dev/null 2>&1; then
             echo -e \"\${S_RED}[ERROR]\${S_NC} Keycloak is not running. Start it first using './keycloak-ssi.sh setup'.\"
             exit 1
@@ -130,13 +128,17 @@ cmd_scopes() {
 
         echo -e \"\${S_BLUE}[INFO]\${S_NC} Creating and assigning client scopes in realm '\$KEYCLOAK_REALM'...\"
         
-        # Determine target clients for assignment
-        TARGET_CLIENTS=(\"openid4vc-rest-api\" \"oid4vc-demo-public\")
+        TARGET_CLIENTS_STR=\"\${ADD_CLIENT_SCOPES_TARGET_CLIENTS:-openid4vc-rest-api oid4vc-demo-public}\"
+        TARGET_CLIENTS_STR=\"\${TARGET_CLIENTS_STR//,/ }\"
+        read -ra TARGET_CLIENTS <<< \"\$TARGET_CLIENTS_STR\"
         CLIENT_UUIDS=()
         for cid in \"\${TARGET_CLIENTS[@]}\"; do
+            [[ -z \"\$cid\" ]] && continue
             uuid=\$(\"\$KCADM\" get clients -r \"\$KEYCLOAK_REALM\" --query clientId=\"\$cid\" --fields id --format csv --noquotes)
             if [[ -n \"\$uuid\" ]]; then
                 CLIENT_UUIDS+=(\"\$uuid\")
+            else
+                echo -e \"\${S_YELLOW}[WARN]\${S_NC} Client '\$cid' not found in realm '\$KEYCLOAK_REALM'; skipping.\"
             fi
         done
 
