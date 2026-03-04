@@ -389,6 +389,7 @@ main() {
             echo ""
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
+            echo "  addClientScopes     Configure client scopes only (direct API)
             echo "  terraform   Run terraform commands (auto-manages credentials)"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
             echo "  install     Install CLI to system PATH"
