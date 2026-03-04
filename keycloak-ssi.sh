@@ -128,7 +128,6 @@ cmd_scopes() {
 
         echo -e \"\${S_BLUE}[INFO]\${S_NC} Creating and assigning client scopes in realm '\$KEYCLOAK_REALM'...\"
         
-        # Target clients from config.override.yaml (add_client_scopes.target_clients) or default
         TARGET_CLIENTS_STR=\"\${ADD_CLIENT_SCOPES_TARGET_CLIENTS:-openid4vc-rest-api oid4vc-demo-public}\"
         TARGET_CLIENTS_STR=\"\${TARGET_CLIENTS_STR//,/ }\"
         read -ra TARGET_CLIENTS <<< \"\$TARGET_CLIENTS_STR\"
@@ -390,7 +389,6 @@ main() {
             echo ""
             echo "WRAPPER COMMANDS:"
             echo "  setup       Sync providers/configs and start Keycloak (submodule)"
-            echo "  addClientScopes     Configure client scopes only (direct API). Target clients: config-override.yaml add_client_scopes.target_clients (default: openid4vc-rest-api oid4vc-demo-public)"
             echo "  terraform   Run terraform commands (auto-manages credentials)"
             echo "  helm        Run helm commands in infrastructure/keycloak-chart"
             echo "  install     Install CLI to system PATH"

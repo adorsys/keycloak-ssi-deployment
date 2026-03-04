@@ -50,7 +50,8 @@ From the repository root, run in order:
 ./keycloak-ssi.sh config   # Configure realm, clients, keys, users
 ```
 
-Then run a credential test, e.g. `./keycloak-ssi.sh test preauth IdentityCredential`.
+Then run a credential test, for example:
+`./keycloak-ssi.sh test preauth IdentityCredential`
 
 ---
 
@@ -58,17 +59,17 @@ Then run a credential test, e.g. `./keycloak-ssi.sh test preauth IdentityCredent
 
 You can add your own client scopes without touching the submodule by:
 
-1. Creating a `client-scopes.json` file at the **repository root**.  
+1. Creating a `client-scopes.json` file at the **repository root**.
    - Use the same JSON structure as the scope definitions under  
      `infrastructure/terraform/jsons/scopes/*.json` (name, protocol, protocolMappers, attributes, etc.).
-   - Each entry in the top-level JSON array represents one client scope to create..
+   - Each entry in the top-level JSON array represents one client scope to create.
 2. Running:
 
    ```bash
    ./keycloak-ssi.sh addClientScopes
    ```
 
-This command reads `client-scopes.json`, **creates any missing client scopes**, and **assigns them as optional scopes** to the
+This command reads `client-scopes.json`, **creates the provided client scopes**, and **assigns them as optional scopes** to the
 clients you configure (see below). By default those are `openid4vc-rest-api` and `oid4vc-demo-public` (skipping scopes or assignments that already exist).
 
 You can create or edit `config-override.yaml` at the **repository root** and define which client IDs receive the optional scopes. The script reads the variable from that file and uses it when you run `./keycloak-ssi.sh addClientScopes`. Example:
@@ -79,7 +80,7 @@ add_client_scopes:
   target_clients: "openid4vc-rest-api oid4vc-demo-public"
 ```
 
-Use a space- or comma-separated list of client IDs. The wrapper syncs this file into the submodule before running, so changes take effect on the next `addClientScopes` run.
+Use a space or comma-separated list of client IDs. The wrapper syncs this file into the submodule before running, so changes take effect on the next `addClientScopes` run.
 
 ### Using the wrapper CLI
 
