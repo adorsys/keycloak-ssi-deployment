@@ -24,14 +24,14 @@ exit_with_error() {
 }
 
 # Derive URLs from environment
-NGROK_URL="https://$KEYCLOAK_HOSTNAME"
-KEYCLOAK_REALM_URL="$NGROK_URL/realms/$KEYCLOAK_REALM"
-TEST_SUITE_BASE_URL="https://demo.certification.openid.net/test/a/keycloak-oid4vci-test"
+KEYCLOAK_REALM_URL="$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM"
+TEST_SUITE_BASE_URL="https://localhost.emobix.co.uk:9443/test/a/keycloak-oid4vci-test"
 USERNAME="$USER_FRANCIS_NAME"
 
 log_message "=== OID4VCI Conformance Test - Send Credential Offer (Pre-Authorized Code) ==="
 log_message "Keycloak URL: $KEYCLOAK_REALM_URL"
 log_message "Test Suite URL: $TEST_SUITE_BASE_URL"
+log_message "Client ID: openid4vc-rest-api-jwt"
 log_message "Target User: $USERNAME"
 log_message ""
 
@@ -43,23 +43,41 @@ wait_for_user() {
     echo ""
 }
 
-# Step 1: Get a fresh user access token
-log_message "Step 1: Getting fresh user access token..."
+# Step 1: Get a fresh user access token (Private Key JWT auth)
+log_message "Step 1: Getting fresh user access token (Private Key JWT auth)..."
 
-TOKEN_ENDPOINT="$KEYCLOAK_REALM_URL/protocol/openid-connect/token"
+TOKEN_ENDPOINT="$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-connect/token"
 
+# Generate client_assertion JWT signed with ES256
+log_message "Generating client_assertion JWT..."
+log_message "Audience for assertion: $TOKEN_ENDPOINT"
+ASSERTION_SCRIPT="$SCRIPT_DIR/../conformance_auth_code_pk_jwt/generate_client_assertion.py"
+if [ ! -f "$ASSERTION_SCRIPT" ]; then
+    exit_with_error "Client assertion script not found at: $ASSERTION_SCRIPT"
+fi
+CLIENT_ASSERTION=$(python3 "$ASSERTION_SCRIPT" "openid4vc-rest-api-jwt" "$TOKEN_ENDPOINT")
+
+if [ -z "$CLIENT_ASSERTION" ]; then
+    exit_with_error "Failed to generate client_assertion JWT"
+fi
+
+log_message "Client assertion generated (first 50 chars): ${CLIENT_ASSERTION:0:50}..."
 log_message "Running: curl -k -s -X POST $TOKEN_ENDPOINT ..."
 wait_for_user
 
-USER_ACCESS_TOKEN=$(curl -k -s -X POST "$TOKEN_ENDPOINT" \
-    -d "client_id=openid4vc-rest-api" \
-    -d "client_secret=$CLIENT_SECRET" \
+TOKEN_RESPONSE=$(curl -k -s -X POST "$TOKEN_ENDPOINT" \
+    -d "client_id=openid4vc-rest-api-jwt" \
+    -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+    -d "client_assertion=$CLIENT_ASSERTION" \
     -d "username=$USERNAME" \
     -d "password=$USER_FRANCIS_PASSWORD" \
     -d "grant_type=password" \
-    -d "scope=openid" | jq -r '.access_token')
+    -d "scope=openid")
+
+USER_ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token')
 
 if [ "$USER_ACCESS_TOKEN" = "null" ] || [ -z "$USER_ACCESS_TOKEN" ]; then
+    log_message "Token Response: $TOKEN_RESPONSE"
     exit_with_error "Failed to get user access token"
 fi
 
@@ -68,21 +86,25 @@ log_message "✅ Got fresh user access token: ${USER_ACCESS_TOKEN:0:50}..."
 # Step 2: Get a fresh credential offer URI with pre-authorized code flow
 log_message ""
 log_message "Step 2: Getting fresh credential offer URI (pre-authorized code flow)..."
-log_message "Note: pre_authorized=true (default) requires username parameter"
+log_message "Note: pre_authorized=true defaults target_user to the logged-in user if not provided"
 log_message "Running: curl -k -s -H \"Authorization: Bearer \$USER_ACCESS_TOKEN\" ..."
 wait_for_user
 
-CREDENTIAL_OFFER_URI=$(curl -k -s -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
-    "$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer-uri?credential_configuration_id=IdentityCredential&type=uri&pre_authorized=true&username=$USERNAME")
+CREDENTIAL_OFFER_URI=$(curl -k -s -X GET -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
+    "$KEYCLOAK_REALM_URL/protocol/oid4vc/create-credential-offer?credential_configuration_id=IdentityCredential&type=uri&pre_authorized=true&target_user=$USERNAME")
 
 
 
+# Historical guard for older server versions that required an explicit username parameter.
+# With the current issuer implementation, pre_authorized=true without target_user defaults
+# to the logged-in user, so this check is mostly defensive.
 if echo "$CREDENTIAL_OFFER_URI" | grep -q "Pre-Authorized credential offer requires a target user"; then
-    exit_with_error "Pre-authorized credential offer requires username parameter. Response: $CREDENTIAL_OFFER_URI"
+    exit_with_error "Pre-authorized credential offer requires target_user parameter. Response: $CREDENTIAL_OFFER_URI"
 fi
 
 NONCE=$(echo "$CREDENTIAL_OFFER_URI" | jq -r '.nonce')
 if [ "$NONCE" = "null" ] || [ -z "$NONCE" ]; then
+    log_message "Credential Offer URI Response: $CREDENTIAL_OFFER_URI"
     exit_with_error "Failed to extract nonce from credential offer URI. Response: $CREDENTIAL_OFFER_URI"
 fi
 
@@ -91,10 +113,10 @@ log_message "✅ Got offer session in Keycloak. Nonce: $NONCE"
 # Step 3: Fetch the actual Credential Offer JSON from Keycloak using the nonce
 log_message ""
 log_message "Step 3: Fetching the actual Credential Offer JSON from Keycloak..."
-log_message "Running: curl -k -s \"$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer/\$NONCE\""
+log_message "Running: curl -k -s -X GET \"$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer/\$NONCE\""
 wait_for_user
 
-CREDENTIAL_OFFER=$(curl -k -s "$KEYCLOAK_REALM_URL/protocol/oid4vc/credential-offer/$NONCE")
+CREDENTIAL_OFFER=$(curl -k -s -X GET "$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/oid4vc/credential-offer/$NONCE")
 
 if [ "$CREDENTIAL_OFFER" = "null" ] || [ -z "$CREDENTIAL_OFFER" ]; then
     exit_with_error "Failed to fetch credential offer JSON from Keycloak for nonce: $NONCE"
@@ -159,6 +181,13 @@ log_message ""
 log_message "=== Script Completed ==="
 log_message "🔗 Key URLs:"
 log_message "- Test Suite: $TEST_SUITE_BASE_URL"
-log_message "- Keycloak Admin: $NGROK_URL/admin"
+log_message "- Keycloak Admin: $KEYCLOAK_EXTERNAL_ADDR/admin"
 log_message "- Credential Issuer: $KEYCLOAK_REALM_URL/.well-known/openid-credential-issuer"
+log_message ""
+log_message "📋 JWT Client Configuration:"
+log_message "- Client ID: openid4vc-rest-api-jwt"
+log_message "- Grant Type: pre-authorized_code"
+log_message "- Authentication: Private Key JWT (client-jwt)"
+log_message "- Key ID: key-1"
+log_message "- Signing Algorithm: ES256 (ECDSA P-256)"
 log_message ""

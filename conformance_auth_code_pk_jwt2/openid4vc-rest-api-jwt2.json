@@ -1,5 +1,5 @@
 {
-    "clientId": "openid4vc-rest-api-jwt",
+    "clientId": "openid4vc-rest-api-jwt2",
     "name": "OID4VCI REST API Client (Private Key JWT Auth)",
     "description": "OID4VCI REST API client using client jwt authentication",
     "rootUrl": "",
@@ -14,7 +14,7 @@
         "http://back.localhost.com/*",
         "https://localhost:8443/callback",
         "https://demo.certification.openid.net/test/a/keycloak-oid4vci-test/callback",
-        "https://localhost.emobix.co.uk:9443/test/a/keycloak-oid4vci-test/callback"
+        "https://localhost.emobix.co.uk:9443/test/a/keycloak-oid4vci-test/callback*"
     ],
     "webOrigins": [
         "http://back.localhost.com",
@@ -39,7 +39,7 @@
         "oauth2.device.authorization.grant.enabled": "false",
         "use.jwks.url": "false",
         "use.jwks.string": "true",
-        "jwks.string": "{\"keys\":[{\"kty\":\"EC\",\"d\":\"r2deoeF9-z2HBVu_a3heMMZWqQbjxjT0lteb5Oxv26o\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"key-1\",\"x\":\"dKVClk-IZHYl4yRaJEdwZApmUzrAPtwanixXFiwm8bA\",\"y\":\"nSCAlmtHGg2V_bZEvJfezn6oVBvJ7Hc-Sql5go7oTHw\",\"alg\":\"ES256\",\"x5c\":[\"MIIBEDCBuKADAgECAgYBnI9zkB4wCgYIKoZIzj0EAwIwEDEOMAwGA1UEAwwFa2V5LTEwHhcNMjYwMjI0MTE0MDQxWhcNMjYxMjIxMTE0MDQxWjAQMQ4wDAYDVQQDDAVrZXktMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABHSlQpZPiGR2JeMkWiRHcGQKZlM6wD7cGp4sVxYsJvGwnSCAlmtHGg2V/bZEvJfezn6oVBvJ7Hc+Sql5go7oTHwwCgYIKoZIzj0EAwIDRwAwRAIgd6IekiI6OMRQeShCv4gHFtF3iUqvXJpARciqmY/NyuMCICJM2s6QK+bco/eyK6Jd6rPFVdgXZWlvLi64STJri4g/\"]}]}",
+        "jwks.string": "{\"keys\":[{\"kty\":\"EC\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"key-2\",\"x\":\"Xl7EFTx9oz-A6NiqqD5NMiYCp7-uEHF-esonD6r3T4U\",\"y\":\"mKYVhYusz1HOeAEB-UoCf2BGPY638H554hP1ebPhKYY\",\"alg\":\"ES256\",\"x5c\":[\"MIIBEDCBuKADAgECAgYBnLk3EUMwCgYIKoZIzj0EAwIwEDEOMAwGA1UEAwwFa2V5LTIwHhcNMjYwMzA0MTQxODM5WhcNMjYxMjI5MTQxODM5WjAQMQ4wDAYDVQQDDAVrZXktMjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABF5exBU8faM/gOjYqqg+TTImAqe/rhBxfnrKJw+q90+FmKYVhYusz1HOeAEB+UoCf2BGPY638H554hP1ebPhKYYwCgYIKoZIzj0EAwIDRwAwRAIgNXHASFvs36HB31BXhzjfQoYxbevJ0QkSv7TG+pxdBO4CIAkSoaK0Rvy4LfmsRMv5Giz8NeQYbbjHyK02Y2dgZbpx\"]}]}",
         "token.endpoint.auth.signing.alg": "ES256",
         "backchannel.logout.revoke.offline.tokens": "false",
         "use.refresh.tokens": "true",

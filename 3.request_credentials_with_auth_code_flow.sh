@@ -79,7 +79,7 @@ request_credential() {
     read code_verifier code_challenge <<< "$(generate_pkce)"
     log_message "PKCE: code_verifier=$code_verifier code_challenge=$code_challenge"
 
-    local auth_url="${KEYCLOAK_ADMIN_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
+    local auth_url="${KEYCLOAK_EXTERNAL_ADDR}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth?response_type=code&client_id=openid4vc-rest-api&redirect_uri=https://localhost:8443/callback&scope=${encoded_scopes}&issuer_state=${issuer_state}&authorization_details=%7B%22type%22:%22openid_credential%22,%22credential_configuration_id%22:%22${credential_id}%22%7D&code_challenge=${code_challenge}&code_challenge_method=S256"
 
     log_message "Manual step required: Open this URL in your browser and login as 'francis'. Paste the 'code' param from the redirect URL."
     echo "$auth_url"

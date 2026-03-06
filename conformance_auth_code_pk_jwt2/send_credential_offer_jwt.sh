@@ -31,7 +31,7 @@ TEST_SUITE_BASE_URL="https://localhost.emobix.co.uk:9443/test/a/keycloak-oid4vci
 log_message "=== OID4VCI Conformance Test - Send Credential Offer (JWT Client) ==="
 log_message "Keycloak URL: $KEYCLOAK_REALM_URL"
 log_message "Test Suite URL: $TEST_SUITE_BASE_URL"
-log_message "Client ID: openid4vc-rest-api-jwt"
+log_message "Client ID: openid4vc-rest-api-jwt2"
 log_message "Credential Configuration ID: IdentityCredential"
 log_message ""
 
@@ -50,7 +50,7 @@ TOKEN_ENDPOINT="$KEYCLOAK_EXTERNAL_ADDR/realms/$KEYCLOAK_REALM/protocol/openid-c
 # Generate client_assertion JWT signed with ES256
 log_message "Generating client_assertion JWT..."
 log_message "Audience for assertion: $TOKEN_ENDPOINT"
-CLIENT_ASSERTION=$(python3 "$SCRIPT_DIR/generate_client_assertion.py" "openid4vc-rest-api-jwt" "$TOKEN_ENDPOINT")
+CLIENT_ASSERTION=$(python3 "$SCRIPT_DIR/generate_client_assertion.py" "openid4vc-rest-api-jwt2" "$TOKEN_ENDPOINT")
 
 if [ -z "$CLIENT_ASSERTION" ]; then
     exit_with_error "Failed to generate client_assertion JWT"
@@ -61,7 +61,7 @@ log_message "Running: curl -k -s -X POST $TOKEN_ENDPOINT ..."
 wait_for_user
 
 TOKEN_RESPONSE=$(curl -k -s -X POST "$TOKEN_ENDPOINT" \
-    -d "client_id=openid4vc-rest-api-jwt" \
+    -d "client_id=openid4vc-rest-api-jwt2" \
     -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
     -d "client_assertion=$CLIENT_ASSERTION" \
     -d "username=$USER_FRANCIS_NAME" \
@@ -86,7 +86,7 @@ log_message "This will create an internal CredentialOfferState in Keycloak."
 wait_for_user
 
 # 1. First, get the offer URI (this creates the session state in Keycloak)
-#    Uses the authenticated create-credential-offer endpoint; non pre-authorized, anonymous offer.
+#    Uses the new create-credential-offer endpoint; non pre-authorized, anonymous offer.
 OFFER_URI_RESPONSE=$(curl -k -s -X GET "$KEYCLOAK_REALM_URL/protocol/oid4vc/create-credential-offer?credential_configuration_id=IdentityCredential&pre_authorized=false&type=uri" \
     -H "Authorization: Bearer $USER_ACCESS_TOKEN")
 
@@ -146,7 +146,7 @@ else
     log_message "📋 Next Steps:"
     log_message "1. Check the test suite dashboard"
     log_message "2. The test will use authorization_code grant type"
-    log_message "3. The test will use client_id: openid4vc-rest-api-jwt"
+    log_message "3. The test will use client_id: openid4vc-rest-api-jwt2"
     log_message "4. The test will use Private Key JWT authentication with ES256"
     log_message ""
     log_message "🔗 Test Suite Dashboard: $TEST_SUITE_BASE_URL"
@@ -161,7 +161,7 @@ log_message "- Keycloak Admin: $KEYCLOAK_EXTERNAL_ADDR/admin"
 log_message "- Credential Issuer: $KEYCLOAK_REALM_URL/.well-known/openid-credential-issuer"
 log_message ""
 log_message "📋 JWT Client Configuration:"
-log_message "- Client ID: openid4vc-rest-api-jwt"
+log_message "- Client ID: openid4vc-rest-api-jwt2"
 log_message "- Grant Type: authorization_code"
 log_message "- Authentication: Private Key JWT (client-jwt)"
 log_message "- Key ID: key-1"
