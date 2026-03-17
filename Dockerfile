@@ -7,18 +7,18 @@ FROM eclipse-temurin:21-jdk-jammy AS builder
 ENV WORK_DIR=/app
 WORKDIR $WORK_DIR
 
-# Install required dependencies
+# Install required dependencies (including docker-compose for helper.sh)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git apt-utils curl jq gettext-base && \
+    apt-get install -y --no-install-recommends git apt-utils curl jq gettext-base docker-compose && \
     rm -rf /var/lib/apt/lists/*
 
 # Install yq (required for configuration management via helper.sh)
 RUN curl -L https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64 -o /usr/bin/yq && chmod +x /usr/bin/yq
 
-# Copy config file from submodule deployment directory
+# Copy config file from oid4vci deployment
 COPY keycloak-oauth-sig/oid4vci-deployment/config.yaml ./
 
-# Copy necessary source scripts from submodule deployment directory
+# Copy necessary source scripts from oid4vci deployment
 COPY keycloak-oauth-sig/oid4vci-deployment/src/deployment ./src/deployment
 COPY keycloak-oauth-sig/oid4vci-deployment/src/utils ./src/utils
 
@@ -35,7 +35,7 @@ WORKDIR /opt/keycloak
 
 # Runtime dependencies required by helper scripts
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gettext-base && \
+    apt-get install -y --no-install-recommends gettext-base jq curl docker-compose && \
     rm -rf /var/lib/apt/lists/*
 
 # Create a non-privileged user
@@ -51,7 +51,7 @@ COPY --from=builder /app/config.yaml /opt/keycloak/
 COPY --from=builder /app/src/utils/helper.sh /opt/keycloak/src/utils/
 COPY --from=builder /usr/bin/yq /usr/bin/yq
 
-# Copy container entrypoint script from submodule deployment directory
+# Copy container entrypoint script from oid4vci deployment
 COPY keycloak-oauth-sig/oid4vci-deployment/docker-entrypoint.sh /opt/keycloak/docker-entrypoint.sh
 RUN chmod +x /opt/keycloak/docker-entrypoint.sh
 
@@ -66,4 +66,3 @@ EXPOSE 8443
 
 # Use custom entrypoint that initializes configuration via helper.sh
 ENTRYPOINT ["/opt/keycloak/docker-entrypoint.sh"]
-
