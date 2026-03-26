@@ -74,6 +74,7 @@ module "users" {
     keycloak = keycloak
   }
   realm_id         = module.realm.realm_id
+  realm_name       = var.realm
   initial_password = var.initial_password
 }
 
