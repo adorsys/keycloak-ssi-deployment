@@ -1,3 +1,4 @@
+{{- if or (not (hasKey .Values "createConfigMapJob")) (not (hasKey .Values.createConfigMapJob "enabled")) (eq .Values.createConfigMapJob.enabled true) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -65,3 +66,4 @@ spec:
       volumes:
         - name: {{ .Values.volumeMounts.name }}
           emptyDir: {}
+{{- end }}

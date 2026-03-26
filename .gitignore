@@ -20,6 +20,8 @@ terraform.tfstate.backup
 .terraform/
 **/.terraform.lock.hcl
 config-override.yaml
+infrastructure/terraform/backend-dev.hcl
+infrastructure/terraform/*.tfvars
 
 # Client scopes
 client-scopes.json

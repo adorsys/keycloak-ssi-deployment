@@ -7,7 +7,7 @@ variable "keycloak_url" {
 variable "admin_password" {
   description = "Keycloak admin password"
   type        = string
-  default     = "admin"
+  sensitive   = true
 }
 
 variable "realm" {
@@ -16,65 +16,10 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
-variable "clients" {
-  description = "A map of client configurations."
-  type = map(object({
-    name                         = string
-    client_secret                = optional(string)
-    enabled                      = bool
-    access_type                  = string
-    standard_flow_enabled        = bool
-    direct_access_grants_enabled = bool
-    valid_redirect_uris          = list(string)
-    web_origins                  = list(string)
-    full_scope_allowed           = bool
-    attributes                   = map(string)
-  }))
-  default = {
-    "oid4vc-demo-public" = {
-      name                         = "oid4vc-demo-public"
-      enabled                      = true
-      access_type                  = "PUBLIC"
-      standard_flow_enabled        = true
-      direct_access_grants_enabled = false
-      valid_redirect_uris          = ["http://localhost:4200/*"]
-      web_origins                  = ["http://localhost:4200"]
-      full_scope_allowed           = true
-      attributes = {
-        "oid4vci.enabled"           = "true"
-        "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*"
-      }
-    },
-    "openid4vc-rest-api" = {
-      name                         = "openid4vc-rest-api"
-      client_secret                = "uArydomqOymeF0tBrtipkPYujNNUuDlt"
-      enabled                      = true
-      access_type                  = "CONFIDENTIAL"
-      standard_flow_enabled        = true
-      direct_access_grants_enabled = true
-      full_scope_allowed           = true
-      valid_redirect_uris = [
-        "https://localhost:8443/callback",
-        "https://issuer.eudi-adorsys.com/services/*",
-        "http://back.localhost.com/*"
-      ]
-      web_origins = [
-        "https://issuer.eudi-adorsys.com/services",
-        "https://localhost:8443"
-      ]
-      attributes = {
-        "oid4vci.enabled"             = "true"
-        "client.secret.creation.time" = "1719785014"
-        "post.logout.redirect.uris"   = "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
-      }
-    }
-  }
-}
-
 variable "optional_client_scopes" {
   description = "List of optional client scope names to assign to clients"
   type        = list(string)
-  default     = ["IdentityCredential", "KMACredential", "SteuerberaterCredential"]
+  default     = ["IdentityCredential", "AdorsysCompanyCredential", "BankEmployeeCredential", "CityRegistryCredential"]
 }
 
 variable "pre_authorized_code_lifespanS" {
@@ -89,10 +34,16 @@ variable "status_list_server_url" {
   default     = "https://statuslist.eudi-adorsys.com"
 }
 
-variable "sdjwt_vct" {
-  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+variable "openid4vc_rest_api_client_secret" {
+  description = "Client secret for the openid4vc-rest-api confidential client"
   type        = string
-  default     = "stbk_westfalen_lippe,https://credentials.example.com/identity_credential,person_vct"
+  sensitive   = true
+}
+
+variable "sdjwt_vct" {
+  description = "Optional override for sd-jwt authenticator VCT list. Leave empty to auto-derive from configured credential scopes."
+  type        = string
+  default     = ""
 }
 
 variable "sdjwt_enforce_nbf_claim" {
@@ -122,7 +73,7 @@ variable "sdjwt_enforce_revocation_status" {
 variable "initial_password" {
   description = "Initial password for user"
   type        = string
-  default     = "francis"
+  sensitive   = true
 }
 
 variable "status_list_enabled" {
