@@ -184,7 +184,7 @@ If you want Terraform to configure the local Keycloak instance instead of (or in
 terraform -chdir=infrastructure/terraform apply \
   -var 'keycloak_url=https://localhost:8443' \
   -var 'admin_password=admin' \
-  -var 'initial_password=francis' \
+  -var 'initial_password=<STRONG_PASSWORD_FOR_FRANCIS>' \
   -var 'openid4vc_rest_api_client_secret=<OPENID4VC_REST_API_CLIENT_SECRET>'
 ```
 

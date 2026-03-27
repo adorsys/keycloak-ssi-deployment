@@ -7,8 +7,14 @@ locals {
       access_type                  = "PUBLIC"
       standard_flow_enabled        = true
       direct_access_grants_enabled = false
-      valid_redirect_uris          = ["http://localhost:4200/*"]
-      web_origins                  = ["http://localhost:4200"]
+      valid_redirect_uris = [
+        "http://localhost:4200/*",
+        "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
+      ]
+      web_origins = [
+        "http://localhost:4200",
+        "https://adorsys-gis.github.io"
+      ]
       full_scope_allowed           = true
       attributes = {
         "oid4vci.enabled"           = "true"

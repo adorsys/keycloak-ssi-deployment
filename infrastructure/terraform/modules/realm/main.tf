@@ -83,6 +83,8 @@ resource "keycloak_authentication_execution_config" "config" {
   config = {
     enforceNbfClaim         = var.sdjwt_enforce_nbf_claim
     enforceExpClaim         = var.sdjwt_enforce_exp_claim
+    requireNbfClaim         = var.sdjwt_enforce_nbf_claim
+    requireExpClaim         = var.sdjwt_enforce_exp_claim
     kbJwtMaxAge             = var.sdjwt_kb_jwt_max_age
     enforceRevocationStatus = var.sdjwt_enforce_revocation_status
     vct                     = var.sdjwt_vct
