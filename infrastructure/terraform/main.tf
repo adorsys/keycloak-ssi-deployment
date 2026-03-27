@@ -15,7 +15,7 @@ locals {
         "http://localhost:4200",
         "https://adorsys-gis.github.io"
       ]
-      full_scope_allowed           = true
+      full_scope_allowed = true
       attributes = {
         "oid4vci.enabled"           = "true"
         "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*"
