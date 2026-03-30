@@ -4,6 +4,17 @@ createConfigMapJob:
 externalSecret:
   enabled: false
 
+postgres:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                  - eu-central-1b
+
 app-template:
   global:
     fullnameOverride: keycloak-demo

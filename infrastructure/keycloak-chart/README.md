@@ -120,3 +120,4 @@ The demo deployment is implemented via an additional Helm values file: `values-k
 Notes:
 - `values-keycloak-demo.yaml` disables `createConfigMapJob` and `externalSecret` to avoid name collisions with the primary `keycloak` release.
 - The demo focuses on “official image + HTTPS + OID4VCI feature”. Provider SPI jars are mounted via the `keycloak-providers` secret (from `./providers/`).
+- PVC/PV AZ runbook for Postgres: when a PVC already exists, first read the bound PV zone (`kubectl get pv <pv-name> -o yaml | rg topology.kubernetes.io/zone`), then set `postgres.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution` in `values-keycloak-demo.yaml` to that same AZ before upgrading.
