@@ -52,6 +52,13 @@ locals {
     for scope_file in local.configured_scope_files :
     try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).attributes["vc.verifiable_credential_type"], null)
   ])))
+
+  configured_scope_names = sort(distinct(compact([
+    for scope_file in local.configured_scope_files :
+    try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).name, null)
+  ])))
+
+  optional_client_scopes_effective = length(var.optional_client_scopes) > 0 ? var.optional_client_scopes : local.configured_scope_names
   sdjwt_vct_effective = trimspace(var.sdjwt_vct) != "" ? trimspace(var.sdjwt_vct) : join(",", local.configured_scope_vcts)
 }
 
@@ -107,7 +114,7 @@ module "clients" {
   admin_password           = urlencode(var.admin_password)
   keycloak_url             = var.keycloak_url
   clients                  = local.clients
-  optional_client_scopes   = var.optional_client_scopes
+  optional_client_scopes   = local.optional_client_scopes_effective
   client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
   depends_on               = [module.realm, module.client_scopes]
 }

@@ -19,7 +19,7 @@ variable "realm" {
 variable "optional_client_scopes" {
   description = "List of optional client scope names to assign to clients"
   type        = list(string)
-  default     = ["IdentityCredential", "AdorsysCompanyCredential", "BankEmployeeCredential", "CityRegistryCredential"]
+  default     = []
 }
 
 variable "pre_authorized_code_lifespanS" {
