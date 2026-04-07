@@ -81,3 +81,9 @@ variable "status_list_enabled" {
   type        = bool
   default     = false
 }
+
+variable "enable_rsa_keys" {
+  description = "Enable RSA key import/usage for OID4VC. Set false to disable RSA providers."
+  type        = bool
+  default     = false
+}

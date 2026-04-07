@@ -129,6 +129,7 @@ module "keys" {
   realm_name     = var.realm
   admin_password = urlencode(var.admin_password)
   keycloak_url   = var.keycloak_url
+  enable_rsa_keys = var.enable_rsa_keys
 }
 
 module "saml_idp" {
