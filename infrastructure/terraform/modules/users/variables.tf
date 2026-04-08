@@ -3,12 +3,6 @@ variable "realm_id" {
   type        = string
 }
 
-variable "realm_name" {
-  description = "Keycloak realm name (legacy input; not used by this module)"
-  type        = string
-  default     = ""
-}
-
 variable "username" {
   description = "User name"
   type        = string

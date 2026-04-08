@@ -7,18 +7,12 @@ locals {
       access_type                  = "PUBLIC"
       standard_flow_enabled        = true
       direct_access_grants_enabled = false
-      valid_redirect_uris = [
-        "http://localhost:4200/*",
-        "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
-      ]
-      web_origins = [
-        "http://localhost:4200",
-        "https://adorsys-gis.github.io"
-      ]
-      full_scope_allowed = true
+      valid_redirect_uris          = var.oid4vc_demo_public_valid_redirect_uris
+      web_origins                  = var.oid4vc_demo_public_web_origins
+      full_scope_allowed           = true
       attributes = {
         "oid4vci.enabled"           = "true"
-        "post.logout.redirect.uris" = "http://localhost:4200##http://localhost:4200/*##https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
+        "post.logout.redirect.uris" = var.oid4vc_demo_public_post_logout_redirect_uris
       }
     }
     "openid4vc-rest-api" = {
@@ -29,19 +23,12 @@ locals {
       direct_access_grants_enabled = true
       full_scope_allowed           = true
       client_secret                = var.openid4vc_rest_api_client_secret
-      valid_redirect_uris = [
-        "https://localhost:8443/callback",
-        "https://issuer.eudi-adorsys.com/services/*",
-        "http://back.localhost.com/*"
-      ]
-      web_origins = [
-        "https://issuer.eudi-adorsys.com/services",
-        "https://localhost:8443"
-      ]
+      valid_redirect_uris          = var.openid4vc_rest_api_valid_redirect_uris
+      web_origins                  = var.openid4vc_rest_api_web_origins
       attributes = {
         "oid4vci.enabled"             = "true"
         "client.secret.creation.time" = "1719785014"
-        "post.logout.redirect.uris"   = "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
+        "post.logout.redirect.uris"   = var.openid4vc_rest_api_post_logout_redirect_uris
       }
     }
   }
@@ -58,8 +45,6 @@ locals {
     try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).name, null)
   ])))
 
-  optional_client_scopes_effective = length(var.optional_client_scopes) > 0 ? var.optional_client_scopes : local.configured_scope_names
-  sdjwt_vct_effective = trimspace(var.sdjwt_vct) != "" ? trimspace(var.sdjwt_vct) : join(",", local.configured_scope_vcts)
 }
 
 module "realm" {
@@ -75,7 +60,7 @@ module "realm" {
   keycloak_url                    = var.keycloak_url
   status_list_enabled             = var.status_list_enabled
   oid4vci_display                 = var.oid4vci_display
-  sdjwt_vct                       = local.sdjwt_vct_effective
+  sdjwt_vct                       = join(",", local.configured_scope_vcts)
   sdjwt_enforce_nbf_claim         = var.sdjwt_enforce_nbf_claim
   sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim
   sdjwt_kb_jwt_max_age            = var.sdjwt_kb_jwt_max_age
@@ -88,7 +73,6 @@ module "users" {
     keycloak = keycloak
   }
   realm_id         = module.realm.realm_id
-  realm_name       = var.realm
   initial_password = var.initial_password
 }
 
@@ -115,7 +99,7 @@ module "clients" {
   admin_password           = urlencode(var.admin_password)
   keycloak_url             = var.keycloak_url
   clients                  = local.clients
-  optional_client_scopes   = local.optional_client_scopes_effective
+  optional_client_scopes   = local.configured_scope_names
   client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
   depends_on               = [module.realm, module.client_scopes]
 }
@@ -126,10 +110,10 @@ module "keys" {
     keycloak = keycloak
   }
 
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = urlencode(var.admin_password)
-  keycloak_url   = var.keycloak_url
+  realm_id        = module.realm.realm_id
+  realm_name      = var.realm
+  admin_password  = urlencode(var.admin_password)
+  keycloak_url    = var.keycloak_url
   enable_rsa_keys = var.enable_rsa_keys
 }
 

@@ -16,10 +16,28 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
-variable "optional_client_scopes" {
-  description = "List of optional client scope names to assign to clients"
+variable "oid4vc_demo_public_valid_redirect_uris" {
+  description = "Valid redirect URIs for the oid4vc-demo-public client."
   type        = list(string)
-  default     = []
+  default = [
+    "http://localhost:4200/*",
+    "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
+  ]
+}
+
+variable "oid4vc_demo_public_web_origins" {
+  description = "Web origins for the oid4vc-demo-public client."
+  type        = list(string)
+  default = [
+    "http://localhost:4200",
+    "https://adorsys-gis.github.io"
+  ]
+}
+
+variable "oid4vc_demo_public_post_logout_redirect_uris" {
+  description = "Post logout redirect URIs string for oid4vc-demo-public (Keycloak format uses ## as separator)."
+  type        = string
+  default     = "http://localhost:4200##http://localhost:4200/*##https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
 }
 
 variable "pre_authorized_code_lifespanS" {
@@ -40,10 +58,29 @@ variable "openid4vc_rest_api_client_secret" {
   sensitive   = true
 }
 
-variable "sdjwt_vct" {
-  description = "Optional override for sd-jwt authenticator VCT list. Leave empty to auto-derive from configured credential scopes."
+variable "openid4vc_rest_api_valid_redirect_uris" {
+  description = "Valid redirect URIs for the openid4vc-rest-api client."
+  type        = list(string)
+  default = [
+    "https://localhost:8443/callback",
+    "https://issuer.eudi-adorsys.com/services/*",
+    "http://back.localhost.com/*"
+  ]
+}
+
+variable "openid4vc_rest_api_web_origins" {
+  description = "Web origins for the openid4vc-rest-api client."
+  type        = list(string)
+  default = [
+    "https://issuer.eudi-adorsys.com/services",
+    "https://localhost:8443"
+  ]
+}
+
+variable "openid4vc_rest_api_post_logout_redirect_uris" {
+  description = "Post logout redirect URIs string for openid4vc-rest-api (Keycloak format uses ## as separator)."
   type        = string
-  default     = ""
+  default     = "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
 }
 
 variable "sdjwt_enforce_nbf_claim" {
