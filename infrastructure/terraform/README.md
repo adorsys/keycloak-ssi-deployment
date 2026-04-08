@@ -153,7 +153,7 @@ kubectl -n datev-wallet create secret tls keycloak-demo-local-tls \
 
 kubectl -n datev-wallet delete secret keycloak-providers 2>/dev/null || true
 kubectl -n datev-wallet create secret generic keycloak-providers \
-  --from-file=keycloak-oid4vp-plugin-1.1.5.jar=../../providers/keycloak-oid4vp-plugin-1.1.5.jar \
+  --from-file=keycloak-oid4vp-plugin-1.1.6.jar=../../providers/keycloak-oid4vp-plugin-1.1.6.jar \
   --dry-run=client -o yaml | kubectl apply -f -
 
 # 4) Deploy the demo Keycloak using the official upstream image

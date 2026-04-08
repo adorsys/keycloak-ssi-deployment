@@ -59,3 +59,9 @@ variable "status_list_enabled" {
   description = "Enable or disable the status list for the realm"
   type        = bool
 }
+
+variable "oid4vci_display" {
+  description = "Issuer root display metadata as JSON array string for realm attribute oid4vci.display"
+  type        = string
+  default     = ""
+}

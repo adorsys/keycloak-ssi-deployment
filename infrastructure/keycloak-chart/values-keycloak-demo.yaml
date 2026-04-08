@@ -103,8 +103,8 @@ app-template:
       type: secret
       name: keycloak-providers
       globalMounts:
-        - path: /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.5.jar
-          subPath: keycloak-oid4vp-plugin-1.1.5.jar
+        - path: /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.6.jar
+          subPath: keycloak-oid4vp-plugin-1.1.6.jar
           readOnly: true
 
   ingress:

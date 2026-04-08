@@ -11,11 +11,16 @@ resource "keycloak_realm" "oid4vc_vci" {
   enabled     = true
   login_theme = var.login_theme
 
-  attributes = {
-    preAuthorizedCodeLifespanS = var.pre_authorized_code_lifespanS
-    status-list-server-url     = var.status_list_server_url
-    status-list-enabled        = var.status_list_enabled
-  }
+  attributes = merge(
+    {
+      preAuthorizedCodeLifespanS = var.pre_authorized_code_lifespanS
+      status-list-server-url     = var.status_list_server_url
+      status-list-enabled        = var.status_list_enabled
+    },
+    trimspace(var.oid4vci_display) != "" ? {
+      "oid4vci.display" = var.oid4vci_display
+    } : {}
+  )
 }
 
 resource "null_resource" "enable_verifiable_credentials" {

@@ -98,8 +98,8 @@ The demo deployment is implemented via an additional Helm values file: `values-k
      ```bash
      cd keycloak-ssi-deployment
      kubectl -n datev-wallet delete secret keycloak-providers 2>/dev/null || true
-     kubectl -n datev-wallet create secret generic keycloak-providers \
-       --from-file=keycloak-oid4vp-plugin-1.1.5.jar=./providers/keycloak-oid4vp-plugin-1.1.5.jar \
+      kubectl -n datev-wallet create secret generic keycloak-providers \
+        --from-file=keycloak-oid4vp-plugin-1.1.6.jar=./providers/keycloak-oid4vp-plugin-1.1.6.jar \
        --dry-run=client -o yaml | kubectl apply -f -
      ```
    - The chart mounts this secret into `/opt/keycloak/providers/` (currently only the `keycloak-oid4vp-plugin-*.jar` is mounted).

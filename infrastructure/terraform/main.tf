@@ -74,6 +74,7 @@ module "realm" {
   admin_password                  = urlencode(var.admin_password)
   keycloak_url                    = var.keycloak_url
   status_list_enabled             = var.status_list_enabled
+  oid4vci_display                 = var.oid4vci_display
   sdjwt_vct                       = local.sdjwt_vct_effective
   sdjwt_enforce_nbf_claim         = var.sdjwt_enforce_nbf_claim
   sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim

@@ -87,3 +87,9 @@ variable "enable_rsa_keys" {
   type        = bool
   default     = false
 }
+
+variable "oid4vci_display" {
+  description = "Issuer root display metadata as JSON array string for realm attribute oid4vci.display"
+  type        = string
+  default     = ""
+}
