@@ -92,6 +92,29 @@ resource "null_resource" "disable_generated_keys" {
     echo "Disabling generated Keycloak keys..."
 
     if [ "${var.enable_rsa_keys}" = "false" ]; then
+      # Disable all RSA encryption key providers (legacy or custom)
+      RSA_ENC_COMPONENT_IDS=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" | jq -r '.[] | select(((.providerId // "") | test("rsa-enc"; "i")) or ((.config.algorithm // []) | index("RSA-OAEP") != null)) | .id')
+
+      if [ -n "$RSA_ENC_COMPONENT_IDS" ]; then
+        while IFS= read -r COMP_ID; do
+          [ -z "$COMP_ID" ] && continue
+          echo "Disabling RSA encryption key provider... ID=$COMP_ID"
+
+          COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json")
+
+          UPDATED_COMPONENT=$(echo "$COMPONENT" | jq '.config.active = ["false"] | .config.enabled = ["false"]')
+
+          echo "$UPDATED_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @-
+        done <<< "$RSA_ENC_COMPONENT_IDS"
+      fi
+
       # Disable RSA-OAEP
       RSA_OAEP_KID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
         -H "Authorization: Bearer $TOKEN" \
