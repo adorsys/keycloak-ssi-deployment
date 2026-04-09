@@ -58,7 +58,7 @@ helm upgrade --install keycloak-openid4vci ./infrastructure/keycloak-chart -f my
 ### Scenario 2: Official Image Demo (`keycloak-demo`)
 
 This scenario deploys a second release using `values-keycloak-demo.yaml` and reuses shared resources from the primary release.
-The demo values file is generated from `values-keycloak-demo.yaml.tpl` to keep plugin version changes in one place.
+The demo values file uses YAML anchors (`plugin.fileName`, `plugin.mountPath`) so plugin version updates stay in one place.
 
 #### Prerequisites
 
@@ -90,11 +90,7 @@ The demo values file is generated from `values-keycloak-demo.yaml.tpl` to keep p
      --from-file=keycloak-oid4vp-plugin-${PLUGIN_VERSION}.jar=./providers/keycloak-oid4vp-plugin-${PLUGIN_VERSION}.jar \
      --dry-run=client -o yaml | kubectl apply -f -
    ```
-4. Render `values-keycloak-demo.yaml` from template:
-   ```bash
-   cd keycloak-ssi-deployment
-   ./infrastructure/keycloak-chart/scripts/render-values-keycloak-demo.sh "${PLUGIN_VERSION}"
-   ```
+4. Update `plugin.fileName` and `plugin.mountPath` at the top of `values-keycloak-demo.yaml` if you are changing versions.
 
 #### Install
 

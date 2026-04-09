@@ -1,3 +1,7 @@
+plugin:
+  fileName: &pluginFileName keycloak-oid4vp-plugin-1.1.6.jar
+  mountPath: &pluginMountPath /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.6.jar
+
 createConfigMapJob:
   enabled: false
 
@@ -103,8 +107,8 @@ app-template:
       type: secret
       name: keycloak-providers
       globalMounts:
-        - path: /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.6.jar
-          subPath: keycloak-oid4vp-plugin-1.1.6.jar
+        - path: *pluginMountPath
+          subPath: *pluginFileName
           readOnly: true
 
   ingress:

@@ -113,60 +113,28 @@ This repo separates responsibilities:
 - Helm chart deploys Keycloak (and mounts the `oid4vp`/`oid4vc`-related plugins + TLS for the demo).
 - Terraform configures the Keycloak realm (clients, scopes, keys, SAML IdP, users, etc.) once Keycloak is reachable.
 
-#### 1. Deploy a local Keycloak (developer machine)
+#### 1. Local Keycloak quick setup (developer machine)
 The local Keycloak setup is provided by the `keycloak-oauth-sig/oid4vci-deployment` CLI.
 
-From repo root:
+From repo root, start local Keycloak:
 ```bash
 cd keycloak-oauth-sig/oid4vci-deployment
 ./keycloak-ssi.sh setup -d
 ```
 
-After the first run, Keycloak should be reachable at `https://localhost:8443` (admin is configured by the local `.env`, defaults are `admin/admin`).
+Verify Keycloak is running locally:
+```bash
+curl -k https://localhost:8443/realms/master/.well-known/openid-configuration
+```
+
+Expected: JSON response from `https://localhost:8443` (admin is configured by the local `.env`, defaults are `admin/admin`).
 
 Optional (if you want the local toolkit to pre-configure a realm before running Terraform):
 ```bash
 ./keycloak-ssi.sh config
 ```
 
-#### 2. Deploy `keycloak-demo` in Kubernetes (demo environment)
-The Helm demo deployment is documented in:
-- `infrastructure/keycloak-chart/README.md` (section “Deploy `keycloak-demo` with Official Keycloak Image”)
-
-High-level flow:
-```bash
-# 1) Deploy primary Keycloak (custom image)
-helm upgrade --install keycloak ./infrastructure/keycloak-chart -n datev-wallet \
-  -f ./infrastructure/keycloak-chart/values.yaml
-
-# 2) Generate demo TLS certs (used to create `keycloak-demo-local-tls`)
-cd keycloak-oauth-sig/oid4vci-deployment
-./keycloak-ssi.sh setup -d
-
-# 3) Create Kubernetes secrets (TLS + provider JAR)
-#    - TLS secret: `keycloak-demo-local-tls`
-#    - Provider secret: `keycloak-providers` (mounts jars into /opt/keycloak/providers/)
-kubectl -n datev-wallet create secret tls keycloak-demo-local-tls \
-  --cert ./target/keycloak-server.crt.pem \
-  --key  ./target/keycloak-server.key.pem \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n datev-wallet delete secret keycloak-providers 2>/dev/null || true
-kubectl -n datev-wallet create secret generic keycloak-providers \
-  --from-file=keycloak-oid4vp-plugin-1.1.6.jar=../../providers/keycloak-oid4vp-plugin-1.1.6.jar \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-# 4) Deploy the demo Keycloak using the official upstream image
-cd ../..
-helm upgrade --install keycloak-demo ./infrastructure/keycloak-chart -n datev-wallet \
-  -f ./infrastructure/keycloak-chart/values.yaml \
-  -f ./infrastructure/keycloak-chart/values-keycloak-demo.yaml \
-  --wait
-```
-
-The demo reuses the shared `keycloak-env-config` ConfigMap and `keycloak-secret` Secret created by the primary `keycloak` release.
-
-#### 3. Run Terraform to configure the target Keycloak
+#### 2. Run Terraform to configure the target Keycloak
 ##### A) Configure the demo Keycloak
 From repo root:
 ```bash

@@ -63,7 +63,6 @@ variable "openid4vc_rest_api_valid_redirect_uris" {
   type        = list(string)
   default = [
     "https://localhost:8443/callback",
-    "https://issuer.eudi-adorsys.com/services/*",
     "http://back.localhost.com/*"
   ]
 }
@@ -72,7 +71,6 @@ variable "openid4vc_rest_api_web_origins" {
   description = "Web origins for the openid4vc-rest-api client."
   type        = list(string)
   default = [
-    "https://issuer.eudi-adorsys.com/services",
     "https://localhost:8443"
   ]
 }
