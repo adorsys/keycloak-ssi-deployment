@@ -18,3 +18,9 @@ variable "keycloak_url" {
   description = "Keycloak base URL"
   type        = string
 }
+
+variable "enable_rsa_keys" {
+  description = "Enable RSA key import/usage for OID4VC"
+  type        = bool
+  default     = false
+}

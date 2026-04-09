@@ -18,8 +18,9 @@ infrastructure/keycloak-chart/**/*.tgz
 terraform.tfstate
 terraform.tfstate.backup
 .terraform/
-**/.terraform.lock.hcl
+**/*.hcl
 config-override.yaml
+infrastructure/terraform/*.tfvars
 
 # Client scopes
 client-scopes.json

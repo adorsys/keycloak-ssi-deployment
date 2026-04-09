@@ -19,6 +19,9 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
   triggers = {
     # Trigger a re-run if the file content changes
     client_scope_hash = filemd5("${path.root}/jsons/scopes/${each.value}")
+    # If the realm was recreated/reset, ensure we re-import missing scopes.
+    realm_id          = var.realm_id
+    realm_name        = var.realm_name
   }
 
   provisioner "local-exec" {
@@ -41,16 +44,46 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
         exit 1
       fi
 
-      echo "Importing OID4VC client scope from ${each.value} via curl..."
+      SCOPE_FILE="${path.root}/jsons/scopes/${each.value}"
+      SCOPE_NAME=$(jq -r '.name' "$SCOPE_FILE")
+
+      if [ -z "$SCOPE_NAME" ] || [ "$SCOPE_NAME" = "null" ]; then
+        echo "Missing 'name' in $SCOPE_FILE" >&2
+        exit 1
+      fi
+
+      echo "Applying OID4VC client scope '$SCOPE_NAME' from ${each.value} via curl..."
 
       # Import the client scope
       HTTP_CODE=$(curl -k -s -o /dev/null -w "%%{http_code}" -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        --data-binary @"${path.root}/jsons/scopes/${each.value}")
+        --data-binary @"$SCOPE_FILE")
 
       if [ "$HTTP_CODE" -eq 409 ]; then
-        echo "Client scope from ${each.value} already exists (HTTP 409). Skipping (idempotent)."
+        echo "Client scope '$SCOPE_NAME' already exists (HTTP 409). Updating it..."
+
+        EXISTING_SCOPE_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/client-scopes?search=$SCOPE_NAME" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id' | head -n 1)
+
+        if [ -z "$EXISTING_SCOPE_ID" ] || [ "$EXISTING_SCOPE_ID" = "null" ]; then
+          echo "Could not resolve existing scope id for '$SCOPE_NAME'" >&2
+          exit 1
+        fi
+
+        UPDATE_PAYLOAD=$(jq --arg id "$EXISTING_SCOPE_ID" '.id = $id' "$SCOPE_FILE")
+
+        UPDATE_HTTP_CODE=$(echo "$UPDATE_PAYLOAD" | curl -k -s -o /dev/null -w "%%{http_code}" -X PUT "$KC_URL/admin/realms/${var.realm_name}/client-scopes/$EXISTING_SCOPE_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @-)
+
+        if [ "$UPDATE_HTTP_CODE" -ge 400 ]; then
+          echo "Failed to update existing client scope '$SCOPE_NAME'. HTTP $UPDATE_HTTP_CODE" >&2
+          exit 1
+        fi
+        echo "Updated existing client scope '$SCOPE_NAME' successfully."
       elif [ "$HTTP_CODE" -ge 400 ]; then
         echo "Failed to import client scope from ${each.value}. HTTP $HTTP_CODE" >&2
         exit 1

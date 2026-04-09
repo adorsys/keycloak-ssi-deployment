@@ -7,8 +7,8 @@ terraform {
 }
 
 locals {
-  rsa_issuer_key_json     = file("${path.root}/jsons/keys/rsa-issuer-key.json")
-  rsa_encryption_key_json = file("${path.root}/jsons/keys/rsa-encryption-key.json")
+  rsa_issuer_key_json     = var.enable_rsa_keys ? file("${path.root}/jsons/keys/rsa-issuer-key.json") : ""
+  rsa_encryption_key_json = var.enable_rsa_keys ? file("${path.root}/jsons/keys/rsa-encryption-key.json") : ""
   ecdsa_issuer_key_json   = file("${path.root}/jsons/keys/ecdsa-issuer-key.json")
 }
 
@@ -17,7 +17,8 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
 
   triggers = {
     realm_id                   = var.realm_id
-    oid4vc_key_components_hash = join(",", [local.rsa_issuer_key_json, local.rsa_encryption_key_json, local.ecdsa_issuer_key_json])
+    enable_rsa_keys            = tostring(var.enable_rsa_keys)
+    oid4vc_key_components_hash = join(",", compact([local.rsa_issuer_key_json, local.rsa_encryption_key_json, local.ecdsa_issuer_key_json]))
   }
 
   provisioner "local-exec" {
@@ -38,17 +39,19 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
 
       echo "Importing OID4VC key components..."
 
-      # Import RSA issuer key
-      echo '${local.rsa_issuer_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
-        -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        --data-binary @-
+      if [ "${var.enable_rsa_keys}" = "true" ]; then
+        # Import RSA issuer key
+        echo '${local.rsa_issuer_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @-
 
-      # Import RSA encryption key
-      echo '${local.rsa_encryption_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
-        -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        --data-binary @-
+        # Import RSA encryption key
+        echo '${local.rsa_encryption_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @-
+      fi
 
       # Import ECDSA issuer key
       echo '${local.ecdsa_issuer_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
@@ -88,56 +91,83 @@ resource "null_resource" "disable_generated_keys" {
 
     echo "Disabling generated Keycloak keys..."
 
-    # Disable RSA-OAEP
-    RSA_OAEP_KID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
-      -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" | jq -r '.active."RSA-OAEP"')
-
-    if [ "$RSA_OAEP_KID" != "null" ] && [ "$RSA_OAEP_KID" != "" ]; then
-      RSA_OAEP_PROV_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
+    if [ "${var.enable_rsa_keys}" = "false" ]; then
+      # Disable all RSA encryption key providers (legacy or custom)
+      RSA_ENC_COMPONENT_IDS=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
         -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" | jq -r --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid).providerId')
+        -H "Content-Type: application/json" | jq -r '.[] | select(((.providerId // "") | test("rsa-enc"; "i")) or ((.config.algorithm // []) | index("RSA-OAEP") != null)) | .id')
 
-      if [ "$RSA_OAEP_PROV_ID" != "null" ] && [ "$RSA_OAEP_PROV_ID" != "" ]; then
-        echo "Disabling generated RSA-OAEP key... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
+      if [ -n "$RSA_ENC_COMPONENT_IDS" ]; then
+        while IFS= read -r COMP_ID; do
+          [ -z "$COMP_ID" ] && continue
+          echo "Disabling RSA encryption key provider... ID=$COMP_ID"
 
-        RSA_OAEP_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$RSA_OAEP_PROV_ID" \
-          -H "Authorization: Bearer $TOKEN" \
-          -H "Content-Type: application/json")
+          COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json")
 
-        UPDATE_RSA_OAEP_COMPONENT=$(echo "$RSA_OAEP_COMPONENT" | jq '.config.active = ["false"]')
+          UPDATED_COMPONENT=$(echo "$COMPONENT" | jq '.config.active = ["false"] | .config.enabled = ["false"]')
 
-        echo "$UPDATE_RSA_OAEP_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$RSA_OAEP_PROV_ID" \
-          -H "Authorization: Bearer $TOKEN" \
-          -H "Content-Type: application/json" \
-          --data-binary @-
+          echo "$UPDATED_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @-
+        done <<< "$RSA_ENC_COMPONENT_IDS"
       fi
-    fi
 
-    # Disable RS256
-    RS256_KID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
-      -H "Authorization: Bearer $TOKEN" \
-      -H "Content-Type: application/json" | jq -r '.active."RS256"')
-
-    if [ "$RS256_KID" != "null" ] && [ "$RS256_KID" != "" ]; then
-      RS256_PROV_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
+      # Disable RSA-OAEP
+      RSA_OAEP_KID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
         -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" | jq -r --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid).providerId')
+        -H "Content-Type: application/json" | jq -r '.active."RSA-OAEP"')
 
-      if [ "$RS256_PROV_ID" != "null" ] && [ "$RS256_PROV_ID" != "" ]; then
-        echo "Disabling generated RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
-
-        RS256_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$RS256_PROV_ID" \
+      if [ "$RSA_OAEP_KID" != "null" ] && [ "$RSA_OAEP_KID" != "" ]; then
+        RSA_OAEP_PROV_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
           -H "Authorization: Bearer $TOKEN" \
-          -H "Content-Type: application/json")
+          -H "Content-Type: application/json" | jq -r --arg kid "$RSA_OAEP_KID" '.keys[] | select(.kid == $kid).providerId')
 
-        UPDATE_RS256_COMPONENT=$(echo "$RS256_COMPONENT" | jq '.config.active = ["false"]')
+        if [ "$RSA_OAEP_PROV_ID" != "null" ] && [ "$RSA_OAEP_PROV_ID" != "" ]; then
+          echo "Disabling generated RSA-OAEP key... KID=$RSA_OAEP_KID PROV_ID=$RSA_OAEP_PROV_ID"
 
-        echo "$UPDATE_RS256_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$RS256_PROV_ID" \
-          -H "Authorization: Bearer $TOKEN" \
-          -H "Content-Type: application/json" \
-          --data-binary @-
+          RSA_OAEP_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$RSA_OAEP_PROV_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json")
+
+          UPDATE_RSA_OAEP_COMPONENT=$(echo "$RSA_OAEP_COMPONENT" | jq '.config.active = ["false"]')
+
+          echo "$UPDATE_RSA_OAEP_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$RSA_OAEP_PROV_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @-
+        fi
       fi
+
+      # Disable RS256
+      RS256_KID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" | jq -r '.active."RS256"')
+
+      if [ "$RS256_KID" != "null" ] && [ "$RS256_KID" != "" ]; then
+        RS256_PROV_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/keys" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" | jq -r --arg kid "$RS256_KID" '.keys[] | select(.kid == $kid).providerId')
+
+        if [ "$RS256_PROV_ID" != "null" ] && [ "$RS256_PROV_ID" != "" ]; then
+          echo "Disabling generated RS256 key... KID=$RS256_KID PROV_ID=$RS256_PROV_ID"
+
+          RS256_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$RS256_PROV_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json")
+
+          UPDATE_RS256_COMPONENT=$(echo "$RS256_COMPONENT" | jq '.config.active = ["false"]')
+
+          echo "$UPDATE_RS256_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$RS256_PROV_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @-
+        fi
+      fi
+    else
+      echo "enable_rsa_keys=true -> keeping RSA providers enabled."
     fi
 
     echo "Generated Keycloak keys disabled successfully."

@@ -11,11 +11,16 @@ resource "keycloak_realm" "oid4vc_vci" {
   enabled     = true
   login_theme = var.login_theme
 
-  attributes = {
-    preAuthorizedCodeLifespanS = var.pre_authorized_code_lifespanS
-    status-list-server-url     = var.status_list_server_url
-    status-list-enabled        = var.status_list_enabled
-  }
+  attributes = merge(
+    {
+      preAuthorizedCodeLifespanS = var.pre_authorized_code_lifespanS
+      status-list-server-url     = var.status_list_server_url
+      status-list-enabled        = var.status_list_enabled
+    },
+    trimspace(var.oid4vci_display) != "" ? {
+      "oid4vci.display" = var.oid4vci_display
+    } : {}
+  )
 }
 
 resource "null_resource" "enable_verifiable_credentials" {
@@ -83,6 +88,8 @@ resource "keycloak_authentication_execution_config" "config" {
   config = {
     enforceNbfClaim         = var.sdjwt_enforce_nbf_claim
     enforceExpClaim         = var.sdjwt_enforce_exp_claim
+    requireNbfClaim         = var.sdjwt_enforce_nbf_claim
+    requireExpClaim         = var.sdjwt_enforce_exp_claim
     kbJwtMaxAge             = var.sdjwt_kb_jwt_max_age
     enforceRevocationStatus = var.sdjwt_enforce_revocation_status
     vct                     = var.sdjwt_vct

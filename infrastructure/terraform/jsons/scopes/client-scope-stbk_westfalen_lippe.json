@@ -1,6 +1,5 @@
 {
   "name": "SteuerberaterCredential",
-  "description": "",
   "protocol": "oid4vc",
   "attributes": {
     "vc.credential_configuration_id": "SteuerberaterCredential",
@@ -11,7 +10,7 @@
     "vc.supported_credential_types": "stbk_westfalen_lippe",
     "vc.format": "dc+sd-jwt",
     "include.in.token.scope": "true",
-    "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
+    "vc.display": "[{\"locale\":\"de-DE\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"description\":\"Berufsnachweis der Steuerberaterkammer Westfalen-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"},{\"locale\":\"en-US\",\"name\":\"Steuerberaterkammer Westfalen-Lippe\",\"description\":\"Professional credential from the Chamber of Tax Advisors Westphalia-Lippe\",\"logo\":{\"uri\":\"https://kci-portal.solutions.adorsys.com/credential_files/stbk-wl-icon.png\",\"alt_text\":\"Steuerberaterkammer Westfalen-Lippe\"},\"background_color\":\"#d3dce0\",\"text_color\":\"#000000\"}]",
     "vc.cryptographic_binding_methods_supported": "jwk",
     "vc.expiry_in_seconds": "31536000",
     "vc.verifiable_credential_type": "stbk_westfalen_lippe",
