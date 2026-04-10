@@ -1,6 +1,6 @@
 plugin:
-  fileName: &pluginFileName keycloak-oid4vp-plugin-1.1.6.jar
-  mountPath: &pluginMountPath /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.6.jar
+  fileName: &pluginFileName keycloak-oid4vp-plugin-1.1.7.jar
+  mountPath: &pluginMountPath /opt/keycloak/providers/keycloak-oid4vp-plugin-1.1.7.jar
 
 createConfigMapJob:
   enabled: false
