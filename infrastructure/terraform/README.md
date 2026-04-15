@@ -56,6 +56,7 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `keycloak_url`           | Keycloak base URL                                     | `https://localhost:8443` |
 | `admin_password`         | Keycloak admin password (required; provide via tfvars/env) | none                     |
 | `realm`                  | Keycloak realm name used for the OID4VCI issuer       | `oid4vc-vci`             |
+| `enabled_scope_names`    | Optional allowlist of client scope names to apply     | `[]` (apply all scopes)  |
 | `status_list_server_url` | Base URL of the status list server                    | `https://statuslist.eudi-adorsys.com` |
 | `status_list_enabled`    | Turns status list support on or off for the realm     | `false`                  |
 
@@ -96,6 +97,11 @@ Files introduced/used for this:
 - `backend-dev.hcl`
   - Supplies the `dev`-specific configuration for the backend.
   - This file is expected to be `gitignored` and contains your account/bucket/table values.
+- `backend-pos.hcl`
+  - Supplies a separate backend state for the PoS realm.
+  - Prevents dev and PoS realms from replacing each other in one shared state.
+- `backend-dev.hcl.example` and `backend-pos.hcl.example`
+  - Templates for creating local backend files safely.
 
 Example `dev` backend settings (replace with yours in `backend-dev.hcl`):
 - S3 bucket: `<YOUR_S3_BUCKET_NAME>`
@@ -138,6 +144,7 @@ Optional (if you want the local toolkit to pre-configure a realm before running 
 ##### A) Configure the demo Keycloak
 From repo root:
 ```bash
+cp infrastructure/terraform/backend-dev.hcl.example infrastructure/terraform/backend-dev.hcl
 terraform -chdir=infrastructure/terraform init -backend-config=backend-dev.hcl -reconfigure
 cp infrastructure/terraform/secrets-dev.tfvars.example infrastructure/terraform/secrets-dev.tfvars
 # edit infrastructure/terraform/secrets-dev.tfvars with your environment values
@@ -157,6 +164,23 @@ terraform -chdir=infrastructure/terraform apply \
 ```
 
 Note: the Terraform Keycloak provider has `tls_insecure_skip_verify = true`, so self-signed HTTPS from local Keycloak should work.
+
+##### C) Configure a separate PoS realm
+Use a dedicated backend state (for example `backend-pos.hcl`) so PoS and dev realms do not replace each other.
+
+```bash
+cp infrastructure/terraform/backend-pos.hcl.example infrastructure/terraform/backend-pos.hcl
+cp infrastructure/terraform/secrets-pos.tfvars.example infrastructure/terraform/secrets-pos.tfvars
+# edit infrastructure/terraform/backend-pos.hcl and infrastructure/terraform/secrets-pos.tfvars
+terraform -chdir=infrastructure/terraform init -backend-config=backend-pos.hcl -reconfigure
+terraform -chdir=infrastructure/terraform apply -var-file=./secrets-pos.tfvars
+```
+
+To switch back to dev operations:
+
+```bash
+terraform -chdir=infrastructure/terraform init -backend-config=backend-dev.hcl -reconfigure
+```
 
 ### 1. Initialize Terraform
 
@@ -212,9 +236,12 @@ This ensures only the custom imported keys are active for OpenID4VCI operations.
 
 ### Extensible Credential Configuration
 
-The Terraform setup is designed to be fully extensible. It automatically discovers and configures all credential definitions (`*.json` files) located in the `jsons/scopes/` directory.
+The Terraform setup discovers credential definitions (`*.json` files) in `jsons/scopes/`.
 
-To add a new credential type, simply create a new JSON file in this directory. Terraform will automatically create the corresponding client scope and associate it with the clients.
+- If `enabled_scope_names` is empty, all discovered scopes are applied.
+- If `enabled_scope_names` is set, only listed scope names are applied.
+
+This is useful for realm-specific scope sets (for example keeping PoS-only scopes out of the dev realm).
 
 ### SAML Identity Provider Features
 

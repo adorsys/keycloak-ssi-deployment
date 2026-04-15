@@ -33,17 +33,22 @@ locals {
     }
   }
 
-  # Keep authenticator VCTs aligned with all configured OID4VC client scopes.
-  configured_scope_files = fileset("${path.root}/jsons/scopes", "*.json")
-  configured_scope_vcts = sort(distinct(compact([
-    for scope_file in local.configured_scope_files :
-    try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).attributes["vc.verifiable_credential_type"], null)
-  ])))
-
-  configured_scope_names = sort(distinct(compact([
-    for scope_file in local.configured_scope_files :
-    try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).name, null)
-  ])))
+  # Keep authenticator VCTs aligned with selected OID4VC client scopes.
+  available_scope_files = fileset("${path.root}/jsons/scopes", "*.json")
+  available_scope_records = [
+    for scope_file in local.available_scope_files : {
+      file = scope_file
+      name = try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).name, null)
+      vct  = try(jsondecode(file("${path.root}/jsons/scopes/${scope_file}")).attributes["vc.verifiable_credential_type"], null)
+    }
+  ]
+  selected_scope_records = length(var.enabled_scope_names) == 0 ? local.available_scope_records : [
+    for record in local.available_scope_records : record
+    if record.name != null && contains(var.enabled_scope_names, record.name)
+  ]
+  configured_scope_files = sort(distinct(compact([for record in local.selected_scope_records : record.file])))
+  configured_scope_names = sort(distinct(compact([for record in local.selected_scope_records : record.name])))
+  configured_scope_vcts  = sort(distinct(compact([for record in local.selected_scope_records : record.vct])))
 
 }
 
@@ -86,6 +91,7 @@ module "client_scopes" {
   realm_name     = var.realm
   admin_password = urlencode(var.admin_password)
   keycloak_url   = var.keycloak_url
+  scope_files    = local.configured_scope_files
 }
 
 module "clients" {

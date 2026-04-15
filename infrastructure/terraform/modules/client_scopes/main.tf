@@ -7,8 +7,8 @@ terraform {
 }
 
 locals {
-  # Find all .json files in the scopes directory
-  client_scope_files = fileset("${path.root}/jsons/scopes", "*.json")
+  # When explicit scope files are provided, apply only those; otherwise apply all JSON scopes.
+  client_scope_files = length(var.scope_files) > 0 ? toset(var.scope_files) : toset(fileset("${path.root}/jsons/scopes", "*.json"))
 }
 
 resource "null_resource" "apply_custom_oid4vc_client_scopes" {

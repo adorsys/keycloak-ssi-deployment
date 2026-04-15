@@ -16,6 +16,12 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
+variable "enabled_scope_names" {
+  description = "Optional allowlist of OID4VC client scope names to apply. Empty list means all scopes in jsons/scopes."
+  type        = list(string)
+  default     = []
+}
+
 variable "oid4vc_demo_public_valid_redirect_uris" {
   description = "Valid redirect URIs for the oid4vc-demo-public client."
   type        = list(string)
