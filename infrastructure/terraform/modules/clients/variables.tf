@@ -45,3 +45,9 @@ variable "optional_client_scopes" {
   description = "List of optional client scope names to assign to each client"
   type        = list(string)
 }
+
+variable "optional_client_scope_client_ids" {
+  description = "Client IDs that should receive optional client scopes. If empty, scopes are assigned to all configured clients."
+  type        = list(string)
+  default     = []
+}

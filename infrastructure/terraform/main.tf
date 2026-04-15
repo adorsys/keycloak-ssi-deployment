@@ -106,6 +106,7 @@ module "clients" {
   keycloak_url             = var.keycloak_url
   clients                  = local.clients
   optional_client_scopes   = local.configured_scope_names
+  optional_client_scope_client_ids = var.optional_client_scope_client_ids
   client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
   depends_on               = [module.realm, module.client_scopes]
 }

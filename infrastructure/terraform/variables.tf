@@ -134,3 +134,9 @@ variable "oid4vci_display" {
   type        = string
   default     = ""
 }
+
+variable "optional_client_scope_client_ids" {
+  description = "Client IDs that should receive optional OID4VC client scopes. Empty list applies scopes to all configured clients."
+  type        = list(string)
+  default     = []
+}

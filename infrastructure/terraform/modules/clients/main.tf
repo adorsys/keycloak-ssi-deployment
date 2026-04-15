@@ -6,6 +6,13 @@ terraform {
   }
 }
 
+locals {
+  scope_assignment_clients = length(var.optional_client_scope_client_ids) == 0 ? keycloak_openid_client.clients : {
+    for client_id, client in keycloak_openid_client.clients : client_id => client
+    if contains(var.optional_client_scope_client_ids, client_id)
+  }
+}
+
 
 resource "keycloak_openid_client" "clients" {
   for_each = var.clients
@@ -73,7 +80,7 @@ resource "null_resource" "apply_client_attributes" {
 }
 
 resource "null_resource" "apply_optional_scopes" {
-  for_each = keycloak_openid_client.clients
+  for_each = local.scope_assignment_clients
 
   depends_on = [null_resource.apply_client_attributes]
 

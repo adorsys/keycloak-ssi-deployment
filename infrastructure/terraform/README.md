@@ -57,6 +57,7 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `admin_password`         | Keycloak admin password (required; provide via tfvars/env) | none                     |
 | `realm`                  | Keycloak realm name used for the OID4VCI issuer       | `oid4vc-vci`             |
 | `enabled_scope_names`    | Optional allowlist of client scope names to apply     | `[]` (apply all scopes)  |
+| `optional_client_scope_client_ids` | Optional list of client IDs that receive optional scopes | `[]` (all configured clients) |
 | `status_list_server_url` | Base URL of the status list server                    | `https://statuslist.eudi-adorsys.com` |
 | `status_list_enabled`    | Turns status list support on or off for the realm     | `false`                  |
 
