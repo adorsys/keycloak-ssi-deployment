@@ -111,6 +111,32 @@ variable "sdjwt_enforce_revocation_status" {
   default     = "false"
 }
 
+variable "sdjwt_response_mode" {
+  description = "Response mode for SdJwtAuthenticator (e.g., direct_post.jwt)"
+  type        = string
+  default     = "direct_post.jwt"
+}
+
+variable "sdjwt_custom_url_scheme" {
+  description = "Custom wallet URL scheme for SdJwtAuthenticator"
+  type        = string
+  default     = "haip-vp://"
+}
+
+variable "sdjwt_access_certificate" {
+  description = "Base64 DER access certificate for SdJwtAuthenticator"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "sdjwt_registration_certificate" {
+  description = "Registration certificate JWT for SdJwtAuthenticator"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "initial_password" {
   description = "Initial password for user"
   type        = string

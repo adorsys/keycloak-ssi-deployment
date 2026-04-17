@@ -49,6 +49,28 @@ variable "sdjwt_enforce_revocation_status" {
   type        = string
 }
 
+variable "sdjwt_response_mode" {
+  description = "Response mode for SdJwtAuthenticator"
+  type        = string
+}
+
+variable "sdjwt_custom_url_scheme" {
+  description = "Custom wallet URL scheme for SdJwtAuthenticator"
+  type        = string
+}
+
+variable "sdjwt_access_certificate" {
+  description = "Base64 DER access certificate for SdJwtAuthenticator"
+  type        = string
+  sensitive   = true
+}
+
+variable "sdjwt_registration_certificate" {
+  description = "Registration certificate JWT for SdJwtAuthenticator"
+  type        = string
+  sensitive   = true
+}
+
 variable "login_theme" {
   description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
   type        = string
