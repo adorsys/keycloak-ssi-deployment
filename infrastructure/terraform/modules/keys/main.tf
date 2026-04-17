@@ -41,20 +41,20 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
 
       if [ "${var.enable_rsa_keys}" = "true" ]; then
         # Import RSA issuer key
-        echo '${local.rsa_issuer_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+        echo '${local.rsa_issuer_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @-
 
         # Import RSA encryption key
-        echo '${local.rsa_encryption_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+        echo '${local.rsa_encryption_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @-
       fi
 
       # Import ECDSA issuer key
-      echo '${local.ecdsa_issuer_key_json}' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+      echo '${local.ecdsa_issuer_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         --data-binary @-

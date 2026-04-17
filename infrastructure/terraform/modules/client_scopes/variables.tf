@@ -17,3 +17,9 @@ variable "keycloak_url" {
   description = "Keycloak base URL"
   type        = string
 }
+
+variable "scope_files" {
+  description = "List of client scope JSON filenames (from jsons/scopes) to apply."
+  type        = list(string)
+  default     = []
+}
