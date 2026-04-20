@@ -70,6 +70,10 @@ module "realm" {
   sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim
   sdjwt_kb_jwt_max_age            = var.sdjwt_kb_jwt_max_age
   sdjwt_enforce_revocation_status = var.sdjwt_enforce_revocation_status
+  sdjwt_response_mode             = var.sdjwt_response_mode
+  sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
+  sdjwt_access_certificate        = var.sdjwt_access_certificate
+  sdjwt_registration_certificate  = var.sdjwt_registration_certificate
 }
 
 module "users" {

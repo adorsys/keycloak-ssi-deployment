@@ -85,13 +85,23 @@ resource "keycloak_authentication_execution_config" "config" {
   execution_id = data.keycloak_authentication_execution.sd_jwt.id
   alias        = "sd_jwt-config-alias"
 
-  config = {
-    enforceNbfClaim         = var.sdjwt_enforce_nbf_claim
-    enforceExpClaim         = var.sdjwt_enforce_exp_claim
-    requireNbfClaim         = var.sdjwt_enforce_nbf_claim
-    requireExpClaim         = var.sdjwt_enforce_exp_claim
-    kbJwtMaxAge             = var.sdjwt_kb_jwt_max_age
-    enforceRevocationStatus = var.sdjwt_enforce_revocation_status
-    vct                     = var.sdjwt_vct
-  }
+  config = merge(
+    {
+      enforceNbfClaim         = var.sdjwt_enforce_nbf_claim
+      enforceExpClaim         = var.sdjwt_enforce_exp_claim
+      requireNbfClaim         = var.sdjwt_enforce_nbf_claim
+      requireExpClaim         = var.sdjwt_enforce_exp_claim
+      kbJwtMaxAge             = var.sdjwt_kb_jwt_max_age
+      enforceRevocationStatus = var.sdjwt_enforce_revocation_status
+      vct                     = var.sdjwt_vct
+      responseMode            = var.sdjwt_response_mode
+      customUrlScheme         = var.sdjwt_custom_url_scheme
+    },
+    trimspace(var.sdjwt_access_certificate) != "" ? {
+      accessCertificate = var.sdjwt_access_certificate
+    } : {},
+    trimspace(var.sdjwt_registration_certificate) != "" ? {
+      registrationCertificate = var.sdjwt_registration_certificate
+    } : {}
+  )
 }
