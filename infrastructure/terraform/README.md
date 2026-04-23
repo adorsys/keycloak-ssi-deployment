@@ -60,6 +60,10 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `optional_client_scope_client_ids` | Optional list of client IDs that receive optional scopes | `[]` (all configured clients) |
 | `status_list_server_url` | Base URL of the status list server                    | `https://statuslist.eudi-adorsys.com` |
 | `status_list_enabled`    | Turns status list support on or off for the realm     | `false`                  |
+| `oid4vc_keystore_path`   | Absolute keystore path on Keycloak host filesystem    | required                 |
+| `oid4vc_keystore_password` | Password for OID4VC keystore                        | required                 |
+| `oid4vc_keystore_type`   | Keystore type for OID4VC key provider                 | `PKCS12`                 |
+| `oid4vc_ecdsa_key_alias` | Alias of persistent ES256 key in keystore             | `ecdsa_key`              |
 
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
@@ -71,6 +75,22 @@ The keys module imports three types of cryptographic keys:
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
+
+#### Persistent ES256 key (keystore-backed)
+
+The ECDSA issuer key is configured to use a `java-keystore` provider (not `ecdsa-generated`) so the same ES256 key can be reused across realm recreation.
+
+Key points:
+
+- `oid4vc_keystore_path` must point to a file path on the **Keycloak runtime host** filesystem.
+- Terraform runner and Keycloak host may be different machines; do not use a Terraform-local-only path.
+- The configured alias (`oid4vc_ecdsa_key_alias`, default `ecdsa_key`) must exist in the keystore.
+- The module automatically disables any `ecdsa-generated` key providers in the realm to avoid active ES256 key conflicts.
+
+Recommended:
+
+- Keep the keystore in durable storage (for example S3 + restore-to-host flow, EBS, or Vault-backed sync).
+- Keep keystore password out of Git and provide via local secret tfvars / environment variables.
 
 If you set `status_list_enabled` to `true`, Keycloak adds status information to issued credentials using
 `status_list_server_url`. This lets wallets and verifiers check whether a credential is still valid, revoked, or suspended.
@@ -232,6 +252,7 @@ The configuration automatically disables certain default Keycloak keys:
 
 - **RSA-OAEP**: Default RSA encryption key
 - **RS256**: Default RSA signing key
+- **ECDSA Generated Providers**: Any `ecdsa-generated` key providers are disabled so keystore-backed ES256 is authoritative.
 
 This ensures only the custom imported keys are active for OpenID4VCI operations.
 

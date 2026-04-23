@@ -167,6 +167,29 @@ variable "enable_rsa_keys" {
   default     = false
 }
 
+variable "oid4vc_keystore_path" {
+  description = "Absolute keystore path on the Keycloak host runtime filesystem for OID4VC signing keys (not the Terraform runner path)."
+  type        = string
+}
+
+variable "oid4vc_keystore_password" {
+  description = "Password for OID4VC keystore."
+  type        = string
+  sensitive   = true
+}
+
+variable "oid4vc_keystore_type" {
+  description = "Keystore type for OID4VC key provider."
+  type        = string
+  default     = "PKCS12"
+}
+
+variable "oid4vc_ecdsa_key_alias" {
+  description = "Alias of persistent ES256 key in keystore."
+  type        = string
+  default     = "ecdsa_key"
+}
+
 variable "oid4vci_display" {
   description = "Issuer root display metadata as JSON array string for realm attribute oid4vci.display"
   type        = string

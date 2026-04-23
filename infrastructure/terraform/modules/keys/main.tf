@@ -53,8 +53,26 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
           --data-binary @-
       fi
 
-      # Import ECDSA issuer key
-      echo '${local.ecdsa_issuer_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+      # Import ECDSA issuer key from persistent java keystore
+      echo '${local.ecdsa_issuer_key_json}' | jq \
+        --arg realm "${var.realm_name}" \
+        --arg keystore "${var.oid4vc_keystore_path}" \
+        --arg keystorePassword "${var.oid4vc_keystore_password}" \
+        --arg keystoreType "${var.oid4vc_keystore_type}" \
+        --arg keyAlias "${var.oid4vc_ecdsa_key_alias}" \
+        '.parentId = $realm
+        | .providerId = "java-keystore"
+        | .config = {
+            "keystorePassword": [$keystorePassword],
+            "keyAlias": [$keyAlias],
+            "keyPassword": [$keystorePassword],
+            "keystoreType": [$keystoreType],
+            "active": ["true"],
+            "keystore": [$keystore],
+            "priority": ["200"],
+            "enabled": ["true"],
+            "algorithm": ["ES256"]
+          }' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         --data-binary @-
@@ -90,6 +108,30 @@ resource "null_resource" "disable_generated_keys" {
       -d "grant_type=password" | jq -r .access_token)
 
     echo "Disabling generated Keycloak keys..."
+
+    # Always disable generated ES256 providers so only the persistent
+    # java-keystore-backed ECDSA key is used.
+    ECDSA_GENERATED_COMPONENT_IDS=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
+      -H "Authorization: Bearer $TOKEN" \
+      -H "Content-Type: application/json" | jq -r '.[] | select(.providerId == "ecdsa-generated") | .id')
+
+    if [ -n "$ECDSA_GENERATED_COMPONENT_IDS" ]; then
+      while IFS= read -r COMP_ID; do
+        [ -z "$COMP_ID" ] && continue
+        echo "Disabling generated ECDSA key provider... ID=$COMP_ID"
+
+        COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json")
+
+        UPDATED_COMPONENT=$(echo "$COMPONENT" | jq '.config.active = ["false"] | .config.enabled = ["false"]')
+
+        echo "$UPDATED_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @-
+      done <<< "$ECDSA_GENERATED_COMPONENT_IDS"
+    fi
 
     if [ "${var.enable_rsa_keys}" = "false" ]; then
       # Disable all RSA encryption key providers (legacy or custom)

@@ -128,6 +128,10 @@ module "keys" {
   admin_password  = urlencode(var.admin_password)
   keycloak_url    = var.keycloak_url
   enable_rsa_keys = var.enable_rsa_keys
+  oid4vc_keystore_path     = var.oid4vc_keystore_path
+  oid4vc_keystore_password = var.oid4vc_keystore_password
+  oid4vc_keystore_type     = var.oid4vc_keystore_type
+  oid4vc_ecdsa_key_alias   = var.oid4vc_ecdsa_key_alias
 }
 
 module "saml_idp" {
