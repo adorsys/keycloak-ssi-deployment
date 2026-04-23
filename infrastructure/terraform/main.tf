@@ -72,6 +72,8 @@ module "realm" {
   sdjwt_enforce_revocation_status = var.sdjwt_enforce_revocation_status
   sdjwt_response_mode             = var.sdjwt_response_mode
   sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
+  sdjwt_client_id_scheme          = var.sdjwt_client_id_scheme
+  sdjwt_query_language            = var.sdjwt_query_language
   sdjwt_access_certificate        = var.sdjwt_access_certificate
   sdjwt_registration_certificate  = var.sdjwt_registration_certificate
 }

@@ -94,6 +94,8 @@ resource "keycloak_authentication_execution_config" "config" {
       kbJwtMaxAge             = var.sdjwt_kb_jwt_max_age
       enforceRevocationStatus = var.sdjwt_enforce_revocation_status
       vct                     = var.sdjwt_vct
+      clientIdScheme          = var.sdjwt_client_id_scheme
+      queryLanguage           = var.sdjwt_query_language
       responseMode            = var.sdjwt_response_mode
       customUrlScheme         = var.sdjwt_custom_url_scheme
     },

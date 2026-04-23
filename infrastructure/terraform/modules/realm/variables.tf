@@ -59,6 +59,16 @@ variable "sdjwt_custom_url_scheme" {
   type        = string
 }
 
+variable "sdjwt_client_id_scheme" {
+  description = "Client ID scheme for SdJwtAuthenticator"
+  type        = string
+}
+
+variable "sdjwt_query_language" {
+  description = "Query language for SdJwtAuthenticator"
+  type        = string
+}
+
 variable "sdjwt_access_certificate" {
   description = "Base64 DER access certificate for SdJwtAuthenticator"
   type        = string
