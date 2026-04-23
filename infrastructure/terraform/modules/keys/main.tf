@@ -19,6 +19,10 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
     realm_id                   = var.realm_id
     enable_rsa_keys            = tostring(var.enable_rsa_keys)
     oid4vc_key_components_hash = join(",", compact([local.rsa_issuer_key_json, local.rsa_encryption_key_json, local.ecdsa_issuer_key_json]))
+    oid4vc_keystore_path       = var.oid4vc_keystore_path
+    oid4vc_keystore_password   = var.oid4vc_keystore_password
+    oid4vc_keystore_type       = var.oid4vc_keystore_type
+    oid4vc_ecdsa_key_alias     = var.oid4vc_ecdsa_key_alias
   }
 
   provisioner "local-exec" {
@@ -53,8 +57,8 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
           --data-binary @-
       fi
 
-      # Import ECDSA issuer key from persistent java keystore
-      echo '${local.ecdsa_issuer_key_json}' | jq \
+      # Build the target ECDSA java-keystore provider payload once.
+      ECDSA_PROVIDER_PAYLOAD=$(echo '${local.ecdsa_issuer_key_json}' | jq -c \
         --arg realm "${var.realm_name}" \
         --arg keystore "${var.oid4vc_keystore_path}" \
         --arg keystorePassword "${var.oid4vc_keystore_password}" \
@@ -72,10 +76,60 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
             "priority": ["200"],
             "enabled": ["true"],
             "algorithm": ["ES256"]
-          }' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+          }')
+
+      # Keep a single ES256 java-keystore component:
+      # - create one if missing
+      # - update the first existing one in place (stable provider id / kid behavior)
+      # - delete any extras
+      EXISTING_ES256_JKS_COMPONENT_IDS=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
         -H "Authorization: Bearer $TOKEN" \
-        -H "Content-Type: application/json" \
-        --data-binary @-
+        -H "Content-Type: application/json" | jq -r '.[] | select(.providerId == "java-keystore" and ((.config.algorithm[0] // "") == "ES256")) | .id')
+
+      PRIMARY_ES256_JKS_COMPONENT_ID=$(echo "$EXISTING_ES256_JKS_COMPONENT_IDS" | rg -v '^$' | awk 'NR==1')
+
+      if [ -z "$PRIMARY_ES256_JKS_COMPONENT_ID" ]; then
+        echo "No ES256 java-keystore provider found. Creating configured provider."
+        echo "$ECDSA_PROVIDER_PAYLOAD" | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @- >/dev/null
+      else
+        echo "Updating existing ES256 java-keystore provider in place... ID=$PRIMARY_ES256_JKS_COMPONENT_ID"
+        EXISTING_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json")
+        UPDATED_COMPONENT=$(echo "$EXISTING_COMPONENT" | jq \
+          --arg keystore "${var.oid4vc_keystore_path}" \
+          --arg keystorePassword "${var.oid4vc_keystore_password}" \
+          --arg keystoreType "${var.oid4vc_keystore_type}" \
+          --arg keyAlias "${var.oid4vc_ecdsa_key_alias}" \
+          '.providerId = "java-keystore"
+          | .config.keystorePassword = [$keystorePassword]
+          | .config.keyAlias = [$keyAlias]
+          | .config.keyPassword = [$keystorePassword]
+          | .config.keystoreType = [$keystoreType]
+          | .config.active = ["true"]
+          | .config.keystore = [$keystore]
+          | .config.priority = ["200"]
+          | .config.enabled = ["true"]
+          | .config.algorithm = ["ES256"]')
+        echo "$UPDATED_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @- >/dev/null
+      fi
+
+      EXTRA_ES256_JKS_COMPONENT_IDS=$(echo "$EXISTING_ES256_JKS_COMPONENT_IDS" | rg -v '^$' | awk 'NR>1')
+      if [ -n "$EXTRA_ES256_JKS_COMPONENT_IDS" ]; then
+        while IFS= read -r COMP_ID; do
+          [ -z "$COMP_ID" ] && continue
+          echo "Deleting duplicate ES256 java-keystore provider... ID=$COMP_ID"
+          curl -k -s -X DELETE "$KC_URL/admin/realms/${var.realm_name}/components/$COMP_ID" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" >/dev/null
+        done <<< "$EXTRA_ES256_JKS_COMPONENT_IDS"
+      fi
 
       echo "Custom OID4VC key components imported."
     EOT

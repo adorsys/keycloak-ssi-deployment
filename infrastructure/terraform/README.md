@@ -86,6 +86,13 @@ Key points:
 - Terraform runner and Keycloak host may be different machines; do not use a Terraform-local-only path.
 - The configured alias (`oid4vc_ecdsa_key_alias`, default `ecdsa_key`) must exist in the keystore.
 - The module automatically disables any `ecdsa-generated` key providers in the realm to avoid active ES256 key conflicts.
+- The module upserts ES256 `java-keystore` providers (update-in-place if present, create if missing) and removes duplicates, so reruns keep a single authoritative provider.
+
+Stability behavior:
+
+- If `oid4vc_keystore_path`, `oid4vc_ecdsa_key_alias`, and keystore contents stay the same, reruns keep the same ES256 key material.
+- Avoid `terraform apply -replace=module.keys.null_resource.apply_custom_oid4vc_key_components` unless you intentionally want to force key component recreation/rotation workflows.
+- For normal operations, use standard `terraform apply -var-file=...` and let the upsert logic preserve provider continuity.
 
 Recommended:
 
@@ -253,6 +260,8 @@ The configuration automatically disables certain default Keycloak keys:
 - **RSA-OAEP**: Default RSA encryption key
 - **RS256**: Default RSA signing key
 - **ECDSA Generated Providers**: Any `ecdsa-generated` key providers are disabled so keystore-backed ES256 is authoritative.
+
+For ES256 `java-keystore` providers, the keys module also keeps a single component by updating the existing one and deleting extras.
 
 This ensures only the custom imported keys are active for OpenID4VCI operations.
 
