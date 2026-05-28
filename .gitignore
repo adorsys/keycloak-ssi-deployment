@@ -24,3 +24,7 @@ infrastructure/terraform/*.tfvars
 
 # Client scopes
 client-scopes.json
+
+# Terraform plan artifacts
+infrastructure/terraform/tfplan*
+*.tfplan
