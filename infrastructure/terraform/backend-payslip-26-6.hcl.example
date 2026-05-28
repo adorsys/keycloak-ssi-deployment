@@ -1,0 +1,5 @@
+bucket         = "<YOUR_DEV_STATE_S3_BUCKET>"
+key            = "terraform/keycloak-ssi/kc-26.6-payslip/terraform.tfstate"
+region         = "eu-central-1"
+dynamodb_table = "<YOUR_DEV_STATE_LOCK_TABLE>"
+encrypt        = true

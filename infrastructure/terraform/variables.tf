@@ -155,6 +155,12 @@ variable "initial_password" {
   sensitive   = true
 }
 
+variable "max_mustermann_initial_password" {
+  description = "Initial password for the Max Mustermann payslip demo user"
+  type        = string
+  sensitive   = true
+}
+
 variable "status_list_enabled" {
   description = "Enable or disable the status list for the realm"
   type        = bool
