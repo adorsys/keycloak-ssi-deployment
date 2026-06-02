@@ -156,7 +156,7 @@ variable "initial_password" {
 }
 
 variable "max_mustermann_initial_password" {
-  description = "Initial password for the Max Mustermann payslip demo user"
+  description = "Initial password of the payslip demo user"
   type        = string
   sensitive   = true
 }
