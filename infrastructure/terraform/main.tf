@@ -83,8 +83,9 @@ module "users" {
   providers = {
     keycloak = keycloak
   }
-  realm_id         = module.realm.realm_id
-  initial_password = var.initial_password
+  realm_id                        = module.realm.realm_id
+  initial_password                = var.initial_password
+  max_mustermann_initial_password = var.max_mustermann_initial_password
 }
 
 module "client_scopes" {
