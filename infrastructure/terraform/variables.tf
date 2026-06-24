@@ -27,6 +27,9 @@ variable "oid4vc_demo_public_valid_redirect_uris" {
   type        = list(string)
   default = [
     "http://localhost:4200/*",
+    "http://127.0.0.1:4200/*",
+    "https://localhost:4200/*",
+    "https://127.0.0.1:4200/*",
     "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
   ]
 }
@@ -36,6 +39,9 @@ variable "oid4vc_demo_public_web_origins" {
   type        = list(string)
   default = [
     "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "https://localhost:4200",
+    "https://127.0.0.1:4200",
     "https://adorsys-gis.github.io"
   ]
 }
@@ -43,7 +49,7 @@ variable "oid4vc_demo_public_web_origins" {
 variable "oid4vc_demo_public_post_logout_redirect_uris" {
   description = "Post logout redirect URIs string for oid4vc-demo-public (Keycloak format uses ## as separator)."
   type        = string
-  default     = "http://localhost:4200##http://localhost:4200/*##https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
+  default     = "http://localhost:4200##http://localhost:4200/*##http://127.0.0.1:4200##http://127.0.0.1:4200/*##https://localhost:4200##https://localhost:4200/*##https://127.0.0.1:4200##https://127.0.0.1:4200/*##https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*"
 }
 
 variable "pre_authorized_code_lifespanS" {
@@ -143,6 +149,12 @@ variable "initial_password" {
   sensitive   = true
 }
 
+variable "francis_verifiable_credentials" {
+  description = "Credential scope names to grant to the demo user francis for OID4VCI offer creation. Null grants IdentityCredential when that scope is configured."
+  type        = list(string)
+  default     = null
+}
+
 variable "status_list_enabled" {
   description = "Enable or disable the status list for the realm"
   type        = bool
@@ -166,3 +178,10 @@ variable "optional_client_scope_client_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "login_theme" {
+  description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
+  type        = string
+  default     = "keycloak.v2+oid4vp"
+}
+

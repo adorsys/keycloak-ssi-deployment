@@ -43,7 +43,7 @@ app-template:
         main:
           # Keep the official image ENTRYPOINT (kc.sh) and pass "start" as arguments.
           command: ["/opt/keycloak/bin/kc.sh"]
-          args: ["start", "--features=oid4vc-vci"]
+          args: ["start", "--features=oid4vc-vci,oid4vc-vci-preauth-code,oid4vc-vci-rest-credential-offer"]
           image:
             repository: quay.io/keycloak/keycloak
             tag: 26.5.6

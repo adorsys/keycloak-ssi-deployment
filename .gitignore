@@ -24,3 +24,7 @@ infrastructure/terraform/*.tfvars
 
 # Client scopes
 client-scopes.json
+
+# Local Terraform State
+infrastructure/terraform/terraform.tfstate.local
+infrastructure/terraform/terraform.tfstate.local.backup

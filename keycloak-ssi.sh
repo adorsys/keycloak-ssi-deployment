@@ -55,7 +55,7 @@ sync_providers() {
     local src="$PROJECT_ROOT/providers"
     local dest="$TEST_DEPLOYMENT_DIR/providers"
 
-    if [[ -d "$src" && "$(ls -A "$src")" ]]; then
+    if [[ -d "$src" ]] && ls "$src"/*.jar &>/dev/null; then
         log "Syncing custom providers from $src to $dest..."
         mkdir -p "$dest"
         # Clean destination to avoid version conflicts

@@ -20,8 +20,8 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
     # Trigger a re-run if the file content changes
     client_scope_hash = filemd5("${path.root}/jsons/scopes/${each.value}")
     # If the realm was recreated/reset, ensure we re-import missing scopes.
-    realm_id          = var.realm_id
-    realm_name        = var.realm_name
+    realm_id   = var.realm_id
+    realm_name = var.realm_name
   }
 
   provisioner "local-exec" {
