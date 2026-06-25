@@ -12,6 +12,8 @@
       "vc.supported_credential_types": "identity_credential",
       "vc.credential_contexts": "https://credentials.example.com/identity_credential",
       "vc.cryptographic_binding_methods_supported": "jwk",
+      "vc.binding_required": "true",
+      "vc.binding_required_proof_types": "attestation,jwt",
       "vc.credential_signing_alg": "ES256",
       "vc.display": "[{\"name\": \"Identity Credential\"}]",
       "vc.issuer_did": "",
