@@ -57,16 +57,20 @@ helm upgrade --install keycloak-openid4vci ./infrastructure/keycloak-chart -f my
 
 ### Scenario 2: Official Image Demo (`keycloak-demo`)
 
-This scenario deploys a second release using `values-keycloak-demo.yaml` and reuses shared resources from the primary release.
-The demo values file uses YAML anchors (`plugin.fileName`, `plugin.mountPath`) so plugin version updates stay in one place.
+This scenario deploys an independent release using `values-keycloak-demo.yaml`. It does not require the primary `keycloak` release, `keycloak-env-config` ConfigMap, or `keycloak-secret` Secret.
+
+The demo release creates its own PostgreSQL StatefulSet and requests its own `keycloak-demo-secret` through `keycloak-demo-external-secret`. The demo values file uses YAML anchors (`plugin.fileName`, `plugin.mountPath`) so plugin version updates stay in one place.
 
 #### Prerequisites
 
-1. Deploy the primary `keycloak` release first.
-   - Reused resources:
-     - `keycloak-env-config` ConfigMap
-     - `keycloak-secret` Secret
-2. Create TLS secret for demo pod:
+1. Verify External Secrets infrastructure:
+   - `SecretStore/datev-secret-store` must be Ready in `datev-wallet`.
+   - AWS Secrets Manager secret `datev-wallet-secrets` must contain `DB_PASSWORD` and `KC_BOOTSTRAP_ADMIN_PASSWORD`.
+   - The External Secrets controller IAM role must be allowed to read that secret.
+   ```bash
+   kubectl -n datev-wallet get secretstore datev-secret-store
+   ```
+2. Create the TLS Secret for the demo pod:
    - Generate cert/key:
      ```bash
      cd keycloak-ssi-deployment
@@ -81,36 +85,52 @@ The demo values file uses YAML anchors (`plugin.fileName`, `plugin.mountPath`) s
        --key  ./keycloak-oauth-sig/oid4vci-deployment/target/keycloak-server.key.pem \
        --dry-run=client -o yaml | kubectl apply -f -
      ```
-3. Create/update plugin secret:
+3. Create/update the plugin Secret:
+
    ```bash
    cd keycloak-ssi-deployment
-   PLUGIN_VERSION=1.1.6
-   kubectl -n datev-wallet delete secret keycloak-providers 2>/dev/null || true
+   PLUGIN_VERSION=1.1.9
    kubectl -n datev-wallet create secret generic keycloak-providers \
      --from-file=keycloak-oid4vp-plugin-${PLUGIN_VERSION}.jar=./providers/keycloak-oid4vp-plugin-${PLUGIN_VERSION}.jar \
      --dry-run=client -o yaml | kubectl apply -f -
    ```
+
 4. Update `plugin.fileName` and `plugin.mountPath` at the top of `values-keycloak-demo.yaml` if you are changing versions.
 
 #### Install
 
-1. Deploy primary release:
-   ```bash
-   helm upgrade --install keycloak ./infrastructure/keycloak-chart -n datev-wallet -f ./infrastructure/keycloak-chart/values.yaml
-   ```
-2. Deploy demo release:
-   ```bash
-   helm upgrade --install keycloak-demo ./infrastructure/keycloak-chart -n datev-wallet \
-     -f ./infrastructure/keycloak-chart/values.yaml \
-     -f ./infrastructure/keycloak-chart/values-keycloak-demo.yaml \
-     --wait
-   ```
+Deploy only the demo release:
+
+```bash
+helm upgrade --install keycloak-demo ./infrastructure/keycloak-chart -n datev-wallet \
+  -f ./infrastructure/keycloak-chart/values.yaml \
+  -f ./infrastructure/keycloak-chart/values-keycloak-demo.yaml \
+  --wait \
+  --timeout 15m
+```
+
+Verify the standalone resources:
+
+```bash
+kubectl -n datev-wallet wait --for=condition=Ready \
+  externalsecret/keycloak-demo-external-secret --timeout=180s
+kubectl -n datev-wallet get secret keycloak-demo-secret
+kubectl -n datev-wallet rollout status \
+  statefulset/keycloak-demo-postgres --timeout=10m
+kubectl -n datev-wallet rollout status \
+  deployment/keycloak-demo --timeout=10m
+kubectl -n datev-wallet get pods,services,endpoints,pvc \
+  -l app.kubernetes.io/instance=keycloak-demo -o wide
+```
 
 #### Notes
 
-- `values-keycloak-demo.yaml` disables `createConfigMapJob` and `externalSecret` to avoid collisions with primary release.
-- Demo focuses on upstream Keycloak image + HTTPS + OID4VCI feature; provider SPI jars come from `keycloak-providers` secret.
-- PVC/PV AZ runbook for Postgres: if PVC already exists, read bound PV zone (`kubectl get pv <pv-name> -o yaml | rg topology.kubernetes.io/zone`) and set `postgres.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution` in `values-keycloak-demo.yaml` accordingly.
+- `values-keycloak-demo.yaml` disables the inherited ConfigMap job, ConfigMap init container, and ConfigMap volume because the official Keycloak image is configured directly through container environment variables.
+- The demo ExternalSecret and generated Secret use demo-specific names and do not collide with the primary release.
+- The demo database password and bootstrap-admin password still come from the shared AWS Secrets Manager source, but no Kubernetes resource from the primary release is reused.
+- Demo focuses on upstream Keycloak image + HTTPS + OID4VCI feature; provider SPI jars come from the `keycloak-providers` Secret.
+- A fresh demo database has no hard-coded availability-zone affinity. Kubernetes and the storage provisioner select a compatible zone.
+- To mount a recovered database PVC, set `postgres.persistence.existingClaim=<pvc-name>` and verify that Ready worker nodes exist in the PV's availability zone before upgrading.
 
 ### Local / Minikube testing
 

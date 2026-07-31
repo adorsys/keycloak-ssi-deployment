@@ -6,18 +6,16 @@ createConfigMapJob:
   enabled: false
 
 externalSecret:
-  enabled: false
+  enabled: true
+  metadata:
+    name: keycloak-demo-external-secret
+  spec:
+    target:
+      name: keycloak-demo-secret
 
 postgres:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: topology.kubernetes.io/zone
-                operator: In
-                values:
-                  - eu-central-1b
+  auth:
+    existingSecret: keycloak-demo-secret
 
 app-template:
   global:
@@ -28,17 +26,19 @@ app-template:
       serviceAccount:
         name: keycloak-demo-job-sa
       initContainers:
+        wait-for-configmap:
+          enabled: false
         wait-for-postgres:
           command:
-          - sh
-          - -c
-          - |
-            until kubectl get svc keycloak-demo-postgres -n datev-wallet; do
-              echo "Waiting for PostgreSQL service..."; sleep 2;
-            done
-            until kubectl exec -n datev-wallet keycloak-demo-postgres-0 -- pg_isready -U datevadmin -d keycloakdb; do
-              echo "Waiting for PostgreSQL to be ready..."; sleep 2;
-            done
+            - sh
+            - -c
+            - |
+              until kubectl get svc keycloak-demo-postgres -n datev-wallet; do
+                echo "Waiting for PostgreSQL service..."; sleep 2;
+              done
+              until kubectl exec -n datev-wallet keycloak-demo-postgres-0 -- pg_isready -U datevadmin -d keycloakdb; do
+                echo "Waiting for PostgreSQL to be ready..."; sleep 2;
+              done
       containers:
         main:
           # Keep the official image ENTRYPOINT (kc.sh) and pass "start" as arguments.
@@ -60,14 +60,14 @@ app-template:
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-secret
+                  name: keycloak-demo-secret
                   key: KC_DB_PASSWORD
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               value: admin
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-secret
+                  name: keycloak-demo-secret
                   key: KC_BOOTSTRAP_ADMIN_PASSWORD
             # Hostname/HTTPS for non-dev mode.
             - name: KC_HOSTNAME
@@ -91,6 +91,8 @@ app-template:
       enabled: false
 
   persistence:
+    env-volume:
+      enabled: false
     tls-volume:
       enabled: true
       type: secret
@@ -116,14 +118,13 @@ app-template:
       annotations:
         external-dns.alpha.kubernetes.io/hostname: keycloak-demo.eudi-adorsys.com
       hosts:
-      - host: keycloak-demo.eudi-adorsys.com
-        paths:
-        - path: /
-          pathType: Prefix
+        - host: keycloak-demo.eudi-adorsys.com
+          paths:
+            - path: /
+              pathType: Prefix
 
 job:
   serviceAccountName: keycloak-demo-job-sa
   rbac:
     roleName: keycloak-demo-job-role
     roleBindingName: keycloak-demo-job-rolebinding
-
