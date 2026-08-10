@@ -14,6 +14,7 @@ resource "null_resource" "apply_saml_identity_provider" {
   depends_on = [var.realm_id]
 
   triggers = {
+    realm_id             = var.realm_id
     saml_idp_config_hash = sha256(local.saml_idp_config_json)
   }
 

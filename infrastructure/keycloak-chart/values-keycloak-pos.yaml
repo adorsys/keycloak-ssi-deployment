@@ -6,39 +6,42 @@ createConfigMapJob:
   enabled: false
 
 externalSecret:
-  enabled: false
+  enabled: true
+  metadata:
+    name: pos-keycloak-external-secret
+  spec:
+    secretStoreRef:
+      name: cash-registry-ui-secret-store
+    target:
+      name: pos-keycloak-secret
 
 postgres:
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: topology.kubernetes.io/zone
-                operator: In
-                values:
-                  - eu-central-1b
+  fullnameOverride: pos-keycloak-postgres
+  auth:
+    existingSecret: pos-keycloak-secret
 
 app-template:
   global:
-    fullnameOverride: keycloak-demo
-    namespaceOverride: datev-wallet
+    fullnameOverride: pos-keycloak
+    namespaceOverride: pos-demo
   controllers:
     main:
       serviceAccount:
-        name: keycloak-demo-job-sa
+        name: pos-keycloak-job-sa
       initContainers:
+        wait-for-configmap:
+          enabled: false
         wait-for-postgres:
           command:
-          - sh
-          - -c
-          - |
-            until kubectl get svc keycloak-demo-postgres -n datev-wallet; do
-              echo "Waiting for PostgreSQL service..."; sleep 2;
-            done
-            until kubectl exec -n datev-wallet keycloak-demo-postgres-0 -- pg_isready -U datevadmin -d keycloakdb; do
-              echo "Waiting for PostgreSQL to be ready..."; sleep 2;
-            done
+            - sh
+            - -c
+            - |
+              until kubectl get svc pos-keycloak-postgres -n pos-demo; do
+                echo "Waiting for PostgreSQL service..."; sleep 2;
+              done
+              until kubectl exec -n pos-demo pos-keycloak-postgres-0 -- pg_isready -U datevadmin -d keycloakdb; do
+                echo "Waiting for PostgreSQL to be ready..."; sleep 2;
+              done
       containers:
         main:
           # Keep the official image ENTRYPOINT (kc.sh) and pass "start" as arguments.
@@ -52,7 +55,7 @@ app-template:
             - name: KC_DB
               value: postgres
             - name: KC_DB_URL_HOST
-              value: keycloak-demo-postgres
+              value: pos-keycloak-postgres
             - name: KC_DB_URL_DATABASE
               value: keycloakdb
             - name: KC_DB_USERNAME
@@ -60,18 +63,18 @@ app-template:
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-secret
+                  name: pos-keycloak-secret
                   key: KC_DB_PASSWORD
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               value: admin
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-secret
+                  name: pos-keycloak-secret
                   key: KC_BOOTSTRAP_ADMIN_PASSWORD
             # Hostname/HTTPS for non-dev mode.
             - name: KC_HOSTNAME
-              value: keycloak-demo.eudi-adorsys.com
+              value: keycloak-pos.eudi-adorsys.com
             - name: KC_HOSTNAME_STRICT
               value: "false"
             - name: KC_HTTP_ENABLED
@@ -91,10 +94,12 @@ app-template:
       enabled: false
 
   persistence:
+    env-volume:
+      enabled: false
     tls-volume:
       enabled: true
       type: secret
-      name: keycloak-demo-local-tls
+      name: pos-keycloak-local-tls
       globalMounts:
         - path: /opt/keycloak/target/keycloak-server.crt.pem
           subPath: tls.crt
@@ -105,7 +110,7 @@ app-template:
     providers-volume:
       enabled: true
       type: secret
-      name: keycloak-providers
+      name: pos-keycloak-providers
       globalMounts:
         - path: *pluginMountPath
           subPath: *pluginFileName
@@ -114,16 +119,15 @@ app-template:
   ingress:
     main:
       annotations:
-        external-dns.alpha.kubernetes.io/hostname: keycloak-demo.eudi-adorsys.com
+        external-dns.alpha.kubernetes.io/hostname: keycloak-pos.eudi-adorsys.com
       hosts:
-      - host: keycloak-demo.eudi-adorsys.com
-        paths:
-        - path: /
-          pathType: Prefix
+        - host: keycloak-pos.eudi-adorsys.com
+          paths:
+            - path: /
+              pathType: Prefix
 
 job:
-  serviceAccountName: keycloak-demo-job-sa
+  serviceAccountName: pos-keycloak-job-sa
   rbac:
-    roleName: keycloak-demo-job-role
-    roleBindingName: keycloak-demo-job-rolebinding
-
+    roleName: pos-keycloak-job-role
+    roleBindingName: pos-keycloak-job-rolebinding
