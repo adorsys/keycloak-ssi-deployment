@@ -73,7 +73,6 @@ module "realm" {
   sdjwt_response_mode             = var.sdjwt_response_mode
   sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
   sdjwt_client_id_scheme          = var.sdjwt_client_id_scheme
-  sdjwt_query_language            = var.sdjwt_query_language
   sdjwt_access_certificate        = var.sdjwt_access_certificate
   sdjwt_registration_certificate  = var.sdjwt_registration_certificate
 }
@@ -84,8 +83,15 @@ module "users" {
     keycloak = keycloak
   }
   realm_id                        = module.realm.realm_id
+  realm_name                      = var.realm
+  admin_password                  = var.admin_password
+  keycloak_url                    = var.keycloak_url
   initial_password                = var.initial_password
   max_mustermann_initial_password = var.max_mustermann_initial_password
+  verifiable_credentials          = local.configured_scope_names
+  client_scopes_dependency        = module.client_scopes.client_scopes_applied_trigger
+
+  depends_on = [module.client_scopes]
 }
 
 module "client_scopes" {
@@ -107,15 +113,15 @@ module "clients" {
     keycloak = keycloak
   }
 
-  realm_id                 = module.realm.realm_id
-  realm_name               = var.realm
-  admin_password           = urlencode(var.admin_password)
-  keycloak_url             = var.keycloak_url
-  clients                  = local.clients
-  optional_client_scopes   = local.configured_scope_names
+  realm_id                         = module.realm.realm_id
+  realm_name                       = var.realm
+  admin_password                   = urlencode(var.admin_password)
+  keycloak_url                     = var.keycloak_url
+  clients                          = local.clients
+  optional_client_scopes           = local.configured_scope_names
   optional_client_scope_client_ids = var.optional_client_scope_client_ids
-  client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
-  depends_on               = [module.realm, module.client_scopes]
+  client_scopes_dependency         = module.client_scopes.client_scopes_applied_trigger
+  depends_on                       = [module.realm, module.client_scopes]
 }
 
 module "keys" {
@@ -124,11 +130,11 @@ module "keys" {
     keycloak = keycloak
   }
 
-  realm_id        = module.realm.realm_id
-  realm_name      = var.realm
-  admin_password  = urlencode(var.admin_password)
-  keycloak_url    = var.keycloak_url
-  enable_rsa_keys = var.enable_rsa_keys
+  realm_id                 = module.realm.realm_id
+  realm_name               = var.realm
+  admin_password           = urlencode(var.admin_password)
+  keycloak_url             = var.keycloak_url
+  enable_rsa_keys          = var.enable_rsa_keys
   oid4vc_keystore_path     = var.oid4vc_keystore_path
   oid4vc_keystore_password = var.oid4vc_keystore_password
   oid4vc_keystore_type     = var.oid4vc_keystore_type

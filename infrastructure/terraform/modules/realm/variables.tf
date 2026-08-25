@@ -25,7 +25,7 @@ variable "keycloak_url" {
 }
 
 variable "sdjwt_vct" {
-  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+  description = "Comma-separated credential types for the OID4VP authenticator"
   type        = string
 }
 
@@ -50,33 +50,28 @@ variable "sdjwt_enforce_revocation_status" {
 }
 
 variable "sdjwt_response_mode" {
-  description = "Response mode for SdJwtAuthenticator"
+  description = "Response mode for the OID4VP authenticator"
   type        = string
 }
 
 variable "sdjwt_custom_url_scheme" {
-  description = "Custom wallet URL scheme for SdJwtAuthenticator"
+  description = "Custom wallet URL scheme for the OID4VP authenticator"
   type        = string
 }
 
 variable "sdjwt_client_id_scheme" {
-  description = "Client ID scheme for SdJwtAuthenticator"
-  type        = string
-}
-
-variable "sdjwt_query_language" {
-  description = "Query language for SdJwtAuthenticator"
+  description = "Client identifier prefix for the OID4VP authenticator"
   type        = string
 }
 
 variable "sdjwt_access_certificate" {
-  description = "Base64 DER access certificate for SdJwtAuthenticator"
+  description = "Base64 DER access certificate for the OID4VP authenticator"
   type        = string
   sensitive   = true
 }
 
 variable "sdjwt_registration_certificate" {
-  description = "Registration certificate JWT for SdJwtAuthenticator"
+  description = "Registration certificate JWT for the OID4VP authenticator"
   type        = string
   sensitive   = true
 }

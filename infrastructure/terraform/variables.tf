@@ -17,7 +17,7 @@ variable "realm" {
 }
 
 variable "enabled_scope_names" {
-  description = "Optional allowlist of OID4VC client scope names to apply. Empty list means all scopes in jsons/scopes."
+  description = "OID4VC client scopes to apply and grant to Francis and Max Mustermann. Empty means all scopes in jsons/scopes."
   type        = list(string)
   default     = []
 }
@@ -112,38 +112,32 @@ variable "sdjwt_enforce_revocation_status" {
 }
 
 variable "sdjwt_response_mode" {
-  description = "Response mode for SdJwtAuthenticator (e.g., direct_post.jwt)"
+  description = "Response mode for the OID4VP authenticator (e.g., direct_post.jwt)"
   type        = string
   default     = "direct_post.jwt"
 }
 
 variable "sdjwt_custom_url_scheme" {
-  description = "Custom wallet URL scheme for SdJwtAuthenticator"
+  description = "Custom wallet URL scheme for the OID4VP authenticator"
   type        = string
   default     = "haip-vp://"
 }
 
 variable "sdjwt_client_id_scheme" {
-  description = "Client ID scheme for SdJwtAuthenticator (e.g., x509_hash)"
+  description = "Client identifier prefix for the OID4VP authenticator (e.g., x509_hash)"
   type        = string
   default     = "x509_hash"
 }
 
-variable "sdjwt_query_language" {
-  description = "Query language for SdJwtAuthenticator (e.g., dcql_query)"
-  type        = string
-  default     = "dcql_query"
-}
-
 variable "sdjwt_access_certificate" {
-  description = "Base64 DER access certificate for SdJwtAuthenticator"
+  description = "Base64 DER access certificate for the OID4VP authenticator"
   type        = string
   sensitive   = true
   default     = ""
 }
 
 variable "sdjwt_registration_certificate" {
-  description = "Registration certificate JWT for SdJwtAuthenticator"
+  description = "Registration certificate JWT for the OID4VP authenticator"
   type        = string
   sensitive   = true
   default     = ""
