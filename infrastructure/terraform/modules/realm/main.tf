@@ -92,7 +92,7 @@ resource "keycloak_authentication_execution_config" "config" {
       holderBindingProofMaxAge = var.sdjwt_kb_jwt_max_age
       enforceRevocationStatus  = var.sdjwt_enforce_revocation_status
       credentialTypes          = var.sdjwt_vct
-      clientIdentifierPrefix   = var.sdjwt_client_id_scheme
+      clientIdentifierPrefix   = var.oid4vp_client_identifier_prefix
       responseMode             = var.sdjwt_response_mode
       customUrlScheme          = var.sdjwt_custom_url_scheme
     },

@@ -123,7 +123,7 @@ variable "sdjwt_custom_url_scheme" {
   default     = "haip-vp://"
 }
 
-variable "sdjwt_client_id_scheme" {
+variable "oid4vp_client_identifier_prefix" {
   description = "Client identifier prefix for the OID4VP authenticator (e.g., x509_hash)"
   type        = string
   default     = "x509_hash"

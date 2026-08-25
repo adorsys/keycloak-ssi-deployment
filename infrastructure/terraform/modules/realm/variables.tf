@@ -59,7 +59,7 @@ variable "sdjwt_custom_url_scheme" {
   type        = string
 }
 
-variable "sdjwt_client_id_scheme" {
+variable "oid4vp_client_identifier_prefix" {
   description = "Client identifier prefix for the OID4VP authenticator"
   type        = string
 }
