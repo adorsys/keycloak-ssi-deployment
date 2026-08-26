@@ -17,7 +17,7 @@ variable "realm" {
 }
 
 variable "enabled_scope_names" {
-  description = "OID4VC client scopes to apply and grant to Francis and Max Mustermann. Empty means all scopes in jsons/scopes."
+  description = "OID4VC client scopes to apply and grant to the managed demo users. Empty means all scopes in jsons/scopes."
   type        = list(string)
   default     = []
 }
@@ -87,38 +87,50 @@ variable "openid4vc_rest_api_post_logout_redirect_uris" {
   default     = "http://front.localhost.com##https://issuer.eudi-adorsys.com/*##https://issuer.eudi-adorsys.com"
 }
 
-variable "sdjwt_enforce_nbf_claim" {
-  description = "Enforce nbf claim for SD-JWT"
+variable "oid4vp_authentication_profiles" {
+  description = "Optional JSON array of OID4VP authentication profiles. Empty uses the legacy single-credential configuration."
+  type        = string
+  default     = ""
+}
+
+variable "oid4vp_require_nbf_claim" {
+  description = "Require the nbf time claim in presented SD-JWT credentials."
   type        = string
   default     = "false"
 }
 
-variable "sdjwt_enforce_exp_claim" {
-  description = "Enforce exp claim for SD-JWT"
+variable "oid4vp_require_exp_claim" {
+  description = "Require the exp time claim in presented SD-JWT credentials."
   type        = string
   default     = "false"
 }
 
-variable "sdjwt_kb_jwt_max_age" {
-  description = "Max age globally for kb-jwt for SD-JWT"
+variable "oid4vp_holder_binding_proof_max_age" {
+  description = "Maximum accepted age in seconds for holder-binding proofs."
   type        = string
   default     = "60"
 }
 
-variable "sdjwt_enforce_revocation_status" {
-  description = "Enforce revocation status for SD-JWT"
+variable "oid4vp_enforce_revocation_status" {
+  description = "Reject credentials marked invalid by the Token Status List mechanism."
   type        = string
   default     = "false"
 }
 
-variable "sdjwt_response_mode" {
+variable "oid4vp_response_mode" {
   description = "Response mode for the OID4VP authenticator (e.g., direct_post.jwt)"
   type        = string
   default     = "direct_post.jwt"
 }
 
-variable "sdjwt_custom_url_scheme" {
-  description = "Custom wallet URL scheme for the OID4VP authenticator"
+variable "oid4vp_request_uri_method" {
+  description = "HTTP method wallets use to dereference request_uri."
+  type        = string
+  default     = "get"
+}
+
+variable "oid4vp_custom_url_scheme" {
+  description = "Custom wallet URL scheme for authorization request links"
   type        = string
   default     = "haip-vp://"
 }
@@ -129,18 +141,50 @@ variable "oid4vp_client_identifier_prefix" {
   default     = "x509_hash"
 }
 
-variable "sdjwt_access_certificate" {
+variable "oid4vp_access_certificate" {
   description = "Base64 DER access certificate for the OID4VP authenticator"
   type        = string
   sensitive   = true
   default     = ""
 }
 
-variable "sdjwt_registration_certificate" {
+variable "oid4vp_registration_certificate" {
   description = "Registration certificate JWT for the OID4VP authenticator"
   type        = string
   sensitive   = true
   default     = ""
+}
+
+variable "oid4vp_transaction_data" {
+  description = "Optional comma-separated or newline-separated base64url-encoded transaction_data objects."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oid4vp_verifier_info" {
+  description = "Optional JSON array of verifier_info objects."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oid4vp_require_cryptographic_holder_binding" {
+  description = "Require cryptographic holder binding for presented credentials."
+  type        = string
+  default     = "true"
+}
+
+variable "oid4vp_verify_issuer_claim" {
+  description = "Require the SD-JWT iss claim to match the realm issuer URL."
+  type        = string
+  default     = "true"
+}
+
+variable "oid4vp_fallback_to_iso_spec_session_transcript" {
+  description = "Allow an ISO-spec session transcript fallback when OpenID4VP mDoc verification fails."
+  type        = string
+  default     = "false"
 }
 
 variable "initial_password" {

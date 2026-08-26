@@ -58,23 +58,30 @@ module "realm" {
     keycloak = keycloak
   }
 
-  realm                           = var.realm
-  pre_authorized_code_lifespanS   = var.pre_authorized_code_lifespanS
-  status_list_server_url          = var.status_list_server_url
-  admin_password                  = urlencode(var.admin_password)
-  keycloak_url                    = var.keycloak_url
-  status_list_enabled             = var.status_list_enabled
-  oid4vci_display                 = var.oid4vci_display
-  sdjwt_vct                       = join(",", local.configured_scope_vcts)
-  sdjwt_enforce_nbf_claim         = var.sdjwt_enforce_nbf_claim
-  sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim
-  sdjwt_kb_jwt_max_age            = var.sdjwt_kb_jwt_max_age
-  sdjwt_enforce_revocation_status = var.sdjwt_enforce_revocation_status
-  sdjwt_response_mode             = var.sdjwt_response_mode
-  sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
-  oid4vp_client_identifier_prefix = var.oid4vp_client_identifier_prefix
-  sdjwt_access_certificate        = var.sdjwt_access_certificate
-  sdjwt_registration_certificate  = var.sdjwt_registration_certificate
+  realm                                          = var.realm
+  pre_authorized_code_lifespanS                  = var.pre_authorized_code_lifespanS
+  status_list_server_url                         = var.status_list_server_url
+  admin_password                                 = urlencode(var.admin_password)
+  keycloak_url                                   = var.keycloak_url
+  status_list_enabled                            = var.status_list_enabled
+  oid4vci_display                                = var.oid4vci_display
+  oid4vp_authentication_profiles                 = var.oid4vp_authentication_profiles
+  oid4vp_credential_types                        = join(",", local.configured_scope_vcts)
+  oid4vp_client_identifier_prefix                = var.oid4vp_client_identifier_prefix
+  oid4vp_response_mode                           = var.oid4vp_response_mode
+  oid4vp_request_uri_method                      = var.oid4vp_request_uri_method
+  oid4vp_custom_url_scheme                       = var.oid4vp_custom_url_scheme
+  oid4vp_access_certificate                      = var.oid4vp_access_certificate
+  oid4vp_registration_certificate                = var.oid4vp_registration_certificate
+  oid4vp_transaction_data                        = var.oid4vp_transaction_data
+  oid4vp_verifier_info                           = var.oid4vp_verifier_info
+  oid4vp_require_cryptographic_holder_binding    = var.oid4vp_require_cryptographic_holder_binding
+  oid4vp_holder_binding_proof_max_age            = var.oid4vp_holder_binding_proof_max_age
+  oid4vp_require_nbf_claim                       = var.oid4vp_require_nbf_claim
+  oid4vp_require_exp_claim                       = var.oid4vp_require_exp_claim
+  oid4vp_verify_issuer_claim                     = var.oid4vp_verify_issuer_claim
+  oid4vp_fallback_to_iso_spec_session_transcript = var.oid4vp_fallback_to_iso_spec_session_transcript
+  oid4vp_enforce_revocation_status               = var.oid4vp_enforce_revocation_status
 }
 
 module "users" {

@@ -87,20 +87,33 @@ resource "keycloak_authentication_execution_config" "config" {
 
   config = merge(
     {
-      requireNbfClaim          = var.sdjwt_enforce_nbf_claim
-      requireExpClaim          = var.sdjwt_enforce_exp_claim
-      holderBindingProofMaxAge = var.sdjwt_kb_jwt_max_age
-      enforceRevocationStatus  = var.sdjwt_enforce_revocation_status
-      credentialTypes          = var.sdjwt_vct
-      clientIdentifierPrefix   = var.oid4vp_client_identifier_prefix
-      responseMode             = var.sdjwt_response_mode
-      customUrlScheme          = var.sdjwt_custom_url_scheme
+      credentialTypes                    = var.oid4vp_credential_types
+      clientIdentifierPrefix             = var.oid4vp_client_identifier_prefix
+      responseMode                       = var.oid4vp_response_mode
+      requestUriMethod                   = var.oid4vp_request_uri_method
+      customUrlScheme                    = var.oid4vp_custom_url_scheme
+      requireCryptographicHolderBinding  = var.oid4vp_require_cryptographic_holder_binding
+      holderBindingProofMaxAge           = var.oid4vp_holder_binding_proof_max_age
+      requireNbfClaim                    = var.oid4vp_require_nbf_claim
+      requireExpClaim                    = var.oid4vp_require_exp_claim
+      verifyIssuerClaim                  = var.oid4vp_verify_issuer_claim
+      fallbackToIsoSpecSessionTranscript = var.oid4vp_fallback_to_iso_spec_session_transcript
+      enforceRevocationStatus            = var.oid4vp_enforce_revocation_status
     },
-    trimspace(var.sdjwt_access_certificate) != "" ? {
-      accessCertificate = var.sdjwt_access_certificate
+    trimspace(var.oid4vp_authentication_profiles) != "" ? {
+      profiles = var.oid4vp_authentication_profiles
     } : {},
-    trimspace(var.sdjwt_registration_certificate) != "" ? {
-      registrationCertificate = var.sdjwt_registration_certificate
+    trimspace(var.oid4vp_access_certificate) != "" ? {
+      accessCertificate = var.oid4vp_access_certificate
+    } : {},
+    trimspace(var.oid4vp_registration_certificate) != "" ? {
+      registrationCertificate = var.oid4vp_registration_certificate
+    } : {},
+    trimspace(var.oid4vp_transaction_data) != "" ? {
+      transactionData = var.oid4vp_transaction_data
+    } : {},
+    trimspace(var.oid4vp_verifier_info) != "" ? {
+      verifierInfo = var.oid4vp_verifier_info
     } : {}
   )
 }
