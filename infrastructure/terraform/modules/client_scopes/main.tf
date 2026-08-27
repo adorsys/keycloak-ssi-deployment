@@ -63,12 +63,16 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
       if [ "$HTTP_CODE" -eq 409 ]; then
         echo "Client scope '$SCOPE_NAME' already exists (HTTP 409). Updating it..."
 
-        EXISTING_SCOPE_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/client-scopes?search=$SCOPE_NAME" \
+        EXISTING_SCOPE_ID=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id' | head -n 1)
 
         if [ -z "$EXISTING_SCOPE_ID" ] || [ "$EXISTING_SCOPE_ID" = "null" ]; then
           echo "Could not resolve existing scope id for '$SCOPE_NAME'" >&2
+          echo "Available scopes in realm '${var.realm_name}':" >&2
+          curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" | jq -r '.[].name' >&2
           exit 1
         fi
 

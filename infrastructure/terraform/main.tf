@@ -65,15 +65,23 @@ module "realm" {
   keycloak_url                    = var.keycloak_url
   status_list_enabled             = var.status_list_enabled
   oid4vci_display                 = var.oid4vci_display
-  sdjwt_vct                       = join(",", local.configured_scope_vcts)
-  sdjwt_enforce_nbf_claim         = var.sdjwt_enforce_nbf_claim
-  sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim
-  sdjwt_kb_jwt_max_age            = var.sdjwt_kb_jwt_max_age
-  sdjwt_enforce_revocation_status = var.sdjwt_enforce_revocation_status
-  sdjwt_response_mode             = var.sdjwt_response_mode
-  sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
-  sdjwt_access_certificate        = var.sdjwt_access_certificate
-  sdjwt_registration_certificate  = var.sdjwt_registration_certificate
+  sdjwt_credential_types                     = var.sdjwt_credential_types
+  sdjwt_require_nbf_claim                    = var.sdjwt_require_nbf_claim
+  sdjwt_require_exp_claim                    = var.sdjwt_require_exp_claim
+  sdjwt_holder_binding_proof_max_age         = var.sdjwt_holder_binding_proof_max_age
+  sdjwt_enforce_revocation_status            = var.sdjwt_enforce_revocation_status
+  sdjwt_response_mode                        = var.sdjwt_response_mode
+  sdjwt_client_identifier_prefix             = var.sdjwt_client_identifier_prefix
+  sdjwt_request_uri_method                   = var.sdjwt_request_uri_method
+  sdjwt_custom_url_scheme                    = var.sdjwt_custom_url_scheme
+  sdjwt_access_certificate                   = var.sdjwt_access_certificate
+  sdjwt_registration_certificate             = var.sdjwt_registration_certificate
+  sdjwt_require_cryptographic_holder_binding = var.sdjwt_require_cryptographic_holder_binding
+  sdjwt_verify_issuer_claim                  = var.sdjwt_verify_issuer_claim
+  sdjwt_fallback_to_iso_spec_session_transcript = var.sdjwt_fallback_to_iso_spec_session_transcript
+  sdjwt_profiles                             = var.sdjwt_profiles
+  sdjwt_transaction_data                     = var.sdjwt_transaction_data
+  sdjwt_verifier_info                        = var.sdjwt_verifier_info
 }
 
 module "users" {
