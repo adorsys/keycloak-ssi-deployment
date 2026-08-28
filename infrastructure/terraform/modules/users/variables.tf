@@ -3,6 +3,34 @@ variable "realm_id" {
   type        = string
 }
 
+variable "realm_name" {
+  description = "Keycloak realm name"
+  type        = string
+}
+
+variable "keycloak_url" {
+  description = "Keycloak base URL"
+  type        = string
+}
+
+variable "admin_password" {
+  description = "Keycloak admin password used to grant verifiable credentials"
+  type        = string
+  sensitive   = true
+}
+
+variable "verifiable_credentials" {
+  description = "Credential scope names granted to each managed demo user"
+  type        = list(string)
+  default     = []
+}
+
+variable "client_scopes_dependency" {
+  description = "Trigger ensuring credential grants run after client scopes are applied"
+  type        = any
+  default     = {}
+}
+
 variable "username" {
   description = "User name"
   type        = string

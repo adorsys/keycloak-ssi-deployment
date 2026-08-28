@@ -24,61 +24,93 @@ variable "keycloak_url" {
   type        = string
 }
 
-variable "sdjwt_vct" {
-  description = "Comma-separated list of VCT entries for sd-jwt authenticator"
+variable "oid4vp_authentication_profiles" {
+  description = "Optional JSON array of OID4VP authentication profiles. Empty uses the legacy single-credential configuration."
   type        = string
 }
 
-variable "sdjwt_enforce_nbf_claim" {
-  description = "Enforce nbf claim for SD-JWT"
+variable "oid4vp_credential_types" {
+  description = "Comma-separated list of credential types accepted by the OID4VP authenticator"
   type        = string
 }
 
-variable "sdjwt_enforce_exp_claim" {
-  description = "Enforce exp claim for SD-JWT"
+variable "oid4vp_require_nbf_claim" {
+  description = "Require the nbf time claim in presented SD-JWT credentials"
   type        = string
 }
 
-variable "sdjwt_kb_jwt_max_age" {
-  description = "Max age globally for kb-jwt for SD-JWT"
+variable "oid4vp_require_exp_claim" {
+  description = "Require the exp time claim in presented SD-JWT credentials"
   type        = string
 }
 
-variable "sdjwt_enforce_revocation_status" {
-  description = "Enforce revocation status for SD-JWT"
+variable "oid4vp_holder_binding_proof_max_age" {
+  description = "Maximum accepted age in seconds for holder-binding proofs"
   type        = string
 }
 
-variable "sdjwt_response_mode" {
-  description = "Response mode for SdJwtAuthenticator"
+variable "oid4vp_enforce_revocation_status" {
+  description = "Reject credentials marked invalid by the Token Status List mechanism"
   type        = string
 }
 
-variable "sdjwt_custom_url_scheme" {
-  description = "Custom wallet URL scheme for SdJwtAuthenticator"
+variable "oid4vp_response_mode" {
+  description = "Response mode for the OID4VP authenticator"
   type        = string
 }
 
-variable "sdjwt_client_id_scheme" {
-  description = "Client ID scheme for SdJwtAuthenticator"
+variable "oid4vp_request_uri_method" {
+  description = "HTTP method wallets use to dereference request_uri"
   type        = string
 }
 
-variable "sdjwt_query_language" {
-  description = "Query language for SdJwtAuthenticator"
+variable "oid4vp_custom_url_scheme" {
+  description = "Custom wallet URL scheme for authorization request links"
   type        = string
 }
 
-variable "sdjwt_access_certificate" {
-  description = "Base64 DER access certificate for SdJwtAuthenticator"
+variable "oid4vp_client_identifier_prefix" {
+  description = "Client identifier prefix for the OID4VP authenticator"
+  type        = string
+}
+
+variable "oid4vp_access_certificate" {
+  description = "Base64 DER access certificate for the OID4VP authenticator"
   type        = string
   sensitive   = true
 }
 
-variable "sdjwt_registration_certificate" {
-  description = "Registration certificate JWT for SdJwtAuthenticator"
+variable "oid4vp_registration_certificate" {
+  description = "Registration certificate JWT for the OID4VP authenticator"
   type        = string
   sensitive   = true
+}
+
+variable "oid4vp_transaction_data" {
+  description = "Optional comma-separated or newline-separated base64url-encoded transaction_data objects"
+  type        = string
+  sensitive   = true
+}
+
+variable "oid4vp_verifier_info" {
+  description = "Optional JSON array of verifier_info objects"
+  type        = string
+  sensitive   = true
+}
+
+variable "oid4vp_require_cryptographic_holder_binding" {
+  description = "Require cryptographic holder binding for presented credentials"
+  type        = string
+}
+
+variable "oid4vp_verify_issuer_claim" {
+  description = "Require the SD-JWT iss claim to match the realm issuer URL"
+  type        = string
+}
+
+variable "oid4vp_fallback_to_iso_spec_session_transcript" {
+  description = "Allow an ISO-spec session transcript fallback when OpenID4VP mDoc verification fails"
+  type        = string
 }
 
 variable "login_theme" {
