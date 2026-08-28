@@ -1,0 +1,14 @@
+# Optional environment-specific overrides.
+# Copy this file to config-override.yaml; that file is intentionally ignored.
+
+keycloak:
+  bootstrap:
+    admin_username: "admin"
+    admin_password: "${KC_BOOTSTRAP_ADMIN_PASSWORD}"
+
+database:
+  username: "${KC_DB_USERNAME}"
+  password: "${KC_DB_PASSWORD}"
+
+# Add other host-specific settings here. Values in this file take precedence
+# over deployment/keycloak/config.override.yaml and the upstream defaults.

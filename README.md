@@ -1,7 +1,7 @@
 ## Keycloak OpenID4VCI Deployment Wrapper
 
-This repository is now a **thin deployment and infrastructure wrapper** around the upstream [Keycloak OAuth SIG](https://github.com/keycloak/keycloak-oauth-sig/tree/main/oid4vci-deployment).
-The actual OpenID4VCI reference setup lives in the `keycloak-oauth-sig` submodule.
+This repository is a **deployment and infrastructure wrapper** around the upstream [Keycloak OAuth SIG](https://github.com/keycloak/keycloak-oauth-sig/tree/main/oid4vci-deployment).
+The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` submodule. SSI-owned configuration and startup scripts layer the Keycloak 26.7.2 and OID4VP plugin deployment on top of it.
 
 ---
 
@@ -9,12 +9,13 @@ The actual OpenID4VCI reference setup lives in the `keycloak-oauth-sig` submodul
 
 | Path                                     | Description                                                                                                                      |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `keycloak-oauth-sig/`                    | Git submodule pointing to the upstream repo (`keycloak/keycloak-oauth-sig`). The OpenID4VCI deployment lives inside this module. |
-| `keycloak-oauth-sig/oid4vci-deployment/` | Contains `config.yaml`, scripts, and docs for running Keycloak as an OpenID4VCI issuer.                                          |
+| `keycloak-oauth-sig/`                    | Read-only Git submodule pinned to an upstream `keycloak/keycloak-oauth-sig` commit from `main`.                                  |
+| `keycloak-oauth-sig/oid4vci-deployment/` | Contains the upstream OpenID4VCI deployment toolkit.                                                                             |
+| `deployment/keycloak/`                   | SSI-owned Keycloak 26.7.2 configuration and database-preserving start/stop scripts.                                              |
 | `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
 | `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
 | `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, users, and status list support.                       |
-| `providers/`                             | Extra Keycloak provider JARs (e.g. status list and OID4VP plugins) to bundle with the deployment image.                          |
+| `providers/`                             | SSI-managed Keycloak provider JARs installed during startup.                                                                     |
 
 ---
 
@@ -39,6 +40,8 @@ To fetch updates from the submodule’s tracked branch (main):
 git submodule update --remote --merge   # Pull latest commit from remote branch defined in .gitmodules
 ```
 
+Review and commit the resulting submodule pointer after verifying the SSI deployment wrapper against the new upstream commit. Do not commit deployment-specific changes inside the submodule.
+
 ---
 
 ### Quick setup
@@ -49,6 +52,26 @@ From the repository root, run in order:
 ./keycloak-ssi.sh setup    # Start DB + Keycloak (wait until ready)
 ./keycloak-ssi.sh config   # Configure realm, clients, keys, users
 ```
+
+`setup` uses the SSI-owned deployment layer to:
+
+- install Keycloak 26.7.2 and the OID4VP plugin 1.3.4;
+- enable the Keycloak credential-offer REST feature;
+- configure the plugin-managed realms;
+- migrate a preserved Keycloak database with the `update` strategy; and
+- restart Keycloak without deleting existing realms or database volumes.
+
+Use `./keycloak-ssi.sh setup --clean` only when an explicit fresh database is required.
+
+For environment-specific credentials or host settings, copy the example and edit the ignored file:
+
+```bash
+cp config-override.yaml.example config-override.yaml
+```
+
+Values in `config-override.yaml` override the committed defaults in `deployment/keycloak/config.override.yaml`.
+
+The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
 
 Then run a credential test, for example:
 `./keycloak-ssi.sh test preauth IdentityCredential`
@@ -72,7 +95,7 @@ You can add your own client scopes without touching the submodule by:
 This command reads `client-scopes.json`, **creates the provided client scopes**, and **assigns them as optional scopes** to the
 clients you configure (see below). By default those are `openid4vc-rest-api` and `oid4vc-demo-public` (skipping scopes or assignments that already exist).
 
-You can create or edit `config-override.yaml` at the **repository root** and define which client IDs receive the optional scopes. The script reads the variable from that file and uses it when you run `./keycloak-ssi.sh addClientScopes`. Example:
+You can also define which client IDs receive optional scopes in `config-override.yaml` at the repository root. The wrapper merges this file over the SSI defaults before running. Example:
 
 ```yaml
 # config-override.yaml (repo root, gitignored)

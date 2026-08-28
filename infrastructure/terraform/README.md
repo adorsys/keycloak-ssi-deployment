@@ -148,11 +148,10 @@ This repo separates responsibilities:
 - Terraform configures the Keycloak realm (clients, scopes, keys, SAML IdP, users, etc.) once Keycloak is reachable.
 
 #### 1. Local Keycloak quick setup (developer machine)
-The local Keycloak setup is provided by the `keycloak-oauth-sig/oid4vci-deployment` CLI.
+The local Keycloak setup uses the upstream OAuth SIG submodule through the SSI-owned deployment wrapper.
 
 From repo root, start local Keycloak:
 ```bash
-cd keycloak-oauth-sig/oid4vci-deployment
 ./keycloak-ssi.sh setup -d
 ```
 

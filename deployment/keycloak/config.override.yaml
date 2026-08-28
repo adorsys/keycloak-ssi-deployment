@@ -1,0 +1,23 @@
+# SSI-owned overrides for the upstream OAuth SIG deployment.
+#
+# Keep environment-specific values such as hostnames, database credentials, and
+# bootstrap-admin credentials in the repository-root config-override.yaml. The
+# wrapper merges that ignored file over these defaults before starting Keycloak.
+
+keycloak:
+  version: "26.7.2"
+  enable_preauth_code: true
+  enable_rest_credential_offer: true
+
+keycloak_image:
+  tag: "26.7.2"
+
+oid4vp_auth:
+  managed_realms: "oid4vc-vci,oid4vc-v-playground,oid4vc-payslip"
+  verbose_errors: false
+
+database:
+  preserve_on_stop: true
+  migration_strategy: "update"
+
+start_command: "start --hostname-strict=false --log-level=info --https-port=${KEYCLOAK_HTTPS_PORT} --https-certificate-file=${SSL_SERVER_CERT} --https-certificate-key-file=${SSL_SERVER_KEY} --spi-realm-restapi-extension-oid4vp-auth-managed-realms=${OID4VP_AUTH_MANAGED_REALMS} --spi-realm-restapi-extension-oid4vp-auth-verbose-errors=${OID4VP_AUTH_VERBOSE_ERRORS}"
