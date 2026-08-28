@@ -31,8 +31,6 @@ PROJECT_ROOT="$(determine_project_root)"
 TEST_DEPLOYMENT_DIR="$PROJECT_ROOT/keycloak-oauth-sig/oid4vci-deployment"
 SUBMODULE_CLI="$TEST_DEPLOYMENT_DIR/keycloak-ssi.sh"
 SSI_KEYCLOAK_DIR="$PROJECT_ROOT/deployment/keycloak"
-SSI_START_SCRIPT="$SSI_KEYCLOAK_DIR/start-keycloak.sh"
-SSI_STOP_SCRIPT="$SSI_KEYCLOAK_DIR/stop-keycloak.sh"
 SSI_CONFIG="$SSI_KEYCLOAK_DIR/config.override.yaml"
 SSI_COMPOSE_OVERRIDE="$SSI_KEYCLOAK_DIR/docker-compose.override.yaml"
 
@@ -271,23 +269,188 @@ cmd_helm() {
 cmd_compose() {
     check_submodule
     sync_all
-    log "Running Docker Compose without implicit volume deletion..."
+    log "Generating a temporary Docker Compose environment from the YAML configuration..."
 
     (
         cd "$TEST_DEPLOYMENT_DIR"
+        WORK_DIR="$TEST_DEPLOYMENT_DIR"
+        export WORK_DIR
         source src/utils/helper.sh
-        setup_environment
+
+        local -a config_files=("$WORK_DIR/config.yaml")
+        [[ -f "$WORK_DIR/config.override.yaml" ]] && \
+            config_files+=("$WORK_DIR/config.override.yaml")
+
+        local compose_env
+        compose_env="$(mktemp)"
+        trap 'rm -f "$compose_env"' EXIT
+
+        # Keep YAML as the single source of truth. The temporary env file is
+        # only an adapter for Docker Compose, matching the upstream flow.
+        export_yaml_as_env "${config_files[@]}" > "$compose_env"
+        printf 'KEYCLOAK_FEATURES=%s\n' "$KEYCLOAK_FEATURES" >> "$compose_env"
 
         local compose_command
         local -a compose_args=()
         compose_command="$(detect_docker_compose)"
         IFS=' ' read -r -a compose_args <<< "$compose_command"
+        log "Running Docker Compose without implicit volume deletion..."
         "${compose_args[@]}" \
+            --env-file "$compose_env" \
             -f "$TEST_DEPLOYMENT_DIR/docker-compose.yml" \
             -f "$SSI_COMPOSE_OVERRIDE" \
             "$@"
     )
 }
+
+cmd_keycloak_stop() (
+    WORK_DIR="$TEST_DEPLOYMENT_DIR"
+    export WORK_DIR
+
+    source "$WORK_DIR/src/utils/helper.sh"
+    init_script
+
+    local keycloak_only=false
+    if [[ "${1:-}" == "--keycloak-only" ]]; then
+        keycloak_only=true
+    fi
+
+    local keycloak_pid
+    local stopped=false
+    while IFS= read -r keycloak_pid || [[ -n "$keycloak_pid" ]]; do
+        [[ -z "$keycloak_pid" ]] && continue
+        stopped=true
+        log "Stopping Keycloak process $keycloak_pid..."
+        kill "$keycloak_pid" 2>/dev/null || true
+
+        local attempt
+        for attempt in {1..30}; do
+            if ! kill -0 "$keycloak_pid" 2>/dev/null; then
+                break
+            fi
+            sleep 1
+        done
+
+        if kill -0 "$keycloak_pid" 2>/dev/null; then
+            warn "Keycloak did not stop gracefully; terminating process $keycloak_pid."
+            kill -9 "$keycloak_pid" 2>/dev/null || true
+        fi
+    done < <(get_keycloak_pid || true)
+
+    rm -f "$WORK_DIR/target/keycloak.pid"
+    if [[ "$stopped" == "false" ]]; then
+        log "No running Keycloak process found."
+    fi
+
+    if [[ "$keycloak_only" == "false" ]]; then
+        local compose_command
+        local -a compose_args=()
+        compose_command="$(detect_docker_compose)"
+        IFS=' ' read -r -a compose_args <<< "$compose_command"
+        log "Stopping the database container while preserving its volume..."
+        "${compose_args[@]}" -f "$WORK_DIR/docker-compose.yml" stop db || \
+            warn "The database container could not be stopped."
+    fi
+)
+
+cmd_keycloak_setup() (
+    WORK_DIR="$TEST_DEPLOYMENT_DIR"
+    export WORK_DIR
+
+    source "$WORK_DIR/src/utils/helper.sh"
+    init_script
+
+    local detach_mode=false
+    if [[ "${1:-}" == "-d" || "${1:-}" == "--detach" ]]; then
+        detach_mode=true
+    fi
+
+    # Stop only Keycloak. Preserve PostgreSQL so existing realms can be migrated.
+    cmd_keycloak_stop --keycloak-only
+
+    log "Preparing Keycloak $KEYCLOAK_VERSION from the upstream distribution..."
+    "$WORK_DIR/src/deployment/setup-kc-oid4vci.sh"
+
+    local compose_command
+    local -a compose_args=()
+    compose_command="$(detect_docker_compose)"
+    IFS=' ' read -r -a compose_args <<< "$compose_command"
+
+    if [[ -z "${DATABASE_OPTS:-}" ]]; then
+        log "Starting the existing database container..."
+        "${compose_args[@]}" -f "$WORK_DIR/docker-compose.yml" up -d db || \
+            error "Could not start the database container."
+        DATABASE_OPTS="--db postgres --db-url-port $DATABASE_EXPOSED_PORT --db-url-database $DATABASE_NAME --db-username $DATABASE_USERNAME --db-password $DATABASE_PASSWORD"
+    fi
+
+    if [[ -z "${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:-}" || -z "${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:-}" ]]; then
+        error "Bootstrap admin credentials are missing. Configure keycloak.bootstrap in config-override.yaml."
+    fi
+
+    log "Installing SSI-managed Keycloak providers..."
+    mkdir -p "$KEYCLOAK_INSTALL_DIR/providers"
+    local provider
+    local provider_count=0
+    for provider in "$PROJECT_ROOT"/providers/*.jar; do
+        [[ -f "$provider" ]] || continue
+        cp "$provider" "$KEYCLOAK_INSTALL_DIR/providers/"
+        provider_count=$((provider_count + 1))
+    done
+    if [[ "$provider_count" -eq 0 ]]; then
+        error "No provider JARs found in $PROJECT_ROOT/providers."
+    fi
+
+    local -a database_args=()
+    local -a start_args=()
+    local -a migration_args=()
+    IFS=' ' read -r -a database_args <<< "$DATABASE_OPTS"
+    IFS=' ' read -r -a start_args <<< "$START_COMMAND"
+    if [[ -n "${DATABASE_MIGRATION_STRATEGY:-}" ]]; then
+        migration_args+=("--spi-connections-jpa-quarkus-migration-strategy=$DATABASE_MIGRATION_STRATEGY")
+    fi
+
+    cd "$KEYCLOAK_INSTALL_DIR"
+
+    log "Ensuring the bootstrap admin exists and migrating the database when required..."
+    local bootstrap_status=0
+    local bootstrap_output
+    bootstrap_output="$(bin/kc.sh bootstrap-admin user \
+        --username "$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME" \
+        --password:env KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD \
+        "${database_args[@]}" "${migration_args[@]}" 2>&1)" || bootstrap_status=$?
+
+    if [[ "$bootstrap_status" -ne 0 ]]; then
+        if grep -Eqi "user with username.*exists|duplicate key value" <<< "$bootstrap_output"; then
+            log "Bootstrap admin already exists; continuing."
+        else
+            printf '%s\n' "$bootstrap_output" >&2
+            error "Failed to bootstrap the Keycloak administrator."
+        fi
+    fi
+
+    export KC_BOOTSTRAP_ADMIN_USERNAME="$KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME"
+    export KC_BOOTSTRAP_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+
+    local log_dir="$WORK_DIR/target"
+    mkdir -p "$log_dir"
+
+    log "Starting Keycloak with features: $KEYCLOAK_FEATURES"
+    if [[ "$detach_mode" == "true" ]]; then
+        local log_file="$log_dir/keycloak.log"
+        local keycloak_pid
+        nohup bin/kc.sh "${start_args[@]}" "${database_args[@]}" \
+            "${migration_args[@]}" "--features=$KEYCLOAK_FEATURES" \
+            >"$log_file" 2>&1 &
+        keycloak_pid=$!
+        printf '%s\n' "$keycloak_pid" > "$log_dir/keycloak.pid"
+        disown "$keycloak_pid" 2>/dev/null || true
+        log "Keycloak started as process $keycloak_pid; logs: $log_file"
+    else
+        printf '%s\n' "$$" > "$log_dir/keycloak.pid"
+        exec bin/kc.sh "${start_args[@]}" "${database_args[@]}" \
+            "${migration_args[@]}" "--features=$KEYCLOAK_FEATURES"
+    fi
+)
 
 cmd_install() {
     log "Installing keycloak-ssi CLI to system PATH..."
@@ -386,7 +549,7 @@ main() {
             fi
 
             log "Starting Keycloak with the SSI-owned deployment wrapper..."
-            "$SSI_START_SCRIPT" "${setup_args[@]}"
+            cmd_keycloak_setup "${setup_args[@]}"
             ;;
         
         config)
@@ -414,7 +577,7 @@ main() {
             check_submodule
             sync_config
             log "Stopping Keycloak while preserving its database..."
-            "$SSI_STOP_SCRIPT" "$@"
+            cmd_keycloak_stop "$@"
             ;;
         
         compose)

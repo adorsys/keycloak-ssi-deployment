@@ -11,7 +11,7 @@ The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` su
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `keycloak-oauth-sig/`                    | Read-only Git submodule pinned to an upstream `keycloak/keycloak-oauth-sig` commit from `main`.                                  |
 | `keycloak-oauth-sig/oid4vci-deployment/` | Contains the upstream OpenID4VCI deployment toolkit.                                                                             |
-| `deployment/keycloak/`                   | SSI-owned Keycloak 26.7.2 configuration and database-preserving start/stop scripts.                                              |
+| `deployment/keycloak/`                   | SSI-owned Keycloak 26.7.2 configuration and Docker Compose overrides.                                                            |
 | `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
 | `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
 | `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, users, and status list support.                       |
@@ -72,6 +72,8 @@ cp config-override.yaml.example config-override.yaml
 Values in `config-override.yaml` override the committed defaults in `deployment/keycloak/config.override.yaml`.
 
 The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
+
+For Docker Compose commands, the merged YAML configuration remains the source of truth. The wrapper generates a temporary `.env` adapter, passes it explicitly to Compose, and removes it after the command completes. The SSI Compose file only mounts providers and maps those generated values into the Keycloak container.
 
 Then run a credential test, for example:
 `./keycloak-ssi.sh test preauth IdentityCredential`
