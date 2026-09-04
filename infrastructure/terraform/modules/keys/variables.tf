@@ -24,3 +24,24 @@ variable "enable_rsa_keys" {
   type        = bool
   default     = false
 }
+
+variable "issuer_keystore_path" {
+  type    = string
+  default = ""
+}
+
+variable "issuer_keystore_type" {
+  type    = string
+  default = "PKCS12"
+}
+
+variable "issuer_keystore_password" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "issuer_key_alias" {
+  type    = string
+  default = "ecdsa_key"
+}

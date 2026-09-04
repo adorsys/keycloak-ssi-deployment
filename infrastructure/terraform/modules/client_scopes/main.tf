@@ -20,8 +20,8 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
     # Trigger a re-run if the file content changes
     client_scope_hash = filemd5("${path.root}/jsons/scopes/${each.value}")
     # If the realm was recreated/reset, ensure we re-import missing scopes.
-    realm_id          = var.realm_id
-    realm_name        = var.realm_name
+    realm_id   = var.realm_id
+    realm_name = var.realm_name
   }
 
   provisioner "local-exec" {
@@ -91,6 +91,50 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
         echo "Custom OID4VC client scope from ${each.value} imported successfully."
       fi
 
+    EOT
+    interpreter = ["bash", "-c"]
+  }
+}
+
+resource "null_resource" "prune_unconfigured_client_scopes" {
+  count = length(var.prune_unconfigured_scopes) > 0 ? 1 : 0
+
+  triggers = {
+    prune_scopes = join(",", sort(var.prune_unconfigured_scopes))
+    realm_id     = var.realm_id
+    realm_name   = var.realm_name
+  }
+
+  provisioner "local-exec" {
+    command     = <<-EOT
+      set -euo pipefail
+      KC_ADMIN_USER="admin"
+      KC_ADMIN_PASS="${var.admin_password}"
+      KC_URL="${var.keycloak_url}"
+      REALM="${var.realm_name}"
+
+      TOKEN=$(curl -k -s -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "client_id=admin-cli" \
+        -d "username=$KC_ADMIN_USER" \
+        -d "password=$KC_ADMIN_PASS" \
+        -d "grant_type=password" | jq -r .access_token)
+
+      if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+        echo "Failed to obtain admin token for scope pruning" >&2
+        exit 1
+      fi
+
+      ALL_SCOPES=$(curl -k -s -X GET "$KC_URL/admin/realms/$REALM/client-scopes" -H "Authorization: Bearer $TOKEN")
+
+      PRUNE_LIST='${jsonencode(var.prune_unconfigured_scopes)}'
+      for scope_name in $(echo "$PRUNE_LIST" | jq -r '.[]'); do
+        SCOPE_ID=$(echo "$ALL_SCOPES" | jq -r --arg name "$scope_name" '.[] | select(.name == $name) | .id')
+        if [ -n "$SCOPE_ID" ] && [ "$SCOPE_ID" != "null" ]; then
+          echo "Pruning unconfigured client scope '$scope_name' ($SCOPE_ID) from realm $REALM..."
+          curl -k -s -o /dev/null -X DELETE "$KC_URL/admin/realms/$REALM/client-scopes/$SCOPE_ID" -H "Authorization: Bearer $TOKEN"
+        fi
+      done
     EOT
     interpreter = ["bash", "-c"]
   }

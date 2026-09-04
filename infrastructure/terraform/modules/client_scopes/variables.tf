@@ -23,3 +23,9 @@ variable "scope_files" {
   type        = list(string)
   default     = []
 }
+
+variable "prune_unconfigured_scopes" {
+  description = "List of client scope names to delete from Keycloak if present"
+  type        = list(string)
+  default     = []
+}

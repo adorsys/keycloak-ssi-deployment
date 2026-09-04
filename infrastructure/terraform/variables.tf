@@ -166,3 +166,70 @@ variable "optional_client_scope_client_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_local_mdoc_test" {
+  description = "Configure local mDoc and SD-JWT wallet-login profiles"
+  type        = bool
+  default     = false
+}
+
+variable "local_mdoc_trust_list_url" {
+  description = "HTTPS URL of the signed local PID Provider LoTE"
+  type        = string
+  default     = "https://localhost:9443/pid-providers.jwt"
+}
+
+variable "local_mdoc_trust_list_signing_certificate_path" {
+  description = "Path to the DER certificate used to verify the local LoTE JWT"
+  type        = string
+  default     = ""
+}
+
+variable "local_pid_provider_identifier" {
+  description = "Issuer identifier stored as TETradeName in the local PID Provider LoTE"
+  type        = string
+  default     = "urn:adorsys:local:pid-provider:keycloak"
+}
+
+variable "local_mdoc_doctype" {
+  description = "doctype of the locally issued PID mDoc"
+  type        = string
+  default     = "eu.europa.ec.eudi.pid.1"
+}
+
+variable "local_mdoc_namespace" {
+  description = "namespace containing the local PID mDoc identity claim"
+  type        = string
+  default     = "eu.europa.ec.eudi.pid.1"
+}
+
+variable "local_sdjwt_vct" {
+  description = "VCT of the local SD-JWT login profile"
+  type        = string
+  default     = "https://credentials.example.com/identity_credential"
+}
+
+variable "oid4vc_issuer_keystore_path" {
+  description = "Server-visible PKCS12 path used for the OID4VC ES256 issuer key"
+  type        = string
+  default     = ""
+}
+
+variable "oid4vc_issuer_keystore_type" {
+  description = "OID4VC issuer keystore type"
+  type        = string
+  default     = "PKCS12"
+}
+
+variable "oid4vc_issuer_keystore_password" {
+  description = "OID4VC issuer keystore and key password"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "oid4vc_issuer_key_alias" {
+  description = "ES256 signing-key alias in the OID4VC issuer keystore"
+  type        = string
+  default     = "ecdsa_key"
+}

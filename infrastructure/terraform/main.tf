@@ -49,6 +49,52 @@ locals {
   configured_scope_files = sort(distinct(compact([for record in local.selected_scope_records : record.file])))
   configured_scope_names = sort(distinct(compact([for record in local.selected_scope_records : record.name])))
   configured_scope_vcts  = sort(distinct(compact([for record in local.selected_scope_records : record.vct])))
+  unconfigured_scope_names = length(var.enabled_scope_names) == 0 ? [] : sort(distinct(compact([
+    for record in local.available_scope_records : record.name
+    if record.name != null && !contains(local.configured_scope_names, record.name)
+  ])))
+
+  local_mdoc_profiles = var.enable_local_mdoc_test ? jsonencode([
+    {
+      id         = "local-mdoc-login"
+      displayCta = { en = "Sign in with local PID mDoc" }
+      credentials = [{
+        id              = "identity-mdoc"
+        format          = "mso_mdoc"
+        credentialTypes = [var.local_mdoc_doctype]
+        role            = "primary"
+        identitySource  = "credential"
+        subjectClaim    = "${var.local_mdoc_namespace}/personal_administrative_number"
+        claims = [
+          "${var.local_mdoc_namespace}/personal_administrative_number",
+          "${var.local_mdoc_namespace}/given_name",
+          "${var.local_mdoc_namespace}/family_name",
+          "${var.local_mdoc_namespace}/issuing_authority"
+        ]
+        trust = [{
+          type                        = "eudi_pid_trust_list"
+          trustListUrl                = var.local_mdoc_trust_list_url
+          trustListSigningCertificate = filebase64(var.local_mdoc_trust_list_signing_certificate_path)
+          serviceType                 = "http://uri.etsi.org/19602/SvcType/PID/Issuance"
+          issuer                      = var.local_pid_provider_identifier
+        }]
+      }]
+    },
+    {
+      id         = "local-sdjwt-login"
+      displayCta = { en = "Sign in with local SD-JWT" }
+      credentials = [{
+        id              = "identity-sdjwt"
+        format          = "dc+sd-jwt"
+        credentialTypes = [var.local_sdjwt_vct]
+        role            = "primary"
+        identitySource  = "credential"
+        subjectClaim    = "sub"
+        claims          = ["sub", "given_name", "family_name"]
+        trust           = [{ type = "self" }]
+      }]
+    }
+  ]) : ""
 
 }
 
@@ -74,6 +120,7 @@ module "realm" {
   sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
   sdjwt_access_certificate        = var.sdjwt_access_certificate
   sdjwt_registration_certificate  = var.sdjwt_registration_certificate
+  oid4vp_profiles                 = local.local_mdoc_profiles
 }
 
 module "users" {
@@ -81,8 +128,16 @@ module "users" {
   providers = {
     keycloak = keycloak
   }
-  realm_id         = module.realm.realm_id
-  initial_password = var.initial_password
+  realm_id                          = module.realm.realm_id
+  realm_name                        = var.realm
+  initial_password                  = var.initial_password
+  admin_password                    = urlencode(var.admin_password)
+  keycloak_url                      = var.keycloak_url
+  assign_credential_offer_role      = !var.enable_local_mdoc_test
+  verifiable_credential_scope_names = var.enable_local_mdoc_test && contains(local.configured_scope_names, "PIDCredential") ? ["PIDCredential"] : []
+  client_scopes_dependency          = module.client_scopes.client_scopes_applied_trigger
+
+  depends_on = [module.client_scopes]
 }
 
 module "client_scopes" {
@@ -91,11 +146,12 @@ module "client_scopes" {
     keycloak = keycloak
   }
 
-  realm_id       = module.realm.realm_id
-  realm_name     = var.realm
-  admin_password = urlencode(var.admin_password)
-  keycloak_url   = var.keycloak_url
-  scope_files    = local.configured_scope_files
+  realm_id                  = module.realm.realm_id
+  realm_name                = var.realm
+  admin_password            = urlencode(var.admin_password)
+  keycloak_url              = var.keycloak_url
+  scope_files               = local.configured_scope_files
+  prune_unconfigured_scopes = local.unconfigured_scope_names
 }
 
 module "clients" {
@@ -104,15 +160,15 @@ module "clients" {
     keycloak = keycloak
   }
 
-  realm_id                 = module.realm.realm_id
-  realm_name               = var.realm
-  admin_password           = urlencode(var.admin_password)
-  keycloak_url             = var.keycloak_url
-  clients                  = local.clients
-  optional_client_scopes   = local.configured_scope_names
+  realm_id                         = module.realm.realm_id
+  realm_name                       = var.realm
+  admin_password                   = urlencode(var.admin_password)
+  keycloak_url                     = var.keycloak_url
+  clients                          = local.clients
+  optional_client_scopes           = local.configured_scope_names
   optional_client_scope_client_ids = var.optional_client_scope_client_ids
-  client_scopes_dependency = module.client_scopes.client_scopes_applied_trigger
-  depends_on               = [module.realm, module.client_scopes]
+  client_scopes_dependency         = module.client_scopes.client_scopes_applied_trigger
+  depends_on                       = [module.realm, module.client_scopes]
 }
 
 module "keys" {
@@ -121,11 +177,15 @@ module "keys" {
     keycloak = keycloak
   }
 
-  realm_id        = module.realm.realm_id
-  realm_name      = var.realm
-  admin_password  = urlencode(var.admin_password)
-  keycloak_url    = var.keycloak_url
-  enable_rsa_keys = var.enable_rsa_keys
+  realm_id                 = module.realm.realm_id
+  realm_name               = var.realm
+  admin_password           = urlencode(var.admin_password)
+  keycloak_url             = var.keycloak_url
+  enable_rsa_keys          = var.enable_rsa_keys
+  issuer_keystore_path     = var.oid4vc_issuer_keystore_path
+  issuer_keystore_type     = var.oid4vc_issuer_keystore_type
+  issuer_keystore_password = var.oid4vc_issuer_keystore_password
+  issuer_key_alias         = var.oid4vc_issuer_key_alias
 }
 
 module "saml_idp" {

@@ -71,6 +71,12 @@ variable "sdjwt_registration_certificate" {
   sensitive   = true
 }
 
+variable "oid4vp_profiles" {
+  description = "JSON authentication profiles for the oid4vp-authenticator"
+  type        = string
+  default     = ""
+}
+
 variable "login_theme" {
   description = "Login theme for the realm (set to keycloak.v2+oid4vp for OID4VP support)"
   type        = string

@@ -9,7 +9,22 @@ terraform {
 locals {
   rsa_issuer_key_json     = var.enable_rsa_keys ? file("${path.root}/jsons/keys/rsa-issuer-key.json") : ""
   rsa_encryption_key_json = var.enable_rsa_keys ? file("${path.root}/jsons/keys/rsa-encryption-key.json") : ""
-  ecdsa_issuer_key_json   = file("${path.root}/jsons/keys/ecdsa-issuer-key.json")
+  ecdsa_issuer_key_json = trimspace(var.issuer_keystore_path) != "" ? jsonencode({
+    name         = "ecdsa-issuer-key"
+    providerId   = "java-keystore"
+    providerType = "org.keycloak.keys.KeyProvider"
+    config = {
+      keystore         = [var.issuer_keystore_path]
+      keystoreType     = [var.issuer_keystore_type]
+      keystorePassword = [var.issuer_keystore_password]
+      keyAlias         = [var.issuer_key_alias]
+      keyPassword      = [var.issuer_keystore_password]
+      active           = ["true"]
+      priority         = ["200"]
+      enabled          = ["true"]
+      algorithm        = ["ES256"]
+    }
+  }) : file("${path.root}/jsons/keys/ecdsa-issuer-key.json")
 }
 
 resource "null_resource" "apply_custom_oid4vc_key_components" {

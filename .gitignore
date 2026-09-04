@@ -24,3 +24,6 @@ infrastructure/terraform/*.tfvars
 
 # Client scopes
 client-scopes.json
+
+# Local mdoc environment runtime files
+scripts/local-mdoc/__pycache__/

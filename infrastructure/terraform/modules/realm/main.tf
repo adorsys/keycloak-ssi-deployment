@@ -73,17 +73,17 @@ resource "null_resource" "enable_verifiable_credentials" {
   }
 }
 
-data "keycloak_authentication_execution" "sd_jwt" {
+data "keycloak_authentication_execution" "oid4vp" {
   realm_id          = keycloak_realm.oid4vc_vci.id
   parent_flow_alias = "oid4vp auth"
-  provider_id       = "sd-jwt-authenticator"
+  provider_id       = "oid4vp-authenticator"
   depends_on        = [null_resource.enable_verifiable_credentials]
 }
 
 resource "keycloak_authentication_execution_config" "config" {
   realm_id     = keycloak_realm.oid4vc_vci.id
-  execution_id = data.keycloak_authentication_execution.sd_jwt.id
-  alias        = "sd_jwt-config-alias"
+  execution_id = data.keycloak_authentication_execution.oid4vp.id
+  alias        = "oid4vp-config-alias"
 
   config = merge(
     {
@@ -97,6 +97,9 @@ resource "keycloak_authentication_execution_config" "config" {
       responseMode            = var.sdjwt_response_mode
       customUrlScheme         = var.sdjwt_custom_url_scheme
     },
+    trimspace(var.oid4vp_profiles) != "" ? {
+      profiles = var.oid4vp_profiles
+    } : {},
     trimspace(var.sdjwt_access_certificate) != "" ? {
       accessCertificate = var.sdjwt_access_certificate
     } : {},

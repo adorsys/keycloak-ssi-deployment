@@ -60,7 +60,11 @@ sync_providers() {
         mkdir -p "$dest"
         # Clean destination to avoid version conflicts
         rm -f "$dest"/*.jar
-        cp "$src"/*.jar "$dest/"
+        if [[ "${OID4VP_ONLY:-false}" == "true" ]]; then
+            cp "$src"/keycloak-oid4vp-plugin-*.jar "$dest/"
+        else
+            cp "$src"/*.jar "$dest/"
+        fi
     else
         log "No custom providers found in $src, skipping sync."
     fi
@@ -210,6 +214,11 @@ cmd_terraform() {
         # Map Keycloak config to TF_VAR equivalents
         export TF_VAR_keycloak_url="$KEYCLOAK_ADMIN_ADDR"
         export TF_VAR_admin_password="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
+        if [[ -n "${CREDENTIALS_ENABLED:-}" ]]; then
+            export TF_VAR_enabled_scope_names="$(jq -cn --arg enabled "$CREDENTIALS_ENABLED" '
+                $enabled | split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0))
+            ')"
+        fi
         
         cd "$tf_dir"
         terraform "$@"

@@ -53,6 +53,12 @@ From the repository root, run in order:
 Then run a credential test, for example:
 `./keycloak-ssi.sh test preauth IdentityCredential`
 
+For the Keycloak-main POC that issues an mDoc to a wallet and verifies it for OID4VP login with issuer-scoped EUDI
+trust-list enforcement, see [LOCAL_MDOC_ISSUANCE_AND_LOGIN.md](./LOCAL_MDOC_ISSUANCE_AND_LOGIN.md).
+
+For a plain-language explanation of the OID4VP plugin's complete authentication flow and its `self`, `x5c`, and
+`eudi_pid_trust_list` trust modes, see [OID4VP_PLUGIN_FLOW_AND_TRUST.md](./OID4VP_PLUGIN_FLOW_AND_TRUST.md).
+
 ---
 
 #### Adding custom client scopes
