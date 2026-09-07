@@ -1,9 +1,9 @@
 # How the OID4VP Keycloak plugin authenticates a user
 
-This guide explains the behavior of the `remove-tmp-username-lookup` branch in
-`/home/adorsys/adorsys_dev/keycloak-oid4vp-plugin`. It focuses on the changes made for issue #166: stable subject-based
-user lookup, issuer-aware mDoc verification, provider-scoped EUDI trust lists, SD-JWT trust behavior, and compatibility
-with Keycloak main.
+This guide explains the behavior of the `remove-tmp-username-lookup` branch in the separate
+`keycloak-oid4vp-plugin` repository. It focuses on the changes made for issue #166: stable subject-based user lookup,
+issuer-aware mDoc verification, provider-scoped EUDI trust lists, SD-JWT trust behavior, and compatibility with
+Keycloak main. Paths to plugin files are relative to the root of that repository.
 
 For the runnable local PID mDoc environment, commands, Terraform, and test LoTE server, see
 [`LOCAL_MDOC_ISSUANCE_AND_LOGIN.md`](./LOCAL_MDOC_ISSUANCE_AND_LOGIN.md).
@@ -199,7 +199,7 @@ Trust answers one question: "Which issuer keys am I willing to accept for this r
 | --- | --- | --- | --- | --- |
 | `self` | Yes | No | Enabled signing keys of the current Keycloak realm | Signed `iss` must be the current realm issuer under the normal self profile |
 | `x5c` | No direct SD-JWT policy support | Yes | Certificates pinned in `anchors` | Certificate trust is static; optional `issuer` is configuration metadata rather than an identifier discovered from the certificate |
-| `eudi_pid_trust_list` | Yes | Yes | Provider/service certificates from a signed LoTE | The configured `issuer` selects one provider, and verification is scoped to that provider's certificates |
+| `eudi_pid_trust_list` | Yes | Yes | Provider/service certificates from a signed LoTE | A credential-based primary mDoc selects one configured provider; a supporting mDoc accepts matching service certificates across the list |
 
 ### `self`: accept credentials from this Keycloak realm
 
@@ -229,6 +229,10 @@ Example for mDoc:
 
 The plugin parses the configured anchors at profile load time. During mDoc verification it validates the presented
 issuer certificate path against those anchors.
+
+A credential-based primary mDoc must configure exactly one trust policy. To support certificate rotation or several
+valid chains for the same intended issuer, put all accepted certificates in that one `x5c` policy's `anchors` array.
+This also ensures an invalid multi-policy profile fails while loading configuration instead of during login.
 
 This is useful for a closed test or a small deployment where certificates are known beforehand. Rotation requires a
 configuration update, and an anchor alone does not provide a standardized provider registration identifier. For the
@@ -275,8 +279,9 @@ The plugin then:
    compatibility fallback.
 8. Uses only that entity's matching `PID/Issuance` certificates.
 
-For a primary mDoc login, configuration validation requires exactly one trust-list policy and a nonblank `issuer`.
-This prevents ambiguity about which issuer is combined with the subject claim.
+For a credential-based primary mDoc login, configuration validation requires exactly one trust policy. When that
+policy is `eudi_pid_trust_list`, it also requires a nonblank `issuer`. This prevents ambiguity about which issuer is
+combined with the subject claim.
 
 For SD-JWT under this policy, the plugin additionally requires the signed JWT `iss` to equal the configured provider
 identifier. It then validates the JWT header's `x5c` chain against only that provider's certificates and uses the leaf
@@ -285,14 +290,20 @@ to be from configured Provider A, even when both providers occur in the same sig
 
 The verified LoTE snapshot is cached for at most 15 minutes and never beyond `NextUpdate`.
 
+The PID Providers LoTE intentionally has no per-service `ServiceStatus` filter. ETSI TS 119 602 V1.1.1 Annex D,
+Table D.3 says `ServiceStatus` must not be used for this profile: presence in the current list represents approval, and
+a provider that is no longer responsible for PID issuance must be removed by the list operator. The plugin observes
+that removal when it refreshes the cached list.
+
 ## Primary versus supporting trust-list behavior
 
 A credential-based primary credential creates the login identity, so issuer selection must be unambiguous. The strict
 PID mDoc path therefore selects exactly one configured provider before verification.
 
 A supporting credential does not choose the user. The primary credential has already done that, and explicit binding
-rules connect the supporting claims to that user. Supporting mDocs may therefore be configured with a wider set of
-trusted anchors or trust-list entries when the application genuinely accepts several issuers. Their claims still do
+rules connect the supporting claims to that user. For `eudi_pid_trust_list`, supporting mDocs use the matching
+PID-issuance certificates across the verified list; an `issuer` value does not narrow them to one provider. Supporting
+mDocs may also use a wider set of pinned anchors when the application accepts several issuers. Their claims still do
 not replace the primary subject used for account lookup.
 
 ## Presentation during issuance is different

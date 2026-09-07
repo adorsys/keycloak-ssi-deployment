@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 project_root="$(cd "$script_dir/../.." && pwd)"
 deployment_dir="$project_root/keycloak-oauth-sig/oid4vci-deployment"
-plugin_source="${OID4VP_PLUGIN_SOURCE_DIR:-/home/adorsys/adorsys_dev/keycloak-oid4vp-plugin}"
+plugin_source="${OID4VP_PLUGIN_SOURCE_DIR:-$project_root/../keycloak-oid4vp-plugin}"
 runtime_dir="$project_root/target/local-mdoc"
 terraform_data_dir="$runtime_dir/terraform-data"
 terraform_work_dir="$runtime_dir/terraform-work"
@@ -25,7 +25,11 @@ load_deployment_config() {
 }
 
 build_plugin() {
-  [[ -d "$plugin_source" ]] || { echo "OID4VP plugin source not found: $plugin_source" >&2; exit 1; }
+  [[ -d "$plugin_source" ]] || {
+    echo "OID4VP plugin source not found: $plugin_source" >&2
+    echo "Set OID4VP_PLUGIN_SOURCE_DIR to the plugin repository's absolute path." >&2
+    exit 1
+  }
 
   local mvn_cmd="$plugin_source/mvnw"
   if [[ ! -x "$mvn_cmd" ]]; then

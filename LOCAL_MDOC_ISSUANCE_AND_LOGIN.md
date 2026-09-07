@@ -56,9 +56,11 @@ For this environment, the effective authentication identity is therefore:
  eu.europa.ec.eudi.pid.1/personal_administrative_number)
 ```
 
-The profile accepts exactly one configured PID Provider. Enforcing that issuer before user lookup is equivalent to
+The credential-based primary mDoc must configure exactly one trust policy. This profile uses one EUDI PID trust-list
+policy and accepts exactly one configured PID Provider. Enforcing that issuer before user lookup is equivalent to
 using the `(issuer, subject)` pair for this single-issuer profile. It does not implement trust-on-first-login and does
-not write an issuer attribute onto a user.
+not write an issuer attribute onto a user. An `x5c` primary can include several certificates for rotation in the single
+policy's `anchors` array.
 
 ## SD-JWT is already issuer-bound
 
@@ -78,11 +80,18 @@ from being accepted under Provider A's configuration when both providers occur i
 
 ## Repository layout
 
-The runner uses these local checkouts:
+By default, the runner expects the two repositories to be sibling directories:
 
 ```text
-/home/adorsys/adorsys_dev/keycloak-ssi-deployment
-/home/adorsys/adorsys_dev/keycloak-oid4vp-plugin
+<workspace>/
+├── keycloak-ssi-deployment/
+└── keycloak-oid4vp-plugin/
+```
+
+If they are stored elsewhere, pass the plugin repository's full path when running the command:
+
+```bash
+export OID4VP_PLUGIN_SOURCE_DIR=/absolute/path/to/keycloak-oid4vp-plugin
 ```
 
 The `keycloak-oauth-sig` submodule inside `keycloak-ssi-deployment` provides the upstream deployment harness
@@ -90,12 +99,12 @@ The `keycloak-oauth-sig` submodule inside `keycloak-ssi-deployment` provides the
 `keycloak-oauth-sig/oid4vci-deployment/target/keycloak_main` and builds it. The runner copies configuration and the
 staged provider into the submodule's deployment area but does not require changes to the upstream Java source.
 
-With the current HTTPS `repo_url`, `/home/adorsys/adorsys_dev/keycloak-oid4vc` is useful for reviewing Keycloak-main
-code but is not read by the runner. To build that checkout instead, set:
+With the current HTTPS `repo_url`, a separate `keycloak-oid4vc` checkout is useful for reviewing Keycloak-main code but
+is not read by the runner. To build a local checkout instead, provide its absolute path as a `file://` URL:
 
 ```yaml
 keycloak:
-  repo_url: "file:///home/adorsys/adorsys_dev/keycloak-oid4vc"
+  repo_url: "file:///absolute/path/to/keycloak-oid4vc"
 ```
 
 Important files are:
@@ -207,7 +216,9 @@ avoid other local PostgreSQL instances.
 From the deployment repository:
 
 ```bash
-cd /home/adorsys/adorsys_dev/keycloak-ssi-deployment
+cd /absolute/path/to/keycloak-ssi-deployment
+# Required only when the plugin is not a sibling of this repository:
+export OID4VP_PLUGIN_SOURCE_DIR=/absolute/path/to/keycloak-oid4vp-plugin
 ./scripts/local-mdoc/local-mdoc-env.sh start
 ```
 
@@ -220,9 +231,10 @@ The command performs the complete setup:
    a clean, reproducible database and avoids accidentally connecting the new Keycloak process to old realm state.
 3. Builds `KEYCLOAK_FEATURES` from the configured features. It adds `oid4vc-mdoc` when `PIDCredential` is enabled,
    while the override enables the pre-authorized-code and REST credential-offer features.
-4. Clean-builds the OID4VP plugin from `/home/adorsys/adorsys_dev/keycloak-oid4vp-plugin` and stages its shaded provider
-   JAR as `providers/keycloak-oid4vp-plugin-1.1.9.jar`. The fixed filename is only the deployment staging name; the
-   Maven project version remains inside the JAR.
+4. Clean-builds the OID4VP plugin from the sibling `../keycloak-oid4vp-plugin` directory, or from the full path supplied
+   through `OID4VP_PLUGIN_SOURCE_DIR`, and stages its shaded provider JAR as
+   `providers/keycloak-oid4vp-plugin-1.1.9.jar`. The fixed filename is only the deployment staging name; the Maven
+   project version remains inside the JAR.
 5. Invokes `./keycloak-ssi.sh setup -d`. The upstream harness obtains Keycloak branch `main` from
    `https://github.com/adorsys/keycloak-oid4vc.git`, builds `999.0.0-SNAPSHOT` when needed, prepares the distribution,
    and starts PostgreSQL and Keycloak.
@@ -587,6 +599,10 @@ signer. Later runs reuse them so the certificate pinned in Terraform remains sta
 5. Creates a compact JWS with `typ=trustlist+jwt`, `alg=RS256`, `sigT`, and the LoTE signing certificate in `x5c`.
 6. Signs `base64url(header) + "." + base64url(payload)` and writes `pid-providers.jwt`.
 
+The PID issuance service deliberately has no `ServiceStatus`. ETSI TS 119 602 V1.1.1 Annex D, Table D.3 requires
+`ServiceStatus` to be absent from a PID Providers LoTE. Membership in the current list means the provider is approved;
+the list operator removes a provider that is no longer responsible for PID issuance.
+
 The payload has an issue time one minute in the past and a `NextUpdate` 30 days in the future. The signing certificate
 is valid for ten years, but both durations are test-fixture choices rather than production lifecycle policy.
 
@@ -638,6 +654,10 @@ When the wallet presents the issued mDoc, the plugin performs the following trus
 7. Validate the mDoc `issuerAuth` using those certificates.
 8. Return the matched entity identifier as the verified credential issuer.
 9. Enforce that issuer together with the configured subject claim before resolving the Keycloak user.
+
+There is no `ServiceStatus` check for this PID profile because the standard forbids that field here. Removal of an
+unapproved provider from a newly published list takes effect when the plugin refreshes its cached snapshot, which is
+held for at most 15 minutes and never beyond `NextUpdate`.
 
 This is a standards-shaped interoperability fixture, not a production trust service. The plugin parses and validates
 the security-relevant ETSI subset it consumes; it is not a complete ETSI schema/JAdES conformance validator. A
