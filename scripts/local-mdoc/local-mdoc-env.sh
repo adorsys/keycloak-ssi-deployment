@@ -11,6 +11,7 @@ terraform_work_dir="$runtime_dir/terraform-work"
 terraform_state="$runtime_dir/terraform.tfstate"
 terraform_secrets="$project_root/infrastructure/terraform/secrets-local.tfvars"
 provider_id="urn:adorsys:local:pid-provider:keycloak"
+mdoc_ca_alias="local_mdoc_iaca"
 local_keycloak_url="https://localhost:10443"
 
 load_deployment_config() {
@@ -82,8 +83,12 @@ start_lote_server() {
   pkill -f 'serve-test-lote.py' 2>/dev/null || true
   sleep 0.5
 
+  "$script_dir/ensure-mdoc-issuer-chain.sh" \
+    "$runtime_dir" "$KEYSTORE_PATH" "$KEYSTORE_PASSWORD" "$KEYSTORE_ALIASES_ECDSA_KEY" "$mdoc_ca_alias"
+
   "$script_dir/generate-test-lote.sh" \
-    "$runtime_dir" "$KEYSTORE_PATH" "$KEYSTORE_PASSWORD" "$KEYSTORE_ALIASES_ECDSA_KEY" "$provider_id"
+    "$runtime_dir" "$KEYSTORE_PATH" "$KEYSTORE_PASSWORD" "$KEYSTORE_ALIASES_ECDSA_KEY" "$provider_id" \
+    "$runtime_dir/mdoc-iaca.crt.der"
 
   nohup python3 "$script_dir/serve-test-lote.py" \
     --directory "$runtime_dir" \
@@ -155,6 +160,15 @@ stop_existing_instance() {
   pkill -f 'serve-test-lote.py' 2>/dev/null || true
 }
 
+reset_disposable_terraform_state() {
+  if [[ -f "$terraform_state" ]]; then
+    local archived_state="${terraform_state}.before-fresh-start.$(date -u '+%Y%m%dT%H%M%SZ')"
+    mv "$terraform_state" "$archived_state"
+    echo "[INFO] Archived disposable Terraform state to $archived_state"
+  fi
+  rm -f "${terraform_state}.backup"
+}
+
 wait_for_keycloak() {
   for _ in $(seq 1 120); do
     if curl -ksSf "$local_keycloak_url/realms/master" >/dev/null; then
@@ -198,6 +212,14 @@ apply_terraform() {
     -var="admin_password=$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD"
   )
 
+  if [[ -n "${OID4VP_PUBLIC_URL:-}" ]]; then
+    if [[ ! "$OID4VP_PUBLIC_URL" =~ ^https://[^/]+/?$ ]]; then
+      echo "OID4VP_PUBLIC_URL must be an HTTPS origin without a path: $OID4VP_PUBLIC_URL" >&2
+      exit 1
+    fi
+    tf_vars+=(-var="realm_frontend_url=${OID4VP_PUBLIC_URL%/}")
+  fi
+
   if [[ -n "${CREDENTIALS_ENABLED:-}" ]]; then
     local scope_names_json
     scope_names_json="$(jq -cn --arg enabled "$CREDENTIALS_ENABLED" '
@@ -235,6 +257,23 @@ verify_environment() {
   if [[ -z "${CREDENTIALS_ENABLED:-}" ]] || [[ ",${CREDENTIALS_ENABLED:-}," == *",PIDCredential,"* ]]; then
     curl -ksSf "$local_keycloak_url/realms/oid4vc-vci/.well-known/openid-credential-issuer" \
       | jq -e '.credential_configurations_supported.PIDCredential.format == "mso_mdoc"' >/dev/null
+
+    local chain_length
+    chain_length="$(keytool -J-Duser.language=en -J-Duser.country=US -list -v \
+      -keystore "$KEYSTORE_PATH" \
+      -storetype PKCS12 \
+      -storepass "$KEYSTORE_PASSWORD" \
+      -alias "$KEYSTORE_ALIASES_ECDSA_KEY" \
+      | sed -n 's/^Certificate chain length: //p' \
+      | head -n 1)"
+    if [[ ! "$chain_length" =~ ^[2-9][0-9]*$ ]]; then
+      echo "The mDoc ES256 key must have a CA-issued certificate chain; found length '$chain_length'." >&2
+      exit 1
+    fi
+    openssl x509 -inform DER -in "$runtime_dir/mdoc-iaca.crt.der" -noout -checkend 0 >/dev/null
+    openssl verify \
+      -CAfile "$runtime_dir/mdoc-iaca.crt.pem" \
+      "$runtime_dir/mdoc-document-signer.crt.pem" >/dev/null
   fi
   echo "Local mDoc environment is ready."
   echo "Issuer metadata: $local_keycloak_url/realms/oid4vc-vci/.well-known/openid-credential-issuer"
@@ -246,6 +285,9 @@ start_environment() {
   load_deployment_config
   # Always shut down any existing Keycloak instance first to avoid port conflicts
   stop_existing_instance
+  # stop_existing_instance removes the database volume. Reusing state would leave
+  # null_resource provisioners (custom scopes, keys, and grants) incorrectly marked complete.
+  reset_disposable_terraform_state
   local kc_features="${KEYCLOAK_FEATURES:-oid4vc-vci}"
   if [[ -z "${CREDENTIALS_ENABLED:-}" ]] || [[ ",${CREDENTIALS_ENABLED:-}," == *",PIDCredential,"* ]]; then
     if [[ ",$kc_features," != *",oid4vc-mdoc,"* ]]; then
@@ -288,7 +330,10 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
       load_deployment_config
       start_lote_server
       ;;
-    verify) verify_environment ;;
+    verify)
+      load_deployment_config
+      verify_environment
+      ;;
     stop) stop_environment ;;
     *) echo "Usage: $0 {start|configure|refresh-lote|verify|stop}" >&2; exit 1 ;;
   esac

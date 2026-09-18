@@ -1,9 +1,8 @@
 # How the OID4VP Keycloak plugin authenticates a user
 
-This guide explains the behavior of the `remove-tmp-username-lookup` branch in the separate
-`keycloak-oid4vp-plugin` repository. It focuses on the changes made for issue #166: stable subject-based user lookup,
-issuer-aware mDoc verification, provider-scoped EUDI trust lists, SD-JWT trust behavior, and compatibility with
-Keycloak main. Paths to plugin files are relative to the root of that repository.
+This guide explains the merged behavior of the separate `keycloak-oid4vp-plugin` repository: subject-based local-user
+recovery, verified-origin external-user import, issuer-aware mDoc verification, provider-scoped EUDI trust lists,
+SD-JWT trust behavior, and compatibility with Keycloak main. Paths to plugin files are relative to that repository.
 
 For the runnable local PID mDoc environment, commands, Terraform, and test LoTE server, see
 [`LOCAL_MDOC_ISSUANCE_AND_LOGIN.md`](./LOCAL_MDOC_ISSUANCE_AND_LOGIN.md).
@@ -22,7 +21,14 @@ Wallet presents an SD-JWT or mDoc
 Plugin verifies the credential, holder binding, claims, and issuer trust
           |
           v
-Plugin reads subjectClaim and resolves that exact Keycloak user ID
+Plugin classifies the verified credential as current-realm or external
+          |
+          v
+Current realm: subjectClaim resolves the exact Keycloak user ID
+External realm: (verified issuer, subjectClaim) resolves a federated link
+          |
+          v
+If enabled, an unknown external identity is imported through mapped claims
           |
           v
 Optional binding rules compare other claims with the user or primary credential
@@ -31,14 +37,15 @@ Optional binding rules compare other claims with the user or primary credential
 Keycloak completes the normal login and returns an authorization code
 ```
 
-For a credential-based primary login, the security identity is conceptually:
+For a credential-based primary login, the security context is conceptually:
 
 ```text
 (verified credential issuer, configured subject claim)
 ```
 
-The subject value selects the Keycloak user. The verified issuer prevents an equally named subject from an unrelated
-issuer from being trusted by the same profile.
+The subject value is used only after issuer trust has been enforced. Current-realm credentials resolve that value as
+the immutable Keycloak user ID. External credentials use an opaque federated-link ID derived from the verified
+`(issuer, subject)` pair. They are never matched to local users by username or email.
 
 ## The configuration model
 
@@ -79,7 +86,7 @@ The important fields are:
 | `identitySource: credential` | Read identity from the credential instead of an existing issuance session |
 | `format` | Select the SD-JWT or mDoc verifier |
 | `credentialTypes` | Allowed SD-JWT `vct` values or the required mDoc `docType` |
-| `subjectClaim` | Claim containing the immutable Keycloak user ID |
+| `subjectClaim` | Stable subject: the immutable Keycloak user ID for same-realm credentials, or an issuer-scoped external subject for third-party credentials |
 | `claims` | Claims the wallet is asked to disclose; it must include `subjectClaim` for credential identity |
 | `trust` | Rules that decide which credential issuers are accepted |
 
@@ -141,9 +148,10 @@ For mDoc, the plugin verifies:
 ### 5. Issuer enforcement happens before user lookup
 
 For the primary PID mDoc trust-list flow, `TrustedProviderResolver` selects exactly one configured provider from the
-signed LoTE and gives `MdocCredentialVerifier` only that provider's PID issuance certificates. After successful mDoc
-verification, the verifier returns that provider identifier. `OID4VPAuthenticator` checks it again against the profile
-as defense in depth.
+signed LoTE and gives `MdocCredentialVerifier` only that provider's PID issuance certificates. The mDoc establishes
+that it belongs to the configured provider's trust domain only when PKIX verification succeeds against those
+provider-specific certificates. There is no later issuer comparison or issuer field in the verifier result because
+that would only carry and compare a value copied from the same configuration.
 
 This is the important ordering:
 
@@ -153,16 +161,19 @@ verify LoTE -> select configured provider -> verify mDoc -> establish issuer -> 
 
 The plugin never looks up the user first and then decides whether the issuer was acceptable.
 
-### 6. The subject claim resolves the Keycloak user
+### 6. The verified origin and subject resolve the Keycloak user
 
-The plugin reads the configured `subjectClaim` from the verified primary claims and calls Keycloak's user provider by
-internal user ID.
+The plugin reads `subjectClaim` only from verified primary claims. If the signature key belongs to the current realm
+and the issuer namespace matches the current realm URL, it calls Keycloak's user provider by internal user ID. If the
+credential is externally issued, it computes a versioned opaque external ID from the verified issuer namespace and
+subject, then resolves the federated link owned by the configured import provider.
 
-There is no username fallback and no automatic issuer-to-user enrollment:
+There is no username fallback or automatic account merging:
 
 ```text
 subject claim missing                          -> reject
-subject does not identify an existing user     -> reject
+same-realm subject does not identify a user    -> reject
+external link absent and import disabled       -> reject
 resolved user is disabled                      -> reject
 issuer verification or issuer match fails      -> reject
 ```
@@ -199,7 +210,22 @@ Trust answers one question: "Which issuer keys am I willing to accept for this r
 | --- | --- | --- | --- | --- |
 | `self` | Yes | No | Enabled signing keys of the current Keycloak realm | Signed `iss` must be the current realm issuer under the normal self profile |
 | `x5c` | No direct SD-JWT policy support | Yes | Certificates pinned in `anchors` | Certificate trust is static; optional `issuer` is configuration metadata rather than an identifier discovered from the certificate |
-| `eudi_pid_trust_list` | Yes | Yes | Provider/service certificates from a signed LoTE | A credential-based primary mDoc selects one configured provider; a supporting mDoc accepts matching service certificates across the list |
+| `eudi_pid_trust_list` | Yes | Yes | Provider/service certificates from a signed LoTE | An SD-JWT's signed `iss` selects one provider and an optional configured issuer pins it; a credential-based primary mDoc selects one configured provider; a supporting mDoc accepts matching service certificates across the list |
+
+### Administrator decision table
+
+| Credential and purpose | Configure | Do not configure | Why |
+| --- | --- | --- | --- |
+| Same-realm SD-JWT primary | One `self` policy | `x5c`; or `self` mixed with another policy | The realm's enabled signing keys and signed `iss` establish both trust and local origin |
+| External SD-JWT PID | `eudi_pid_trust_list`; normally pin `issuer` for a single-provider profile | Standalone `x5c` | The signed `iss` selects the provider and its `x5c` chain is checked only against that provider's LoTE certificates |
+| Primary mDoc with pinned certificates | Exactly one `x5c` policy; add a stable `issuer` if user import is possible | `self`; multiple trust policies | mDoc has no signed `iss`; PKIX proves the chain, while configured `issuer` supplies a stable external namespace |
+| Primary PID mDoc using a LoTE | Exactly one `eudi_pid_trust_list` policy with nonblank `issuer` | Missing or ambiguous provider selection | The provider is selected before PKIX verification and becomes the verified issuer namespace |
+| Supporting mDoc | `x5c` anchors or `eudi_pid_trust_list`, plus an explicit binding rule | Using its subject to choose the user | The primary credential already chose the account; the supporting credential adds independently verified evidence |
+| Presentation during issuance | A format-appropriate trust policy and at least one user binding | Treating the credential subject as login identity | The existing issuance session supplies the user |
+
+The policy is attached to each credential requirement, not to the profile as a whole. In a dual-credential profile,
+the SD-JWT primary and mDoc supporting credential therefore need separate `trust` arrays. Trusting one never makes the
+other trusted.
 
 ### `self`: accept credentials from this Keycloak realm
 
@@ -283,10 +309,12 @@ For a credential-based primary mDoc login, configuration validation requires exa
 policy is `eudi_pid_trust_list`, it also requires a nonblank `issuer`. This prevents ambiguity about which issuer is
 combined with the subject claim.
 
-For SD-JWT under this policy, the plugin additionally requires the signed JWT `iss` to equal the configured provider
-identifier. It then validates the JWT header's `x5c` chain against only that provider's certificates and uses the leaf
-certificate to verify the JWT signature. A certificate belonging to Provider B cannot validate a credential claiming
-to be from configured Provider A, even when both providers occur in the same signed LoTE.
+For SD-JWT under this policy, the plugin always requires a nonblank signed JWT `iss`. When `trust[].issuer` is
+configured, it pins the credential to that provider and must equal the signed `iss`. When `trust[].issuer` is omitted,
+the signed `iss` dynamically selects the exact provider from the LoTE. It then validates the JWT header's `x5c` chain
+against only that selected provider's certificates and uses the leaf certificate to verify the JWT signature. A
+certificate belonging to Provider B cannot validate a credential claiming Provider A as its issuer, even when both
+providers occur in the same signed LoTE.
 
 The verified LoTE snapshot is cached for at most 15 minutes and never beyond `NextUpdate`.
 
@@ -294,6 +322,65 @@ The PID Providers LoTE intentionally has no per-service `ServiceStatus` filter. 
 Table D.3 says `ServiceStatus` must not be used for this profile: presence in the current list represents approval, and
 a provider that is no longer responsible for PID issuance must be removed by the list operator. The plugin observes
 that removal when it refreshes the cached list.
+
+## Importing a user from another Keycloak realm
+
+Consider source realm `https://issuer.example/realms/source` and login realm
+`https://login.example/realms/target`. The source realm issues the credential; the target realm runs this verifier and
+owns the imported account. The target does not query the source realm's user database.
+
+```text
+source realm issues credential
+          |
+          v
+wallet presents it to target realm
+          |
+          v
+target verifies format + signature + issuer trust + holder binding
+          |
+          v
+external ID = hash(verified issuer namespace, verified subject)
+          |
+          +-- existing federated link --> authenticate linked target user
+          `-- no link + import enabled --> validate mappings, create user and link atomically
+```
+
+The target realm needs all of the following:
+
+1. A primary credential profile with a stable `subjectClaim` included in `claims`.
+2. Trust configuration that produces a stable verified issuer namespace.
+3. `importUnknownUsers=true` and the correct `importIdentityProviderAlias` on the authenticator.
+4. A hidden, enabled identity provider with provider ID `oid4vp-plugin-import` and the configured alias.
+5. Plugin-owned attribute mappers for every field required by the target realm's user profile.
+
+For an SD-JWT issued by the source realm, its signed `iss` normally supplies the issuer namespace and `sub` supplies
+the subject. Use `eudi_pid_trust_list`; the plugin does not implement standalone `x5c` trust for SD-JWT. The trust-list
+provider identifier must match the signed `iss`, or the configured `trust.issuer` must pin that exact value.
+
+For an mDoc issued by the source realm, there is no signed `iss`. With `x5c`, configure a stable nonblank
+`trust.issuer` owned by that trust domain, for example the source realm URL or a registered provider URN, and pin its
+dedicated CA anchors. With `eudi_pid_trust_list`, configure the exact registered PID Provider identifier. The
+namespace-qualified mDoc `subjectClaim` and the issuer namespace together define the external identity.
+
+### Important administrator rules
+
+- Use distinct credential-signing keys for every realm. Reusing a key can make current-realm versus external origin
+  ambiguous, especially for mDoc.
+- A same-realm credential must carry the Keycloak internal user ID in `subjectClaim`; there is deliberately no
+  username fallback.
+- For external credentials, choose an issuer-defined stable unique subject. Names, birth dates, and display labels are
+  not safe identifiers.
+- Username/email mappers only populate the new local account. They never locate, merge, or link an existing account.
+  Collisions fail closed.
+- Changing `trust.issuer`, `subjectClaim`, or the import-provider alias changes the federated-link namespace and can
+  make existing imported accounts unreachable.
+- `importUnknownUsers=false` stops new account creation, but existing correctly linked users can still log in.
+- The hidden import provider is a mapper/link host, not a browser identity provider. Keep it hidden and do not expect
+  it to initiate login.
+- Required user-profile fields must be mapped before enabling import. Validation or mapper failures roll back the
+  entire creation transaction.
+- Retain old trusted issuer keys/anchors for the lifetime of credentials that must remain usable, and plan rotation
+  before removing them.
 
 ## Primary versus supporting trust-list behavior
 
@@ -326,25 +413,27 @@ This is separate from normal wallet login, where `identitySource: credential` an
 - Removed the post-lookup username mismatch check.
 - Kept username available only for explicit `claim_equals_user_attribute` binding rules.
 
-### Verified issuer now travels with verified claims
+### Issuer trust is enforced before claims are used
 
-- Added `VerifiedCredential(issuer, claims)` as the format-verifier result.
-- Added `CredentialIdentity(issuer, subject)` to make the intended identity pair explicit.
-- SD-JWT obtains issuer from the signed `iss` claim.
-- Strict PID mDoc obtains issuer from the selected LoTE provider entry, not from `issuing_authority` display data.
+- `VerifiedCredential` carries only the verified claims consumed by user recovery and binding rules.
+- SD-JWT trust validation checks the signed `iss` before returning those claims.
+- Strict PID mDoc trust validation selects the configured LoTE provider's certificates before verifying the mDoc.
+- `issuing_authority` remains display data and is not used as a trust identifier.
 
 ### mDoc trust-list issuer enforcement added
 
 - The LoTE parser preserves provider-to-service-to-certificate structure.
 - A primary PID profile must name one provider.
 - Only that provider's issuance certificates validate the mDoc.
-- The resolved provider identifier is enforced before subject-based user lookup.
+- Successful provider-specific certificate verification establishes the issuer namespace before subject-based user
+  lookup.
 
 ### SD-JWT trust-list isolation hardened
 
-- EUDI SD-JWT verification now resolves the configured provider first.
-- Its JWT `x5c` chain is checked against that provider's certificates rather than a flattened list containing every
-  provider certificate.
+- EUDI SD-JWT verification resolves the exact provider identified by the signed JWT `iss`.
+- When an issuer is configured in the trust policy, it pins the credential and must match the signed `iss`.
+- The JWT `x5c` chain is checked against only that provider's certificates rather than a flattened list containing
+  every provider certificate.
 
 ### Keycloak-main authorization-code compatibility fixed
 
@@ -366,8 +455,8 @@ Authentication is rejected when any required step fails, including:
 - disabled Keycloak user; or
 - failed primary/supporting binding rule.
 
-The plugin does not trust-on-first-login, does not save the first presented issuer on a user, and does not fall back to
-username when subject lookup fails.
+The plugin does not trust-on-first-login and does not fall back to username. Optional import occurs only after complete
+verification, uses a verified issuer-qualified federated link, and fails rather than merging colliding accounts.
 
 ## Main code map
 
@@ -376,10 +465,12 @@ username when subject lookup fails.
 | Build signed OpenID4VP request | `AuthorizationRequestService` |
 | Process wallet response and complete login | `AuthorizationResponseService` |
 | Orchestrate primary user lookup and supporting bindings | `OID4VPAuthenticator` |
+| Create, link, and resynchronize external users | `OID4VPUserProvisioner` |
+| Host the hidden import link/mappers | `OID4VPImportIdentityProvider` |
 | Verify SD-JWT presentation | `SdJwtCredentialVerifier` |
 | Choose SD-JWT trust implementation | `SdJwtTrustedIssuerResolver` |
 | Verify mDoc presentation | `MdocCredentialVerifier` |
-| Resolve mDoc anchors and provider issuer | `TrustedProviderResolver` |
+| Resolve mDoc provider-specific trust anchors | `TrustedProviderResolver` |
 | Download/cache a signed PID LoTE | `EudiPidTrustListProvider` |
 | Authenticate the LoTE JWS | `EudiTrustListJwtVerifier` |
 | Preserve entity/service/certificate associations | `EudiTrustListPayloadParser` |

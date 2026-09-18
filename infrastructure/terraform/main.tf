@@ -54,7 +54,7 @@ locals {
     if record.name != null && !contains(local.configured_scope_names, record.name)
   ])))
 
-  local_mdoc_profiles = var.enable_local_mdoc_test ? jsonencode([
+  local_mdoc_profiles = var.enable_local_mdoc_test ? [
     {
       id         = "local-mdoc-login"
       displayCta = { en = "Sign in with local PID mDoc" }
@@ -94,7 +94,41 @@ locals {
         trust           = [{ type = "self" }]
       }]
     }
-  ]) : ""
+  ] : []
+
+  german_wallet_import_profiles = var.enable_german_wallet_import_test ? [
+    {
+      id         = "german-wallet-mdoc-import"
+      displayCta = { en = "Sign in with German test PID" }
+      credentials = [{
+        id              = "german-pid-mdoc"
+        format          = "mso_mdoc"
+        credentialTypes = ["eu.europa.ec.eudi.pid.1"]
+        role            = "primary"
+        identitySource  = "credential"
+        # The German demo PID has no stable person identifier. This is deliberately
+        # test-only; see GERMAN_WALLET_EXTERNAL_USER_IMPORT.md.
+        subjectClaim = "eu.europa.ec.eudi.pid.1/birth_date"
+        claims = [
+          "eu.europa.ec.eudi.pid.1/birth_date",
+          "eu.europa.ec.eudi.pid.1/given_name",
+          "eu.europa.ec.eudi.pid.1/family_name",
+          "eu.europa.ec.eudi.pid.1/issuing_country"
+        ]
+        trust = [{
+          type                        = "eudi_pid_trust_list"
+          trustListUrl                = var.german_wallet_pid_trust_list_url
+          trustListSigningCertificate = filebase64(var.german_wallet_pid_trust_list_signing_certificate_path)
+          serviceType                 = "http://uri.etsi.org/19602/SvcType/PID/Issuance"
+          issuer                      = var.german_wallet_pid_provider_identifier
+        }]
+      }]
+    }
+  ] : []
+
+  oid4vp_profiles = length(concat(local.local_mdoc_profiles, local.german_wallet_import_profiles)) > 0 ? jsonencode(
+    concat(local.local_mdoc_profiles, local.german_wallet_import_profiles)
+  ) : ""
 
 }
 
@@ -105,6 +139,7 @@ module "realm" {
   }
 
   realm                           = var.realm
+  realm_frontend_url              = var.realm_frontend_url
   pre_authorized_code_lifespanS   = var.pre_authorized_code_lifespanS
   status_list_server_url          = var.status_list_server_url
   admin_password                  = urlencode(var.admin_password)
@@ -116,11 +151,14 @@ module "realm" {
   sdjwt_enforce_exp_claim         = var.sdjwt_enforce_exp_claim
   sdjwt_kb_jwt_max_age            = var.sdjwt_kb_jwt_max_age
   sdjwt_enforce_revocation_status = var.sdjwt_enforce_revocation_status
+  oid4vp_client_identifier_prefix = var.oid4vp_client_identifier_prefix
   sdjwt_response_mode             = var.sdjwt_response_mode
   sdjwt_custom_url_scheme         = var.sdjwt_custom_url_scheme
   sdjwt_access_certificate        = var.sdjwt_access_certificate
   sdjwt_registration_certificate  = var.sdjwt_registration_certificate
-  oid4vp_profiles                 = local.local_mdoc_profiles
+  oid4vp_profiles                 = local.oid4vp_profiles
+  oid4vp_import_unknown_users     = var.enable_german_wallet_import_test
+  oid4vp_import_idp_alias         = var.oid4vp_import_idp_alias
 }
 
 module "users" {

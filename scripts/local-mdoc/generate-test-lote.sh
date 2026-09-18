@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 5 ]]; then
-  echo "Usage: $0 <output-dir> <issuer-keystore> <store-password> <key-alias> <provider-id>" >&2
+if [[ $# -ne 6 ]]; then
+  echo "Usage: $0 <output-dir> <issuer-keystore> <store-password> <key-alias> <provider-id> <issuer-trust-anchor-der>" >&2
   exit 1
 fi
 
@@ -11,6 +11,7 @@ issuer_keystore="$2"
 store_password="$3"
 key_alias="$4"
 provider_id="$5"
+issuer_trust_anchor_der="$6"
 
 mkdir -p "$output_dir"
 
@@ -19,6 +20,11 @@ lote_cert_pem="$output_dir/lote-signing.crt.pem"
 lote_cert_der="$output_dir/lote-signing.crt.der"
 issuer_cert_der="$output_dir/mdoc-issuer.crt.der"
 trust_list="$output_dir/pid-providers.jwt"
+
+[[ -f "$issuer_trust_anchor_der" ]] || {
+  echo "mDoc issuer trust anchor does not exist: $issuer_trust_anchor_der" >&2
+  exit 1
+}
 
 if [[ ! -f "$lote_key" || ! -f "$lote_cert_pem" ]]; then
   openssl req -x509 -newkey rsa:3072 -sha256 -nodes -days 3650 \
@@ -39,14 +45,14 @@ base64url() {
 }
 
 lote_x5c="$(openssl base64 -A -in "$lote_cert_der")"
-issuer_x5c="$(openssl base64 -A -in "$issuer_cert_der")"
+issuer_trust_anchor_x5c="$(openssl base64 -A -in "$issuer_trust_anchor_der")"
 issued_at="$(date -u -d '1 minute ago' '+%Y-%m-%dT%H:%M:%SZ')"
 next_update="$(date -u -d '30 days' '+%Y-%m-%dT%H:%M:%SZ')"
 
 header="$(jq -cn --arg cert "$lote_x5c" --arg sigT "$issued_at" '{typ:"trustlist+jwt",alg:"RS256",sigT:$sigT,x5c:[$cert]}')"
 payload="$(jq -cn \
   --arg provider "$provider_id" \
-  --arg certificate "$issuer_x5c" \
+  --arg certificate "$issuer_trust_anchor_x5c" \
   --arg loteCertificate "$lote_x5c" \
   --arg issuedAt "$issued_at" \
   --arg nextUpdate "$next_update" \
@@ -60,4 +66,5 @@ printf '%s.%s' "$signing_input" "$signature" > "$trust_list"
 
 echo "Generated signed PID Provider LoTE: $trust_list"
 echo "LoTE verification certificate (DER): $lote_cert_der"
-echo "mDoc issuer certificate (DER): $issuer_cert_der"
+echo "mDoc document-signer certificate (DER): $issuer_cert_der"
+echo "mDoc issuer trust anchor (DER): $issuer_trust_anchor_der"

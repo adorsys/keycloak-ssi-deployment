@@ -4,6 +4,15 @@ target/
 # Keystore files
 *.pkcs12
 
+# Recovered verifier key material (local-only; never commit)
+/ec2_files/
+
+# Plan files
+plan/
+
+# Important Docs
+DATA/
+
 # IDE and editor configs
 /.idea/
 .vscode/

@@ -45,9 +45,9 @@ The primary identity is not the subject claim alone. The verifier enforces this 
    pool.
 3. Select that provider's `PID/Issuance` service and only its `ServiceDigitalIdentity` certificates.
 4. Verify the mDoc `issuerAuth` certificate chain using those provider-specific certificates.
-5. Return the provider identifier as the verified credential issuer.
-6. Confirm it equals the issuer configured for the primary mDoc requirement.
-7. Read the namespace-qualified subject claim and resolve the Keycloak user by ID.
+5. Only after successful PKIX verification, treat the credential claims as belonging to that configured provider's
+   trust domain.
+6. Read the namespace-qualified subject claim and resolve the Keycloak user by ID.
 
 For this environment, the effective authentication identity is therefore:
 
@@ -73,10 +73,11 @@ The local SD-JWT profile uses `trust: [{ "type": "self" }]`.
 Its effective identity is consequently `(Keycloak realm issuer, sub)`.
 
 The additional change in `EudiPidTrustedSdJwtIssuer` does not alter this self-issued path. It only hardens the separate
-EUDI trust-list SD-JWT mode. That mode already compared the JWT `iss` value with `trust[].issuer`, but previously
-verified its `x5c` chain against certificates flattened from every provider in the LoTE. It now resolves the configured
-provider first and validates against only that provider's certificates. This prevents a credential from Provider B
-from being accepted under Provider A's configuration when both providers occur in the same signed LoTE.
+EUDI trust-list SD-JWT mode. That mode always requires a signed JWT `iss`. If `trust[].issuer` is configured, it pins
+the credential to that provider and must match the signed `iss`. If it is omitted, the signed `iss` dynamically selects
+the exact provider from the LoTE. The plugin validates the JWT `x5c` chain only against that selected provider's
+certificates and never against a flattened pool containing every LoTE provider. This prevents a credential from
+Provider B from being accepted as a credential from Provider A when both providers occur in the same signed LoTE.
 
 ## Repository layout
 
@@ -115,6 +116,7 @@ infrastructure/terraform/secrets-local.tfvars
 infrastructure/terraform/main.tf
 infrastructure/terraform/jsons/scopes/*.json
 scripts/local-mdoc/local-mdoc-env.sh
+scripts/local-mdoc/ensure-mdoc-issuer-chain.sh
 scripts/local-mdoc/generate-test-lote.sh
 scripts/local-mdoc/serve-test-lote.py
 ```
@@ -129,7 +131,11 @@ target/local-mdoc/
 ├── lote-signing.key.pem       # private test key that signs the LoTE JWS
 ├── lote-signing.crt.pem       # corresponding test signing certificate
 ├── lote-signing.crt.der       # DER form pinned in the verifier profile
-├── mdoc-issuer.crt.der        # certificate exported from Keycloak's issuer keystore
+├── mdoc-iaca.key.pem          # local development issuer-CA private key
+├── mdoc-iaca.crt.pem          # local development issuer-CA trust anchor
+├── mdoc-iaca.crt.der          # DER trust anchor published in the LoTE
+├── mdoc-document-signer.crt.pem # CA-issued certificate installed on the ES256 key
+├── mdoc-issuer.crt.der        # document-signer leaf exported for inspection
 ├── pid-providers.jwt          # signed test PID Provider LoTE
 ├── lote-server.log
 ├── lote-server.pid
@@ -227,8 +233,9 @@ The command performs the complete setup:
 1. Copies the repository's `config-override.yaml` into the upstream deployment harness and loads it through
    `helper.sh`. This resolves the source repository, Keycloak version, ports, passwords, enabled credentials, keystore,
    and TLS paths in one place.
-2. Stops an already running local Keycloak process and brings down the harness database with its volume. This produces
-   a clean, reproducible database and avoids accidentally connecting the new Keycloak process to old realm state.
+2. Stops an already running local Keycloak process and brings down the harness database with its volume. It archives
+   the disposable Terraform state at the same time. A fresh database must not reuse state which says imperative
+   client-scope, key-provider, and user-grant provisioners already ran.
 3. Builds `KEYCLOAK_FEATURES` from the configured features. It adds `oid4vc-mdoc` when `PIDCredential` is enabled,
    while the override enables the pre-authorized-code and REST credential-offer features.
 4. Clean-builds the OID4VP plugin from the sibling `../keycloak-oid4vp-plugin` directory, or from the full path supplied
@@ -240,8 +247,9 @@ The command performs the complete setup:
    and starts PostgreSQL and Keycloak.
 6. Loads only the OID4VP provider for this test. The unrelated local status-list JAR is intentionally excluded because
    its bundled dependencies are not compatible with Keycloak main; the normal wrapper behavior remains unchanged.
-7. Generates or reuses the local LoTE signing key, exports Keycloak's current ES256 issuer certificate, builds a new
-   signed ETSI-shaped LoTE, and starts its HTTPS server on port `9443`.
+7. Generates or reuses a local mDoc IACA, replaces the ES256 key's old self-signed certificate with a CA-issued
+   document-signer chain, publishes the IACA trust anchor in a signed ETSI-shaped LoTE, and starts its HTTPS server on
+   port `9443`.
 8. Waits until Keycloak is reachable before attempting administrative configuration.
 9. Copies Terraform below `target/local-mdoc/terraform-work/` without `backend.tf`. This deliberately avoids the
    repository's S3 backend and uses `target/local-mdoc/terraform.tfstate` for the disposable POC.
@@ -292,7 +300,7 @@ The subcommands intentionally have different scopes:
 | --- | --- | --- |
 | `start` | Rebuilds the plugin, recreates the local DB, starts Keycloak, starts the LoTE server, applies Terraform | First start or a completely clean end-to-end run |
 | `configure` | Regenerates/restarts the LoTE server and reapplies Terraform; it does not rebuild or restart Keycloak | Realm, profile, scope, user-grant, key, or LoTE configuration changed |
-| `refresh-lote` | Regenerates the signed LoTE and restarts only its HTTPS server | Test LoTE contents or the issuer certificate changed |
+| `refresh-lote` | Ensures the document-signer chain, regenerates the signed LoTE, and restarts only its HTTPS server | Test LoTE contents or issuer PKI changed |
 | `verify` | Performs read-only health checks | Confirm the LoTE and issuer metadata are reachable |
 | `stop` | Stops the test LoTE server and delegates Keycloak/database shutdown to the wrapper | End the local session |
 
@@ -351,9 +359,10 @@ The grant stores a snapshot of the user's mapped attributes. Merely publishing t
 not sufficient; without the grant, `create-credential-offer` returns `User 'francis' does not have verifiable
 credential 'PIDCredential'`.
 
-The ES256 Java-keystore component points Keycloak at the same key/certificate whose public certificate is placed under
-the local provider's `ServiceDigitalIdentity` in the LoTE. Keycloak main then embeds its certificate chain in mDoc
-`issuerAuth` when producing the issuer-signed document.
+The ES256 Java-keystore component points Keycloak at a private key with a CA-issued document-signer certificate.
+Keycloak main rejects a self-signed document-signer certificate. During issuance it embeds the leaf chain in mDoc
+`issuerAuth` and omits the self-signed root, as required by the mDoc profile. The corresponding local IACA root is
+placed under the provider's `ServiceDigitalIdentity` in the LoTE so the verifier can build the PKIX path.
 
 ### Why the plugin runs on both Keycloak 26.7 and Keycloak main
 
@@ -413,7 +422,7 @@ Terraform stores two OID4VP profiles in the `oid4vp-authenticator` execution:
 ```
 
 The signing-certificate value is also stored in that trust policy but is omitted above for readability. It pins the
-public certificate used to validate the LoTE JWS; it is not the mDoc issuer certificate.
+public certificate used to validate the LoTE JWS; it is neither the mDoc IACA nor the document-signer certificate.
 
 ## Inspect the running configuration
 
@@ -567,7 +576,8 @@ The test service is assembled from four sources:
 | Value | Source | Purpose |
 | --- | --- | --- |
 | `urn:adorsys:local:pid-provider:keycloak` | `provider_id` in `local-mdoc-env.sh` | Stable identifier of the single test PID Provider |
-| Keycloak issuer keystore, password, and ES256 alias | Values resolved by the upstream `helper.sh` | Supplies the certificate that Keycloak uses for mDoc `issuerAuth` |
+| Keycloak issuer keystore, password, and ES256 alias | Values resolved by the upstream `helper.sh` | Supplies the private key and CA-issued document-signer chain used for mDoc `issuerAuth` |
+| Local mDoc IACA | Generated under `target/local-mdoc/` by `ensure-mdoc-issuer-chain.sh` | Issues the document-signer certificate and provides the LoTE trust anchor |
 | LoTE signing key and certificate | Generated under `target/local-mdoc/` by `generate-test-lote.sh` | Signs the LoTE JWS so its contents cannot be changed unnoticed |
 | HTTPS certificate and private key | `SSL_SERVER_CERT` and `SSL_SERVER_KEY` resolved by `helper.sh` | Protects transport to `https://localhost:9443` |
 
@@ -575,27 +585,35 @@ The test service is assembled from four sources:
 exports the generated LoTE URL, LoTE verification certificate, and provider identifier as Terraform variables. This
 keeps the generated trust document and the verifier profile synchronized automatically.
 
-### The three certificates are not interchangeable
+### The four certificate roles are not interchangeable
 
 | Certificate | Checked by | What it proves |
 | --- | --- | --- |
 | HTTPS server certificate | Keycloak's HTTP client | The response came through the expected TLS endpoint; Keycloak trusts it through `--truststore-paths` |
 | LoTE signing certificate | `EudiTrustListJwtVerifier` in the plugin | The downloaded JWS was signed by the locally pinned LoTE authority |
-| mDoc issuer certificate | mDoc verification against the selected LoTE provider service | The presented mDoc was signed by the certificate associated with the configured PID Provider |
+| mDoc IACA trust anchor | mDoc PKIX verification against the selected LoTE provider service | The document-signer certificate chains to the CA associated with the configured PID Provider |
+| mDoc document-signer certificate | Wallet and verifier, from `issuerAuth` | The presented Mobile Security Object was signed by the issuer's ES256 private key |
 
 Pinning only the LoTE signing certificate would prove that the list is authentic, but not which provider issued the
-mDoc. Trusting only the mDoc certificate would lose the provider identifier needed for the `(issuer, subject)` login
-identity. Both checks are required.
+mDoc. The document-signer certificate is not a trust anchor and can rotate beneath the IACA. The verifier therefore
+authenticates the LoTE, selects the provider's IACA, builds the document-signer path, and only then uses the provider
+identifier in the `(issuer, subject)` login identity.
 
 ### What `generate-test-lote.sh` does
 
-On its first run the generator creates a self-signed RSA-3072 development certificate and private key for the LoTE
-signer. Later runs reuse them so the certificate pinned in Terraform remains stable. Each run then:
+Before the LoTE is generated, `ensure-mdoc-issuer-chain.sh` creates a local EC IACA with critical `CA=true` and
+certificate-signing usage. It creates a CSR from the existing ES256 private key, issues a `CA=false`,
+`digitalSignature` document-signer certificate, and installs the two-certificate chain in the PKCS#12 keystore. It is
+idempotent and reuses an already valid chain.
+
+On its first run the LoTE generator separately creates a self-signed RSA-3072 development certificate and private key
+for signing the LoTE JWS. That self-signed certificate is acceptable here because it is independently pinned as the
+local LoTE signer; it is not the mDoc document signer. Later runs reuse it. Each run then:
 
 1. Converts the LoTE signing certificate to DER.
-2. Exports the ES256 certificate identified by `KEYSTORE_ALIASES_ECDSA_KEY` from Keycloak's PKCS#12 issuer keystore.
+2. Exports the ES256 document-signer leaf for inspection.
 3. Creates an ETSI TS 119 602-shaped JSON payload containing one PID Provider and one `PID/Issuance` service.
-4. Places the exported Keycloak issuer certificate in that service's `ServiceDigitalIdentity`.
+4. Places the local IACA trust anchor in that service's `ServiceDigitalIdentity`.
 5. Creates a compact JWS with `typ=trustlist+jwt`, `alg=RS256`, `sigT`, and the LoTE signing certificate in `x5c`.
 6. Signs `base64url(header) + "." + base64url(payload)` and writes `pid-providers.jwt`.
 
@@ -628,13 +646,13 @@ LoTE
 ├── ListAndSchemeInformation
 │   └── LoTEType = .../EUPIDProvidersList
 └── TrustedEntitiesList[]
-    └── TrustedEntityInformation
-        ├── TETradeName[] = urn:adorsys:local:pid-provider:keycloak
-        └── TrustedEntityServices[]
-            └── ServiceInformation
-                ├── ServiceTypeIdentifier = .../PID/Issuance
-                └── ServiceDigitalIdentity
-                    └── X509Certificates[] = mDoc issuer certificate
+    ├── TrustedEntityInformation
+    │   └── TETradeName[] = urn:adorsys:local:pid-provider:keycloak
+    └── TrustedEntityServices[]
+        └── ServiceInformation
+            ├── ServiceTypeIdentifier = .../PID/Issuance
+            └── ServiceDigitalIdentity
+                └── X509Certificates[] = mDoc IACA trust anchor
 ```
 
 The compact JWS protected header contains `alg`, `x5c`, and `sigT`. The local plugin additionally expects
@@ -652,8 +670,8 @@ When the wallet presents the issued mDoc, the plugin performs the following trus
 5. Inside only that entity, select the configured `PID/Issuance` service.
 6. Extract only that service's certificate identities.
 7. Validate the mDoc `issuerAuth` using those certificates.
-8. Return the matched entity identifier as the verified credential issuer.
-9. Enforce that issuer together with the configured subject claim before resolving the Keycloak user.
+8. After successful verification, treat the claims as belonging to that configured entity's trust domain.
+9. Resolve the Keycloak user using the configured subject claim inside that issuer-restricted verification flow.
 
 There is no `ServiceStatus` check for this PID profile because the standard forbids that field here. Removal of an
 unapproved provider from a newly published list takes effect when the plugin refreshes its cached snapshot, which is
@@ -710,6 +728,18 @@ distribution.
 
 Creating the managed realm also invokes OID4VP flow migration. If the provider retries and receives `409`, the runner
 adopts the successfully created realm into its isolated state and resumes the declarative apply.
+
+### `Signing of credential failed: Could not sign mDoc credential`
+
+Inspect the ES256 alias with `keytool -list -v`. Current Keycloak mDoc issuance requires a CA-issued document-signer
+certificate and rejects a self-signed leaf. The local runner calls `ensure-mdoc-issuer-chain.sh` before configuring the
+realm and `verify` requires a chain length of at least two. Run a clean `start` after upgrading an older environment;
+it installs the generated document-signer chain before Terraform registers the Java-keystore key provider. Do not
+disable the self-signed check: the IACA/document-signer separation is part of the issuer trust model.
+
+If the log also says `No client scopes found for credential configuration 'PIDCredential'`, use `start`, not an old
+state left by a deleted database. A clean start now archives the disposable Terraform state whenever it removes the
+database volume, ensuring the custom scope, key component, and user-grant provisioners run again.
 
 ### Wallet cannot fetch the request or issuer metadata
 

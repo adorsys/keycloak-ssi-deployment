@@ -16,6 +16,17 @@ variable "realm" {
   default     = "oid4vc-vci"
 }
 
+variable "realm_frontend_url" {
+  description = "Optional public HTTPS origin advertised by the realm"
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.realm_frontend_url == "" || can(regex("^https://[^/]+$", var.realm_frontend_url))
+    error_message = "realm_frontend_url must be empty or an HTTPS origin without a trailing slash or path."
+  }
+}
+
 variable "enabled_scope_names" {
   description = "Optional allowlist of OID4VC client scope names to apply. Empty list means all scopes in jsons/scopes."
   type        = list(string)
@@ -117,6 +128,12 @@ variable "sdjwt_response_mode" {
   default     = "direct_post.jwt"
 }
 
+variable "oid4vp_client_identifier_prefix" {
+  description = "OpenID4VP verifier client identifier prefix"
+  type        = string
+  default     = "x509_san_dns"
+}
+
 variable "sdjwt_custom_url_scheme" {
   description = "Custom wallet URL scheme for SdJwtAuthenticator"
   type        = string
@@ -171,6 +188,36 @@ variable "enable_local_mdoc_test" {
   description = "Configure local mDoc and SD-JWT wallet-login profiles"
   type        = bool
   default     = false
+}
+
+variable "enable_german_wallet_import_test" {
+  description = "Add the German National Wallet test PID profile and enable verified external-user import"
+  type        = bool
+  default     = false
+}
+
+variable "german_wallet_pid_trust_list_url" {
+  description = "HTTPS URL of the signed German sandbox PID Provider LoTE"
+  type        = string
+  default     = "https://bmi.usercontent.opencode.de/eudi-wallet/test-trust-lists/pid-provider.jwt"
+}
+
+variable "german_wallet_pid_trust_list_signing_certificate_path" {
+  description = "Path to the independently pinned DER certificate used to verify the German sandbox LoTE JWT"
+  type        = string
+  default     = ""
+}
+
+variable "german_wallet_pid_provider_identifier" {
+  description = "Exact PID Provider identifier selected from the authenticated German sandbox LoTE"
+  type        = string
+  default     = "Bundesdruckerei GmbH"
+}
+
+variable "oid4vp_import_idp_alias" {
+  description = "Alias of the hidden OpenID4VP import identity provider"
+  type        = string
+  default     = "oid4vp-import"
 }
 
 variable "local_mdoc_trust_list_url" {

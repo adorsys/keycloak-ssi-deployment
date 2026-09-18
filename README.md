@@ -56,6 +56,9 @@ Then run a credential test, for example:
 For the Keycloak-main POC that issues an mDoc to a wallet and verifies it for OID4VP login with issuer-scoped EUDI
 trust-list enforcement, see [LOCAL_MDOC_ISSUANCE_AND_LOGIN.md](./LOCAL_MDOC_ISSUANCE_AND_LOGIN.md).
 
+For the German National Wallet test that imports an unknown user only after a German PID mDoc passes issuer-chain
+verification, see [GERMAN_WALLET_EXTERNAL_USER_IMPORT.md](./GERMAN_WALLET_EXTERNAL_USER_IMPORT.md).
+
 For a plain-language explanation of the OID4VP plugin's complete authentication flow and its `self`, `x5c`, and
 `eudi_pid_trust_list` trust modes, see [OID4VP_PLUGIN_FLOW_AND_TRUST.md](./OID4VP_PLUGIN_FLOW_AND_TRUST.md).
 
