@@ -92,6 +92,9 @@ German National Wallet
        -> maps given_name to firstName
        -> maps family_name to lastName
        -> stores birth date and issuing country as attributes
+  -> target-realm user profile
+       -> permits an imported account without email
+       -> exposes mapped custom attributes to administrators as read-only fields
 ```
 
 The credential trust source is the official German sandbox PID Provider LoTE at
@@ -116,7 +119,7 @@ local Keycloak user is neither selected nor linked automatically.
 
 ## Configuration created by the runner
 
-The runner combines four pieces that must agree:
+The runner combines five pieces that must agree:
 
 | Piece | Configuration | Reason |
 | --- | --- | --- |
@@ -124,6 +127,7 @@ The runner combines four pieces that must agree:
 | Trust policy | `eudi_pid_trust_list`, pinned LoTE signer, exact `Bundesdruckerei GmbH` provider, PID issuance service type | Authenticates the provider-specific credential signing certificates before identity lookup |
 | Authenticator import settings | `importUnknownUsers=true`, `importIdentityProviderAlias=oid4vp-import` | Enables first-login creation and selects the link/mapping host |
 | Import provider and mappers | Hidden `oid4vp-plugin-import` provider with `FORCE` sync | Stages Keycloak fields and owns the standard federated identity link |
+| Realm user profile | Email-as-username is disabled, email is optional, and unmanaged attributes use `ADMIN_VIEW` | Accepts the fields the German PID can actually supply and makes mapped custom fields visible through management interfaces |
 
 The profile requests only the claims needed for this test:
 
@@ -136,6 +140,19 @@ The profile requests only the claims needed for this test:
 
 The other claims visible in the screenshots are intentionally not requested. OpenID4VP should ask for only what the
 login/import use case needs.
+
+### Why email is optional in this test realm
+
+Keycloak's default declarative user profile requires `email` for registration. The German PID test credential cannot
+satisfy that policy: email is not available from the German eID, so requesting or mapping an empty email would still
+fail validation. The runner therefore explicitly disables email-as-username and removes only the email `required`
+rule in the `oid4vc-vci` test realm. It keeps the email field and its normal format/length validation for accounts that
+do have an email. It does not invent an email, derive one from a name, or bypass user-profile validation.
+
+The runner also sets `unmanagedAttributePolicy` to `ADMIN_VIEW`. This lets administrators inspect
+`oid4vpBirthDate` and `oid4vpIssuingCountry` while keeping unmanaged attributes unavailable to ordinary registration
+and account-management contexts. Production realms should preferably declare intentional custom attributes in their
+user-profile schema, including appropriate permissions, rather than broadly relying on unmanaged attributes.
 
 ## How the plugin performs user import
 
@@ -226,7 +243,8 @@ file, `OID4VP_PUBLIC_URL=https://current-host.example` remains supported and tak
 
 `start` is intentionally clean and destructive for the local test database: it stops the current harness instance,
 removes its Compose database volume, builds the feature plugin, starts Keycloak main, applies the local control
-profiles plus the German PID profile, installs the hidden import provider and mappers, and verifies the result.
+profiles plus the German PID profile, reconciles the target-realm user profile, installs the hidden import provider
+and mappers, and verifies the result.
 
 If the base environment is already running and only its realm configuration needs reconciliation:
 
@@ -286,6 +304,7 @@ username fallback.
 | Wallet reports no matching credential | The installed PID may be SD-JWT rather than mDoc, or does not disclose `birth_date` |
 | `Certificate chain validation failed` | The selected LoTE provider does not contain a certificate that can validate the presented PID chain, or the provider rotated its issuance PKI and the signed LoTE/configuration is stale |
 | `User with presented OID4VP credential is unknown` | Import is disabled, the hidden provider is absent/disabled, or verified-origin resolution failed |
+| `error-user-attribute-required` with `inputHint='email'` | The target realm still requires an email that the German PID cannot supply; rerun the harness `configure` command and verify the realm user profile |
 | Username collision | A local/imported user already owns `ERIKA`; fallback linking is intentionally forbidden |
 | Phone cannot open `request_uri` | The request still contains a host-local URL or an untrusted/mismatched TLS certificate |
 | Wallet fails before prompting with `Could not trust certificate chain` | The registered access certificate is absent, the recovered signing key is not active, or the request uses the wrong client-identifier policy |
@@ -301,6 +320,7 @@ publication.
 GERMAN_WALLET_EXTERNAL_USER_IMPORT.md
 scripts/german-wallet-import/german-wallet-import-env.sh
 scripts/german-wallet-import/configure-import-provider.sh
+scripts/german-wallet-import/configure-realm-user-profile.sh
 infrastructure/terraform/main.tf
 infrastructure/terraform/variables.tf
 infrastructure/terraform/modules/realm/main.tf

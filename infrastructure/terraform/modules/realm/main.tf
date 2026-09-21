@@ -7,9 +7,10 @@ terraform {
 }
 
 resource "keycloak_realm" "oid4vc_vci" {
-  realm       = var.realm
-  enabled     = true
-  login_theme = var.login_theme
+  realm                          = var.realm
+  enabled                        = true
+  login_theme                    = var.login_theme
+  registration_email_as_username = false
 
   attributes = merge(
     {

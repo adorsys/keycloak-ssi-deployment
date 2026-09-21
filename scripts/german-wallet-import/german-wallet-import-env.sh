@@ -155,14 +155,31 @@ configure_import_provider() {
     "$local_keycloak_url" oid4vc-vci "$import_alias"
 }
 
+configure_realm_user_profile() {
+  KEYCLOAK_ADMIN_PASSWORD="$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
+    "$gw_script_dir/configure-realm-user-profile.sh" \
+    "$local_keycloak_url" oid4vc-vci
+}
+
 verify_german_environment() {
   verify_environment
-  local token execution_config_id
+  local token execution_config_id import_provider_status
   token="$(curl -ksSf -X POST "$local_keycloak_url/realms/master/protocol/openid-connect/token" \
     -H 'Content-Type: application/x-www-form-urlencoded' \
     --data-urlencode client_id=admin-cli --data-urlencode username=admin \
     --data-urlencode "password=$KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD" \
     --data-urlencode grant_type=password | jq -er .access_token)"
+  curl -ksSf "$local_keycloak_url/admin/realms/oid4vc-vci" \
+    -H "Authorization: Bearer $token" \
+    | jq -e '(.registrationEmailAsUsername // false) == false' >/dev/null
+  import_provider_status="$(curl -ksS -o /dev/null -w '%{http_code}' \
+    "$local_keycloak_url/admin/realms/oid4vc-vci/identity-provider/instances/$import_alias" \
+    -H "Authorization: Bearer $token")"
+  if [[ "$import_provider_status" != "200" ]]; then
+    echo "Hidden import provider '$import_alias' is unavailable (HTTP $import_provider_status)." >&2
+    echo "Run '$0 configure' before verification." >&2
+    return 1
+  fi
   curl -ksSf "$local_keycloak_url/admin/realms/oid4vc-vci/identity-provider/instances/$import_alias" \
     -H "Authorization: Bearer $token" \
     | jq -e '.enabled == true and .hideOnLogin == true and .providerId == "oid4vp-plugin-import"' >/dev/null
@@ -172,6 +189,12 @@ verify_german_environment() {
         map(select(.identityProviderMapper == "oid4vp-user-attribute-idp-mapper"))
         | map(.name)
         | contains(["german-pid-username", "german-pid-given-name", "german-pid-family-name", "german-pid-birth-date", "german-pid-issuing-country"])
+      ' >/dev/null
+  curl -ksSf "$local_keycloak_url/admin/realms/oid4vc-vci/users/profile" \
+    -H "Authorization: Bearer $token" \
+    | jq -e '
+        .unmanagedAttributePolicy == "ADMIN_VIEW"
+        and ([.attributes[] | select(.name == "email" and has("required"))] | length == 0)
       ' >/dev/null
   execution_config_id="$(curl -ksSf \
     "$local_keycloak_url/admin/realms/oid4vc-vci/authentication/flows/oid4vp%20auth/executions" \
@@ -210,6 +233,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
       prepare_verifier_identity
       prepare_german_pid_trust
       start_environment
+      configure_realm_user_profile
       configure_import_provider
       verify_german_environment
       ;;
@@ -217,6 +241,7 @@ if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
       prepare_verifier_identity
       prepare_german_pid_trust
       configure_environment
+      configure_realm_user_profile
       configure_import_provider
       verify_german_environment
       ;;
