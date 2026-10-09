@@ -33,6 +33,7 @@ SUBMODULE_CLI="$TEST_DEPLOYMENT_DIR/keycloak-ssi.sh"
 SSI_KEYCLOAK_DIR="$PROJECT_ROOT/deployment/keycloak"
 SSI_CONFIG="$SSI_KEYCLOAK_DIR/config.override.yaml"
 SSI_COMPOSE_OVERRIDE="$SSI_KEYCLOAK_DIR/docker-compose.override.yaml"
+SD_JWT_KEYSTORE_SCRIPT="$PROJECT_ROOT/scripts/ensure-sd-jwt-keystore.sh"
 
 # Colors
 if [ -t 1 ]; then
@@ -123,6 +124,44 @@ sync_config() {
 sync_all() {
     sync_providers
     sync_config
+}
+
+ensure_sd_jwt_signing_material() {
+    if [[ ! -x "$SD_JWT_KEYSTORE_SCRIPT" ]]; then
+        error "SD-JWT keystore helper is missing or not executable: $SD_JWT_KEYSTORE_SCRIPT"
+    fi
+
+    log "Ensuring the local ES256 key has the Keycloak 26.8 certificate chain..."
+    "$SD_JWT_KEYSTORE_SCRIPT" \
+        --keystore "$KEYSTORE_PATH" \
+        --storepass "$KEYSTORE_PASSWORD" \
+        --alias "$KEYSTORE_ALIASES_ECDSA_KEY"
+
+    # The upstream deployment caches this file outside target/, so refresh the
+    # cache after migration. A later setup then reuses the compliant chain.
+    local keystore_cache="$WORK_DIR/src/utils/crypto/$(basename "$KEYSTORE_PATH")"
+    cp "$KEYSTORE_PATH" "$keystore_cache"
+    chmod 600 "$keystore_cache"
+
+    # Keep the compose-mounted copy consistent with the native runtime copy.
+    local data_rel="${KEYSTORE_PATH#*/data/}"
+    local compose_keystore_path="$WORK_DIR/target/keycloak-data/$data_rel"
+    mkdir -p "$(dirname "$compose_keystore_path")"
+    cp "$KEYSTORE_PATH" "$compose_keystore_path"
+    chmod 600 "$compose_keystore_path"
+
+    if [[ "${KEYSTORE_EXTERNAL_ENABLED:-false}" == "true" ]]; then
+        [[ -n "${KEYSTORE_EXTERNAL_PATH:-}" ]] \
+            || error "keystore.external.enabled is true but keystore.external.path is empty."
+        [[ -n "${KEYSTORE_EXTERNAL_PASSWORD_FILE:-}" ]] \
+            || error "keystore.external.enabled is true but keystore.external.password_file is empty."
+
+        log "Ensuring the externally managed ES256 keystore is Keycloak 26.8 compatible..."
+        "$SD_JWT_KEYSTORE_SCRIPT" \
+            --keystore "$KEYSTORE_EXTERNAL_PATH" \
+            --storepass-file "$KEYSTORE_EXTERNAL_PASSWORD_FILE" \
+            --alias "${KEYSTORE_EXTERNAL_ALIAS:-$KEYSTORE_ALIASES_ECDSA_KEY}"
+    fi
 }
 
 check_submodule() {
@@ -370,6 +409,7 @@ cmd_keycloak_setup() (
 
     log "Preparing Keycloak $KEYCLOAK_VERSION from the upstream distribution..."
     "$WORK_DIR/src/deployment/setup-kc-oid4vci.sh"
+    ensure_sd_jwt_signing_material
 
     local compose_command
     local -a compose_args=()

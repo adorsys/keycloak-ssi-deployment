@@ -59,6 +59,8 @@ From the repository root, run in order:
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
+- ensure the ES256 signing key has the non-self-signed leaf certificate chain
+  required by Keycloak 26.8 for `dc+sd-jwt` issuance; and
 - restart Keycloak without deleting existing realms or database volumes.
 
 Use `./keycloak-ssi.sh setup --clean` only when an explicit fresh database is required.
@@ -70,6 +72,33 @@ cp config-override.yaml.example config-override.yaml
 ```
 
 Values in `config-override.yaml` override the committed defaults in `deployment/keycloak/config.override.yaml`.
+
+#### Keycloak 26.8 SD-JWT signing certificate
+
+Keycloak 26.8 rejects `dc+sd-jwt` issuance when the active signing key has only
+a self-signed certificate. During `setup`, the wrapper checks the local ES256
+entry and, when necessary, preserves its private key while replacing its
+certificate with a development-CA-signed leaf and a two-certificate chain. The
+operation is idempotent and creates a timestamped keystore backup before the
+first migration.
+
+The EC2 deployment uses an externally managed keystore. Enable its migration in
+the ignored root `config-override.yaml`:
+
+```yaml
+keystore:
+  external:
+    enabled: true
+    path: "/path/to/oid4vc-signing-keystore.p12"
+    password_file: "/path/to/keystore.password"
+    alias: "your-signing-key-alias"
+```
+
+After pulling the branch on EC2, `./keycloak-ssi.sh setup -d` upgrades that
+keystore once and reuses it on later runs. Terraform continues to reference the
+same path and alias, so no realm key-provider change or private-key rotation is
+introduced. The generated chain satisfies Keycloak's issuance requirement; it
+does not establish trust with a production or German wallet PKI.
 
 The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
 
