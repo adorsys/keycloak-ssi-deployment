@@ -1,7 +1,7 @@
 ## Keycloak OpenID4VCI Deployment Wrapper
 
 This repository is a **deployment and infrastructure wrapper** around the upstream [Keycloak OAuth SIG](https://github.com/keycloak/keycloak-oauth-sig/tree/main/oid4vci-deployment).
-The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` submodule. SSI-owned configuration and startup scripts layer the Keycloak 26.7.2 and OID4VP plugin deployment on top of it.
+The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` submodule. SSI-owned configuration and startup scripts layer the Keycloak 26.8.0 and OID4VP plugin deployment on top of it.
 
 ---
 
@@ -11,7 +11,7 @@ The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` su
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `keycloak-oauth-sig/`                    | Read-only Git submodule pinned to an upstream `keycloak/keycloak-oauth-sig` commit from `main`.                                  |
 | `keycloak-oauth-sig/oid4vci-deployment/` | Contains the upstream OpenID4VCI deployment toolkit.                                                                             |
-| `deployment/keycloak/`                   | SSI-owned Keycloak 26.7.2 configuration and Docker Compose overrides.                                                            |
+| `deployment/keycloak/`                   | SSI-owned Keycloak 26.8.0 configuration and Docker Compose overrides.                                                           |
 | `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
 | `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
 | `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, users, and status list support.                       |
@@ -55,7 +55,7 @@ From the repository root, run in order:
 
 `setup` uses the SSI-owned deployment layer to:
 
-- install Keycloak 26.7.2 and the OID4VP plugin 1.3.4;
+- install Keycloak 26.8.0 and the OID4VP plugin 1.3.4;
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and

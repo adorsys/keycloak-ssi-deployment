@@ -1,0 +1,8 @@
+# Copy this file to backend_override.tf for isolated local testing.
+# Terraform loads *_override.tf files last, so this local backend replaces the
+# tracked S3 backend without requiring any edit to backend.tf.
+terraform {
+  backend "local" {
+    path = ".local-state/terraform.tfstate"
+  }
+}

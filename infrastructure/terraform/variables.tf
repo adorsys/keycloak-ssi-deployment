@@ -240,6 +240,12 @@ variable "oid4vci_display" {
   default     = ""
 }
 
+variable "oid4vci_signed_metadata_alg" {
+  description = "Signature algorithm used for Signed Credential Issuer Metadata (realm attribute oid4vci.signed_metadata.alg)"
+  type        = string
+  default     = ""
+}
+
 variable "optional_client_scope_client_ids" {
   description = "Client IDs that should receive optional OID4VC client scopes. Empty list applies scopes to all configured clients."
   type        = list(string)

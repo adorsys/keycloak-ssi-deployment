@@ -129,3 +129,9 @@ variable "oid4vci_display" {
   type        = string
   default     = ""
 }
+
+variable "oid4vci_signed_metadata_alg" {
+  description = "Signature algorithm used for Signed Credential Issuer Metadata (realm attribute oid4vci.signed_metadata.alg)"
+  type        = string
+  default     = ""
+}

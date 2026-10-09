@@ -65,6 +65,7 @@ module "realm" {
   keycloak_url                                   = var.keycloak_url
   status_list_enabled                            = var.status_list_enabled
   oid4vci_display                                = var.oid4vci_display
+  oid4vci_signed_metadata_alg                    = var.oid4vci_signed_metadata_alg
   oid4vp_authentication_profiles                 = var.oid4vp_authentication_profiles
   oid4vp_credential_types                        = join(",", local.configured_scope_vcts)
   oid4vp_client_identifier_prefix                = var.oid4vp_client_identifier_prefix

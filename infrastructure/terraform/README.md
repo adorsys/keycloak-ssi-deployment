@@ -64,6 +64,7 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vc_keystore_password` | Password for OID4VC keystore                        | required                 |
 | `oid4vc_keystore_type`   | Keystore type for OID4VC key provider                 | `PKCS12`                 |
 | `oid4vc_ecdsa_key_alias` | Alias of persistent ES256 key in keystore             | `ecdsa_key`              |
+| `oid4vci_signed_metadata_alg` | Optional signed issuer metadata algorithm; empty leaves the feature disabled | empty |
 
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
@@ -138,7 +139,15 @@ Example `dev` backend settings (replace with yours in `backend-dev.hcl`):
 - State key (path in the bucket): `<YOUR_STATE_KEY_PATH>`
 - `encrypt = true`: enables server-side encryption for the state object (Terraform sets encryption on the S3 object; the bucket’s defaults apply as well).
 
-If later you want `local` or other environments, the intended pattern is to create another `backend-<env>.hcl` and pass it to `terraform init` via `-backend-config`.
+Backend configuration files supplied with `-backend-config` can configure the
+selected S3 backend, but they cannot change its type to `local`. For isolated
+local testing, copy `backend_override.tf.example` to the ignored
+`backend_override.tf`. Terraform gives a backend block in an override file
+precedence over the tracked S3 backend.
+
+Keep local and S3 initialization metadata separate by using
+`TF_DATA_DIR=.terraform-local` for every local Terraform command. Local state is
+stored under the ignored `.local-state/` directory.
 
 ## Terraform Usage
 
@@ -182,15 +191,29 @@ terraform -chdir=infrastructure/terraform apply \
 
 ##### B) Configure local Keycloak
 If you want Terraform to configure the local Keycloak instance instead of (or in addition to) the local CLI scripts:
+
 ```bash
-terraform -chdir=infrastructure/terraform apply \
-  -var 'keycloak_url=https://localhost:8443' \
-  -var 'admin_password=admin' \
-  -var 'initial_password=<STRONG_PASSWORD_FOR_FRANCIS>' \
-  -var 'openid4vc_rest_api_client_secret=<OPENID4VC_REST_API_CLIENT_SECRET>'
+cd infrastructure/terraform
+cp backend_override.tf.example backend_override.tf
+
+TF_DATA_DIR=.terraform-local terraform init -reconfigure
+TF_DATA_DIR=.terraform-local terraform plan -var-file=./secrets-local.tfvars
+TF_DATA_DIR=.terraform-local terraform apply -var-file=./secrets-local.tfvars
 ```
 
-Note: the Terraform Keycloak provider has `tls_insecure_skip_verify = true`, so self-signed HTTPS from local Keycloak should work.
+Both `backend_override.tf` and the resulting local state are ignored by Git.
+Keep `TF_DATA_DIR=.terraform-local` on all subsequent local `plan`, `apply`, and
+state commands. The Terraform Keycloak provider has
+`tls_insecure_skip_verify = true`, so self-signed HTTPS from local Keycloak
+should work.
+
+Before initializing an S3 backend from this same checkout, ensure the local
+override is not present:
+
+```bash
+test ! -e backend_override.tf
+terraform init -backend-config=backend-dev.hcl -reconfigure
+```
 
 ##### C) Configure a separate PoS realm
 Use a dedicated backend state (for example `backend-pos.hcl`) so PoS and dev realms do not replace each other.
