@@ -10,15 +10,5 @@ database:
   username: "${KC_DB_USERNAME}"
   password: "${KC_DB_PASSWORD}"
 
-# Optional persistent host keystore. When enabled, `setup` upgrades a legacy
-# self-signed signing certificate in place while preserving its private key.
-# This is intended for the EC2 deployment; keep the password outside Git.
-keystore:
-  external:
-    enabled: false
-    path: "/path/to/oid4vc-signing-keystore.p12"
-    password_file: "/path/to/keystore.password"
-    alias: "your-signing-key-alias"
-
 # Add other host-specific settings here. Values in this file take precedence
 # over deployment/keycloak/config.override.yaml and the upstream defaults.

@@ -85,6 +85,7 @@ Key points:
 
 - `oid4vc_keystore_path` must point to a file path on the **Keycloak runtime host** filesystem.
 - Terraform runner and Keycloak host may be different machines; do not use a Terraform-local-only path.
+- Keycloak requires the file to be under `<keystores-root>/<realm-name>/`. The default root is `${kc.home.dir}/data`. For an external persistent root, start Keycloak with `KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH` set to that root, and store each realm's keystore in its realm-named subdirectory.
 - The configured alias (`oid4vc_ecdsa_key_alias`, default `ecdsa_key`) must exist in the keystore.
 - The module automatically disables any `ecdsa-generated` key providers in the realm to avoid active ES256 key conflicts.
 - The module upserts ES256 `java-keystore` providers (update-in-place if present, create if missing) and removes duplicates, so reruns keep a single authoritative provider.
@@ -94,6 +95,8 @@ Stability behavior:
 - If `oid4vc_keystore_path`, `oid4vc_ecdsa_key_alias`, and keystore contents stay the same, reruns keep the same ES256 key material.
 - Avoid `terraform apply -replace=module.keys.null_resource.apply_custom_oid4vc_key_components` unless you intentionally want to force key component recreation/rotation workflows.
 - For normal operations, use standard `terraform apply -var-file=...` and let the upsert logic preserve provider continuity.
+
+The root Terraform configuration manages one realm per apply (`realm` is a scalar). Keep one ignored `secrets-*.tfvars` file per realm, set its `realm` and `oid4vc_keystore_path` to that realm's values, then apply each file separately. For example, with `/path/to/keycloak-keystores` as the external root, realm `oid4vc-vci` uses `/path/to/keycloak-keystores/oid4vc-vci/issuer-signing.p12`; another realm uses the same root and its own realm-named subdirectory. Each realm can use the same keystore material if that is intentional, or point to a different per-realm keystore.
 
 Recommended:
 

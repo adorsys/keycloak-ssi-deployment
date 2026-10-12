@@ -27,14 +27,14 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
 
   provisioner "local-exec" {
     command     = <<-EOT
-      set -e
+      set -euo pipefail
       export KC_ADMIN_USER="admin"
       export KC_ADMIN_PASS="${var.admin_password}"
       export KC_URL="${var.keycloak_url}"
       export KC_REALM="master"
 
       # Get admin token
-      export TOKEN=$(curl -k -s -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
+      export TOKEN=$(curl -k -fsS -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
         -H "Content-Type: application/x-www-form-urlencoded" \
         -d "client_id=admin-cli" \
         -d "username=$KC_ADMIN_USER" \
@@ -45,13 +45,13 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
 
       if [ "${var.enable_rsa_keys}" = "true" ]; then
         # Import RSA issuer key
-        echo '${local.rsa_issuer_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+        echo '${local.rsa_issuer_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -fsS -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @-
 
         # Import RSA encryption key
-        echo '${local.rsa_encryption_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+        echo '${local.rsa_encryption_key_json}' | jq --arg realm "${var.realm_name}" '.parentId = $realm' | curl -k -fsS -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @-
@@ -82,21 +82,23 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
       # - create one if missing
       # - update the first existing one in place (stable provider id / kid behavior)
       # - delete any extras
-      EXISTING_ES256_JKS_COMPONENT_IDS=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
+      EXISTING_ES256_JKS_COMPONENT_IDS=$(curl -k -fsS -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" | jq -r '.[] | select(.providerId == "java-keystore" and ((.config.algorithm[0] // "") == "ES256")) | .id')
 
-      PRIMARY_ES256_JKS_COMPONENT_ID=$(echo "$EXISTING_ES256_JKS_COMPONENT_IDS" | rg -v '^$' | awk 'NR==1')
+      # An empty lookup is expected on the first run. Avoid `rg -v` here:
+      # with `pipefail`, no matches would terminate the script before creation.
+      PRIMARY_ES256_JKS_COMPONENT_ID=$(printf '%s\n' "$EXISTING_ES256_JKS_COMPONENT_IDS" | awk 'NF { print; exit }')
 
       if [ -z "$PRIMARY_ES256_JKS_COMPONENT_ID" ]; then
         echo "No ES256 java-keystore provider found. Creating configured provider."
-        echo "$ECDSA_PROVIDER_PAYLOAD" | curl -k -s -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+        echo "$ECDSA_PROVIDER_PAYLOAD" | curl -k -fsS -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @- >/dev/null
       else
         echo "Updating existing ES256 java-keystore provider in place... ID=$PRIMARY_ES256_JKS_COMPONENT_ID"
-        EXISTING_COMPONENT=$(curl -k -s -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
+        EXISTING_COMPONENT=$(curl -k -fsS -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json")
         UPDATED_COMPONENT=$(echo "$EXISTING_COMPONENT" | jq \
@@ -114,13 +116,13 @@ resource "null_resource" "apply_custom_oid4vc_key_components" {
           | .config.priority = ["200"]
           | .config.enabled = ["true"]
           | .config.algorithm = ["ES256"]')
-        echo "$UPDATED_COMPONENT" | curl -k -s -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
+        echo "$UPDATED_COMPONENT" | curl -k -fsS -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$PRIMARY_ES256_JKS_COMPONENT_ID" \
           -H "Authorization: Bearer $TOKEN" \
           -H "Content-Type: application/json" \
           --data-binary @- >/dev/null
       fi
 
-      EXTRA_ES256_JKS_COMPONENT_IDS=$(echo "$EXISTING_ES256_JKS_COMPONENT_IDS" | rg -v '^$' | awk 'NR>1')
+      EXTRA_ES256_JKS_COMPONENT_IDS=$(printf '%s\n' "$EXISTING_ES256_JKS_COMPONENT_IDS" | awk 'NF { if (++count > 1) print }')
       if [ -n "$EXTRA_ES256_JKS_COMPONENT_IDS" ]; then
         while IFS= read -r COMP_ID; do
           [ -z "$COMP_ID" ] && continue

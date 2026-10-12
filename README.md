@@ -59,8 +59,6 @@ From the repository root, run in order:
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
-- ensure the ES256 signing key has the non-self-signed leaf certificate chain
-  required by Keycloak 26.8 for `dc+sd-jwt` issuance; and
 - restart Keycloak without deleting existing realms or database volumes.
 
 Use `./keycloak-ssi.sh setup --clean` only when an explicit fresh database is required.
@@ -73,32 +71,64 @@ cp config-override.yaml.example config-override.yaml
 
 Values in `config-override.yaml` override the committed defaults in `deployment/keycloak/config.override.yaml`.
 
-#### Keycloak 26.8 SD-JWT signing certificate
+#### Keycloak 26.8 issuer signing keystore
 
-Keycloak 26.8 rejects `dc+sd-jwt` issuance when the active signing key has only
-a self-signed certificate. During `setup`, the wrapper checks the local ES256
-entry and, when necessary, preserves its private key while replacing its
-certificate with a development-CA-signed leaf and a two-certificate chain. The
-operation is idempotent and creates a timestamped keystore backup before the
-first migration.
+The issuer signing keystore is managed outside the startup script.
+`./keycloak-ssi.sh setup` does not create, modify, or download issuer
+certificates. The PKCS#12 must contain an ES256 `PrivateKeyEntry` and the
+certificate chain for that same key.
 
-The EC2 deployment uses an externally managed keystore. Enable its migration in
-the ignored root `config-override.yaml`:
+For the Keycloak Java keystore provider, configure
+`KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH` to the keystore root. Put each
+realm's keystore under a directory named for that realm, and set that realm's
+Terraform `oid4vc_keystore_path` to the resulting file path. Realms may use
+copies of the same keystore when they intentionally share the same issuer key.
+Keep the keystore and its password out of Git.
 
-```yaml
-keystore:
-  external:
-    enabled: true
-    path: "/path/to/oid4vc-signing-keystore.p12"
-    password_file: "/path/to/keystore.password"
-    alias: "your-signing-key-alias"
+Keycloak documents this layout in the [26.8 Upgrading Guide, “Files for the Java Keystore provider should be placed inside a fixed realm directory”](https://www.keycloak.org/docs/26.8.0/upgrading/#_files_for_the_java_keystore_provider_should_be_placed_inside_a_fixed_realm_directory). The keystores root and realm-specific file path are covered in the [26.8 Server Administration Guide, “Loading keys from a Java Keystore”](https://www.keycloak.org/docs/26.8.0/server_admin/#loading-keys-from-a-java-keystore): the startup option sets the root, and the realm's `java-keystore` provider `keystore` field points to the file under `<root>/<realm-name>/`. The environment-variable spelling for that startup option, `KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH`, is listed under [`keys` → `java-keystore` in the All Provider Configuration](https://www.keycloak.org/server/all-provider-config#_java_keystore) (the provider configuration reference is not versioned).
+
+#### Local issuance testing vs. German-wallet testing
+
+For a local issuance smoke test, a developer needs a PKCS#12 signing keystore
+with the expected ES256 private-key alias and certificate chain, plus a local
+secret tfvars file containing that keystore's password, alias, realm name, and
+runtime-visible path. For example, with `local-keystores` as the local keystore root:
+
+```text
+local-keystores/
+└── oid4vc-vci/
+    └── issuer-signing.p12
 ```
 
-After pulling the branch on EC2, `./keycloak-ssi.sh setup -d` upgrades that
-keystore once and reuses it on later runs. Terraform continues to reference the
-same path and alias, so no realm key-provider change or private-key rotation is
-introduced. The generated chain satisfies Keycloak's issuance requirement; it
-does not establish trust with a production or German wallet PKI.
+In the ignored local tfvars file, set the realm, absolute keystore path,
+keystore password, type, alias, and signed-metadata algorithm. For example:
+
+```hcl
+realm                       = "oid4vc-vci"
+oid4vc_keystore_path        = "/absolute/path/to/local-keystores/oid4vc-vci/issuer-signing.p12"
+oid4vc_keystore_password    = "<local-keystore-password>"
+oid4vc_keystore_type        = "PKCS12"
+oid4vc_ecdsa_key_alias      = "ecdsa_team_key"
+oid4vci_signed_metadata_alg = "ES256"
+```
+
+The configured alias must be a `PrivateKeyEntry`; its private key must
+correspond to the leaf certificate. Export the keystore root into the Keycloak
+process environment, start Keycloak, then apply Terraform for that realm:
+
+```bash
+export KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH="/absolute/path/to/local-keystores"
+./keycloak-ssi.sh setup -d
+terraform -chdir=infrastructure/terraform apply -var-file=secrets-local.tfvars
+```
+
+A successful local issuance test only confirms the local Keycloak flow and
+keystore configuration. It does not establish German-wallet trust. For that,
+the leaf must be the sandbox-issued issuer access certificate for the same
+private key, with its CA chain, and the local Keycloak endpoint must be
+reachable by the wallet over HTTPS. A self-signed or development-CA chain may
+be useful for isolated local testing, but it is not trusted by the German
+wallet sandbox.
 
 The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
 
