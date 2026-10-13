@@ -19,6 +19,9 @@ resource "keycloak_realm" "oid4vc_vci" {
     },
     trimspace(var.oid4vci_display) != "" ? {
       "oid4vci.display" = var.oid4vci_display
+    } : {},
+    trimspace(var.oid4vci_signed_metadata_alg) != "" ? {
+      "oid4vci.signed_metadata.alg" = var.oid4vci_signed_metadata_alg
     } : {}
   )
 }

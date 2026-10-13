@@ -18,6 +18,9 @@ infrastructure/keycloak-chart/**/*.tgz
 terraform.tfstate
 terraform.tfstate.backup
 .terraform/
+infrastructure/terraform/.terraform-local/
+infrastructure/terraform/.local-state/
+infrastructure/terraform/backend_override.tf
 **/*.hcl
 config-override.yaml
 infrastructure/terraform/*.tfvars
