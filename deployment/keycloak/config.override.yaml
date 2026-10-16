@@ -17,6 +17,7 @@ oid4vp_auth:
   verbose_errors: false
 
 database:
+  exposed_port: "10433"
   preserve_on_stop: true
   migration_strategy: "update"
 

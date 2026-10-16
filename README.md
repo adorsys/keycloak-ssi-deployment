@@ -55,7 +55,7 @@ From the repository root, run in order:
 
 `setup` uses the SSI-owned deployment layer to:
 
-- install Keycloak 26.8.0 and the OID4VP plugin 1.3.4;
+- install Keycloak 26.8.0 and the OID4VP plugin 1.4.1;
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
