@@ -65,12 +65,16 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vc_keystore_type`   | Keystore type for OID4VC key provider                 | `PKCS12`                 |
 | `oid4vc_ecdsa_key_alias` | Alias of persistent ES256 key in keystore             | `ecdsa_key`              |
 | `oid4vci_signed_metadata_alg` | Optional signed issuer metadata algorithm; empty leaves the feature disabled | empty |
-| `oid4vci_allow_proof_iss_mismatch` | Temporary workaround accepting German-wallet OID4VCI JWT proofs whose `iss` equals the Credential Issuer identifier; set per realm | `false` |
+| `oid4vci_allow_proof_iss_mismatch` | Temporary workaround accepting German-wallet OID4VCI JWT proofs whose `iss` equals the Credential Issuer identifier; set per realm | `true` |
+| `oid4vci_omit_encryption_metadata` | Temporary German-wallet compatibility workaround that omits OID4VCI credential encryption metadata; set per realm | `true` |
 
-Keep `oid4vci_allow_proof_iss_mismatch = false` unless the German wallet fails
-credential issuance specifically because its JWT proof `iss` is the Credential
-Issuer identifier rather than the requesting client ID. Set it to `true` only
-for affected realms; the plugin workaround is temporary.
+These compatibility workarounds default to `true` for the current German-wallet
+testing setup. Set them to `false` for realms that do not need them. The
+`oid4vci_allow_proof_iss_mismatch` workaround accepts JWT proofs whose `iss` is
+the Credential Issuer identifier rather than the requesting client ID.
+
+`oid4vci_omit_encryption_metadata` omits the encryption metadata from Credential
+Issuer Metadata. Both plugin workarounds are temporary compatibility settings.
 
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
