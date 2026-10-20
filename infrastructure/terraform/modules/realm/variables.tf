@@ -135,3 +135,15 @@ variable "oid4vci_signed_metadata_alg" {
   type        = string
   default     = ""
 }
+
+variable "oid4vci_allow_proof_iss_mismatch" {
+  description = "Whether to enable the temporary German-wallet OID4VCI JWT proof issuer mismatch workaround"
+  type        = bool
+  default     = false
+}
+
+variable "oid4vci_omit_encryption_metadata" {
+  description = "Whether to omit OID4VCI encryption metadata for wallet compatibility"
+  type        = bool
+  default     = true
+}

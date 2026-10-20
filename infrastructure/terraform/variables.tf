@@ -246,6 +246,18 @@ variable "oid4vci_signed_metadata_alg" {
   default     = ""
 }
 
+variable "oid4vci_allow_proof_iss_mismatch" {
+  description = "Temporarily allow German-wallet OID4VCI JWT proofs whose iss is the credential issuer identifier"
+  type        = bool
+  default     = false
+}
+
+variable "oid4vci_omit_encryption_metadata" {
+  description = "Whether to omit credential request/response encryption metadata as a temporary German-wallet compatibility workaround"
+  type        = bool
+  default     = true
+}
+
 variable "optional_client_scope_client_ids" {
   description = "Client IDs that should receive optional OID4VC client scopes. Empty list applies scopes to all configured clients."
   type        = list(string)
