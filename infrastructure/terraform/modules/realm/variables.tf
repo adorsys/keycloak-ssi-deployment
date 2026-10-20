@@ -139,7 +139,7 @@ variable "oid4vci_signed_metadata_alg" {
 variable "oid4vci_allow_proof_iss_mismatch" {
   description = "Whether to enable the temporary German-wallet OID4VCI JWT proof issuer mismatch workaround"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "oid4vci_omit_encryption_metadata" {
