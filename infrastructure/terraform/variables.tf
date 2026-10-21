@@ -258,6 +258,53 @@ variable "oid4vci_omit_encryption_metadata" {
   default     = true
 }
 
+variable "oid4vci_presentation_during_issuance" {
+  description = "Enable the OID4VCI presentation-during-issuance capability for this realm"
+  type        = bool
+  default     = true
+}
+
+variable "pdi_credential_scope_name" {
+  description = "Credential client scope gated by presentation during issuance when the feature is enabled"
+  type        = string
+  default     = "DatevCompanyCredential"
+}
+
+variable "pdi_authentication_profile_id" {
+  description = "OID4VP authentication profile required by the gated credential scope"
+  type        = string
+  default     = "datev-pid-presentation"
+}
+
+variable "pdi_test_user_enabled" {
+  description = "Create the local Erika Mustermann test user for presentation-during-issuance"
+  type        = bool
+  default     = true
+}
+
+variable "pdi_wallet_client_enabled" {
+  description = "Create the German wallet public OID4VC client used for PDI authorization-code issuance"
+  type        = bool
+  default     = false
+}
+
+variable "pdi_wallet_client_valid_redirect_uris" {
+  description = "Allowed German wallet and local/demo frontend callback URIs for the PDI client"
+  type        = list(string)
+  default = [
+    "org.sprind.wallet.sandbox:/authorization",
+    "http://localhost:4200/*",
+    "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe/*",
+    "https://adorsys-gis.github.io/keycloak-oid4vc-mock-fe-datev/*"
+  ]
+}
+
+variable "pdi_test_user_initial_password" {
+  description = "Initial password for the local Erika Mustermann PDI test user"
+  type        = string
+  sensitive   = true
+}
+
 variable "optional_client_scope_client_ids" {
   description = "Client IDs that should receive optional OID4VC client scopes. Empty list applies scopes to all configured clients."
   type        = list(string)

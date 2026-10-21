@@ -13,11 +13,12 @@ resource "keycloak_realm" "oid4vc_vci" {
 
   attributes = merge(
     {
-      preAuthorizedCodeLifespanS         = var.pre_authorized_code_lifespanS
-      status-list-server-url             = var.status_list_server_url
-      status-list-enabled                = var.status_list_enabled
-      "oid4vci.allow_proof_iss_mismatch" = tostring(var.oid4vci_allow_proof_iss_mismatch)
-      "oid4vci.omit_encryption_metadata" = tostring(var.oid4vci_omit_encryption_metadata)
+      preAuthorizedCodeLifespanS             = var.pre_authorized_code_lifespanS
+      status-list-server-url                 = var.status_list_server_url
+      status-list-enabled                    = var.status_list_enabled
+      "oid4vci.allow_proof_iss_mismatch"     = tostring(var.oid4vci_allow_proof_iss_mismatch)
+      "oid4vci.omit_encryption_metadata"     = tostring(var.oid4vci_omit_encryption_metadata)
+      "oid4vci.presentation_during_issuance" = tostring(var.oid4vci_presentation_during_issuance)
     },
     trimspace(var.oid4vci_display) != "" ? {
       "oid4vci.display" = var.oid4vci_display

@@ -78,6 +78,22 @@ setup; set it to `false` for realms that do not need it.
 `oid4vci_omit_encryption_metadata` omits the encryption metadata from Credential
 Issuer Metadata. Both plugin workarounds are temporary compatibility settings.
 
+### Presentation-during-issuance test branch
+
+This branch enables presentation during issuance by default. The selected
+credential scope (by default `DatevCompanyCredential`) is configured to require
+the `nested_oid4vp_flow` mode and reference the configured OID4VP profile. The
+shared scope JSON is not changed. Use a separate ignored tfvars file when testing
+so the branch's PDI-specific defaults are explicit and isolated from other
+realm configurations.
+
+The PDI profile must request the wallet PID claims authorized by the verifier
+registration certificate and bind them to the Keycloak user. The local PDI test
+configuration includes an `erika_mustermann` test user matching the German
+wallet PID used for testing. Use an authorization-code credential offer that
+contains `issuer_state` for this session-identity profile. A pre-authorized offer
+does not run the required presentation gate.
+
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
 

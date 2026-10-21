@@ -1,6 +1,6 @@
 locals {
   # Non-secret parts of client configuration live in code; the confidential client secret is injected at runtime.
-  clients = {
+  clients = merge({
     "oid4vc-demo-public" = {
       name                         = "oid4vc-demo-public"
       enabled                      = true
@@ -31,7 +31,22 @@ locals {
         "post.logout.redirect.uris"   = var.openid4vc_rest_api_post_logout_redirect_uris
       }
     }
-  }
+    }, var.pdi_wallet_client_enabled ? {
+    "cbc61b45-907a-4c65-8467-3194d8af12ab" = {
+      name                         = "cbc61b45-907a-4c65-8467-3194d8af12ab"
+      enabled                      = true
+      access_type                  = "PUBLIC"
+      standard_flow_enabled        = true
+      direct_access_grants_enabled = false
+      valid_redirect_uris          = var.pdi_wallet_client_valid_redirect_uris
+      web_origins                  = var.oid4vc_demo_public_web_origins
+      full_scope_allowed           = true
+      attributes = {
+        "oid4vci.enabled"           = "true"
+        "post.logout.redirect.uris" = var.oid4vc_demo_public_post_logout_redirect_uris
+      }
+    }
+  } : {})
 
   # Keep authenticator VCTs aligned with selected OID4VC client scopes.
   available_scope_files = fileset("${path.root}/jsons/scopes", "*.json")
@@ -68,6 +83,7 @@ module "realm" {
   oid4vci_signed_metadata_alg                    = var.oid4vci_signed_metadata_alg
   oid4vci_allow_proof_iss_mismatch               = var.oid4vci_allow_proof_iss_mismatch
   oid4vci_omit_encryption_metadata               = var.oid4vci_omit_encryption_metadata
+  oid4vci_presentation_during_issuance           = var.oid4vci_presentation_during_issuance
   oid4vp_authentication_profiles                 = var.oid4vp_authentication_profiles
   oid4vp_credential_types                        = join(",", local.configured_scope_vcts)
   oid4vp_client_identifier_prefix                = var.oid4vp_client_identifier_prefix
@@ -98,6 +114,8 @@ module "users" {
   keycloak_url                    = var.keycloak_url
   initial_password                = var.initial_password
   max_mustermann_initial_password = var.max_mustermann_initial_password
+  pdi_test_user_enabled           = var.pdi_test_user_enabled
+  pdi_test_user_initial_password  = var.pdi_test_user_initial_password
   verifiable_credentials          = local.configured_scope_names
   client_scopes_dependency        = module.client_scopes.client_scopes_applied_trigger
 
@@ -115,6 +133,9 @@ module "client_scopes" {
   admin_password = urlencode(var.admin_password)
   keycloak_url   = var.keycloak_url
   scope_files    = local.configured_scope_files
+  pdi_enabled    = var.oid4vci_presentation_during_issuance
+  pdi_scope_name = var.pdi_credential_scope_name
+  pdi_profile_id = var.pdi_authentication_profile_id
 }
 
 module "clients" {

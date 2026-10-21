@@ -33,8 +33,23 @@ resource "keycloak_user" "max_mustermann" {
   }
 }
 
+resource "keycloak_user" "pdi_erika_mustermann" {
+  count      = var.pdi_test_user_enabled ? 1 : 0
+  realm_id   = var.realm_id
+  username   = "erika_mustermann"
+  first_name = "Erika"
+  last_name  = "Mustermann"
+  email      = "erika.mustermann@example.test"
+  enabled    = true
+
+  initial_password {
+    value     = var.pdi_test_user_initial_password
+    temporary = false
+  }
+}
+
 locals {
-  managed_users = {
+  managed_users = merge({
     francis = {
       id       = keycloak_user.francis.id
       username = keycloak_user.francis.username
@@ -43,7 +58,12 @@ locals {
       id       = keycloak_user.max_mustermann.id
       username = keycloak_user.max_mustermann.username
     }
-  }
+    }, var.pdi_test_user_enabled ? {
+    pdi_erika_mustermann = {
+      id       = keycloak_user.pdi_erika_mustermann[0].id
+      username = "erika_mustermann"
+    }
+  } : {})
 }
 
 # Keycloak 26.7 requires a user-verifiable-credential grant in addition to

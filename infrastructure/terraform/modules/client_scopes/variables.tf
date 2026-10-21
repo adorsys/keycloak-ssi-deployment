@@ -23,3 +23,21 @@ variable "scope_files" {
   type        = list(string)
   default     = []
 }
+
+variable "pdi_enabled" {
+  description = "Whether to gate the configured credential scope on presentation during issuance"
+  type        = bool
+  default     = true
+}
+
+variable "pdi_scope_name" {
+  description = "Name of the credential scope to gate when presentation during issuance is enabled"
+  type        = string
+  default     = "DatevCompanyCredential"
+}
+
+variable "pdi_profile_id" {
+  description = "OID4VP profile ID to reference from the gated credential scope"
+  type        = string
+  default     = "datev-pid-presentation"
+}

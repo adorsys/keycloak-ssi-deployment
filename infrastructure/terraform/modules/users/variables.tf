@@ -31,6 +31,18 @@ variable "client_scopes_dependency" {
   default     = {}
 }
 
+variable "pdi_test_user_enabled" {
+  description = "Whether to create the Erika Mustermann local PDI test user"
+  type        = bool
+  default     = true
+}
+
+variable "pdi_test_user_initial_password" {
+  description = "Initial password for the Erika Mustermann local PDI test user"
+  type        = string
+  sensitive   = true
+}
+
 variable "username" {
   description = "User name"
   type        = string
