@@ -283,7 +283,7 @@ resource "null_resource" "apply_ecdh_es_encryption_key" {
 
   triggers = {
     realm_id        = var.realm_id
-    provider_config = "ecdh-generated|ECDH-ES|P-256|100"
+    provider_config = "ecdh-generated|ecdhAlgorithm=ECDH-ES|P-256|100|v2"
   }
 
   provisioner "local-exec" {
@@ -313,7 +313,7 @@ resource "null_resource" "apply_ecdh_es_encryption_key" {
           providerType: "org.keycloak.keys.KeyProvider",
           parentId: $realm,
           config: {
-            algorithm: ["ECDH-ES"],
+            ecdhAlgorithm: ["ECDH-ES"],
             ecdhEllipticCurveKey: ["P-256"],
             priority: ["100"],
             enabled: ["true"],
@@ -330,7 +330,8 @@ resource "null_resource" "apply_ecdh_es_encryption_key" {
           -H "Content-Type: application/json")
         echo "$COMPONENT" | jq '
           .providerId = "ecdh-generated"
-          | .config.algorithm = ["ECDH-ES"]
+          | .config.ecdhAlgorithm = ["ECDH-ES"]
+          | del(.config.algorithm)
           | .config.ecdhEllipticCurveKey = ["P-256"]
           | .config.priority = ["100"]
           | .config.enabled = ["true"]
