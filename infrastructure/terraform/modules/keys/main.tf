@@ -274,3 +274,75 @@ resource "null_resource" "disable_generated_keys" {
   }
 
 }
+
+# Keep an active ECDH-ES realm encryption key available for OID4VCI metadata
+# and German-wallet encrypted credential requests. This key is independent of
+# the external ES256 signing keystore configured above.
+resource "null_resource" "apply_ecdh_es_encryption_key" {
+  depends_on = [null_resource.disable_generated_keys]
+
+  triggers = {
+    realm_id        = var.realm_id
+    provider_config = "ecdh-generated|ECDH-ES|P-256|100"
+  }
+
+  provisioner "local-exec" {
+    command     = <<-EOT
+      set -euo pipefail
+      export KC_ADMIN_USER="admin"
+      export KC_ADMIN_PASS="${var.admin_password}"
+      export KC_URL="${var.keycloak_url}"
+
+      TOKEN=$(curl -k -fsS -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "client_id=admin-cli" \
+        -d "username=$KC_ADMIN_USER" \
+        -d "password=$KC_ADMIN_PASS" \
+        -d "grant_type=password" | jq -r .access_token)
+
+      COMPONENTS=$(curl -k -fsS -X GET "$KC_URL/admin/realms/${var.realm_name}/components?type=org.keycloak.keys.KeyProvider" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json")
+      COMPONENT_ID=$(echo "$COMPONENTS" | jq -r '.[] | select(.name == "eudi-wallet-ecdh-es") | .id' | head -n1)
+
+      if [ -z "$COMPONENT_ID" ]; then
+        echo "Creating ECDH-ES P-256 encryption key provider for realm ${var.realm_name}."
+        jq -n --arg realm "${var.realm_name}" '{
+          name: "eudi-wallet-ecdh-es",
+          providerId: "ecdh-generated",
+          providerType: "org.keycloak.keys.KeyProvider",
+          parentId: $realm,
+          config: {
+            algorithm: ["ECDH-ES"],
+            ecdhEllipticCurveKey: ["P-256"],
+            priority: ["100"],
+            enabled: ["true"],
+            active: ["true"]
+          }
+        }' | curl -k -fsS -X POST "$KC_URL/admin/realms/${var.realm_name}/components" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @- >/dev/null
+      else
+        echo "Updating ECDH-ES encryption key provider in place for realm ${var.realm_name}..."
+        COMPONENT=$(curl -k -fsS -X GET "$KC_URL/admin/realms/${var.realm_name}/components/$COMPONENT_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json")
+        echo "$COMPONENT" | jq '
+          .providerId = "ecdh-generated"
+          | .config.algorithm = ["ECDH-ES"]
+          | .config.ecdhEllipticCurveKey = ["P-256"]
+          | .config.priority = ["100"]
+          | .config.enabled = ["true"]
+          | .config.active = ["true"]
+        ' | curl -k -fsS -X PUT "$KC_URL/admin/realms/${var.realm_name}/components/$COMPONENT_ID" \
+          -H "Authorization: Bearer $TOKEN" \
+          -H "Content-Type: application/json" \
+          --data-binary @- >/dev/null
+      fi
+
+      echo "ECDH-ES P-256 encryption key provider is configured."
+    EOT
+    interpreter = ["bash", "-c"]
+  }
+}

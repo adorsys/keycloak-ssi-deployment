@@ -66,17 +66,21 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vc_ecdsa_key_alias` | Alias of persistent ES256 key in keystore             | `ecdsa_key`              |
 | `oid4vci_signed_metadata_alg` | Optional signed issuer metadata algorithm; empty leaves the feature disabled | empty |
 | `oid4vci_allow_proof_iss_mismatch` | Temporary workaround accepting German-wallet OID4VCI JWT proofs whose `iss` equals the Credential Issuer identifier; set per realm | `false` |
-| `oid4vci_omit_encryption_metadata` | Temporary German-wallet compatibility workaround that omits OID4VCI credential encryption metadata; set per realm | `true` |
+| `oid4vci_omit_encryption_metadata` | Omits OID4VCI encryption metadata; leave disabled when wallets need those parameters | `false` |
+| `oid4vci_patch_credential_requests` | Enables the OID4VP plugin workaround for German-wallet credential requests using `credential_configuration_id` | `false` |
 
 `oid4vci_allow_proof_iss_mismatch` defaults to `false` because it relaxes proof
 validation. Set it to `true` only for realms where testing confirms the German
 wallet requires accepting JWT proofs whose `iss` is the Credential Issuer
-identifier rather than the requesting client ID. The encryption-metadata
-workaround remains enabled by default for the current German-wallet testing
-setup; set it to `false` for realms that do not need it.
+identifier rather than the requesting client ID. For German-wallet test realms,
+set `oid4vci_patch_credential_requests = true` to enable the plugin's compatibility
+patch for credential requests (including encrypted requests). Keep it `false` in
+realms that do not need this behavior.
 
-`oid4vci_omit_encryption_metadata` omits the encryption metadata from Credential
-Issuer Metadata. Both plugin workarounds are temporary compatibility settings.
+`oid4vci_omit_encryption_metadata` omits encryption parameters from Credential
+Issuer Metadata when `true`; German-wallet test realms should set it to `false`
+so Keycloak publishes the supported encryption metadata. Both plugin workarounds
+are temporary compatibility settings. The default is now `false`.
 
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.
@@ -88,6 +92,9 @@ The keys module imports three types of cryptographic keys:
 - **ECDSA Issuer Key**: For signing verifiable credentials
 - **RSA Issuer Key**: Alternative signing key
 - **RSA Encryption Key**: For encrypting sensitive data
+- **ECDH-ES Encryption Key**: A Keycloak-generated P-256 realm key used to advertise
+  ECDH-ES encryption support to wallets. This is separate from the external ES256
+  signing keystore.
 
 #### Persistent ES256 key (keystore-backed)
 
@@ -101,6 +108,9 @@ Key points:
 - The configured alias (`oid4vc_ecdsa_key_alias`, default `ecdsa_key`) must exist in the keystore.
 - The module automatically disables any `ecdsa-generated` key providers in the realm to avoid active ES256 key conflicts.
 - The module upserts ES256 `java-keystore` providers (update-in-place if present, create if missing) and removes duplicates, so reruns keep a single authoritative provider.
+- The module also upserts an `ecdh-generated` P-256 provider using `ECDH-ES` for
+  each realm. Keycloak persists this realm encryption key independently of the
+  ES256 signing keystore; do not replace it with the credential-signing key.
 
 Stability behavior:
 

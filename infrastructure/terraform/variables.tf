@@ -253,9 +253,15 @@ variable "oid4vci_allow_proof_iss_mismatch" {
 }
 
 variable "oid4vci_omit_encryption_metadata" {
-  description = "Whether to omit credential request/response encryption metadata as a temporary German-wallet compatibility workaround"
+  description = "Whether to omit OID4VCI credential encryption metadata; keep false when wallets need encryption metadata"
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "oid4vci_patch_credential_requests" {
+  description = "Enable the OID4VP plugin compatibility patch for German-wallet OID4VCI credential requests"
+  type        = bool
+  default     = false
 }
 
 variable "optional_client_scope_client_ids" {
