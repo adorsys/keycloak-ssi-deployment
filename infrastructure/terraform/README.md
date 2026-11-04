@@ -67,6 +67,8 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vci_signed_metadata_alg` | Optional signed issuer metadata algorithm; empty leaves the feature disabled | empty |
 | `oid4vci_allow_proof_iss_mismatch` | Temporary workaround accepting German-wallet OID4VCI JWT proofs whose `iss` equals the Credential Issuer identifier; set per realm | `false` |
 | `oid4vci_omit_encryption_metadata` | Temporary German-wallet compatibility workaround that omits OID4VCI credential encryption metadata; set per realm | `true` |
+| `oid4vci_patch_credential_requests` | Enables the plugin patch that normalizes German-wallet credential requests, including encrypted requests | `false` |
+| `oid4vci_ecdh_es_enabled` | Creates an ECDH-ES P-256 encryption key provider for the realm | `false` |
 
 `oid4vci_allow_proof_iss_mismatch` defaults to `false` because it relaxes proof
 validation. Set it to `true` only for realms where testing confirms the German
@@ -77,6 +79,9 @@ setup; set it to `false` for realms that do not need it.
 
 `oid4vci_omit_encryption_metadata` omits the encryption metadata from Credential
 Issuer Metadata. Both plugin workarounds are temporary compatibility settings.
+For German-wallet testing with plugin v1.4.2, set `oid4vci_omit_encryption_metadata`
+to `false`, `oid4vci_patch_credential_requests` and `oid4vci_allow_proof_iss_mismatch`
+to `true`, and enable `oid4vci_ecdh_es_enabled` so the metadata advertises ECDH-ES.
 
 ### Presentation-during-issuance test branch
 

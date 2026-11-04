@@ -258,6 +258,18 @@ variable "oid4vci_omit_encryption_metadata" {
   default     = true
 }
 
+variable "oid4vci_patch_credential_requests" {
+  description = "Enable the OID4VP plugin patch that normalizes German-wallet credential requests, including encrypted requests"
+  type        = bool
+  default     = false
+}
+
+variable "oid4vci_ecdh_es_enabled" {
+  description = "Create an ECDH-ES P-256 realm key provider for OID4VCI request/response encryption"
+  type        = bool
+  default     = false
+}
+
 variable "oid4vci_presentation_during_issuance" {
   description = "Enable the OID4VCI presentation-during-issuance capability for this realm"
   type        = bool

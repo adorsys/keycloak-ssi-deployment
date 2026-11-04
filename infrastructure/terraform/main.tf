@@ -83,6 +83,7 @@ module "realm" {
   oid4vci_signed_metadata_alg                    = var.oid4vci_signed_metadata_alg
   oid4vci_allow_proof_iss_mismatch               = var.oid4vci_allow_proof_iss_mismatch
   oid4vci_omit_encryption_metadata               = var.oid4vci_omit_encryption_metadata
+  oid4vci_patch_credential_requests              = var.oid4vci_patch_credential_requests
   oid4vci_presentation_during_issuance           = var.oid4vci_presentation_during_issuance
   oid4vp_authentication_profiles                 = var.oid4vp_authentication_profiles
   oid4vp_credential_types                        = join(",", local.configured_scope_vcts)
@@ -170,6 +171,7 @@ module "keys" {
   oid4vc_keystore_password = var.oid4vc_keystore_password
   oid4vc_keystore_type     = var.oid4vc_keystore_type
   oid4vc_ecdsa_key_alias   = var.oid4vc_ecdsa_key_alias
+  oid4vci_ecdh_es_enabled  = var.oid4vci_ecdh_es_enabled
 }
 
 module "saml_idp" {

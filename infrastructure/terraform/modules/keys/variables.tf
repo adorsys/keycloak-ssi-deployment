@@ -45,3 +45,9 @@ variable "oid4vc_ecdsa_key_alias" {
   description = "Alias of persistent ES256 key in keystore."
   type        = string
 }
+
+variable "oid4vci_ecdh_es_enabled" {
+  description = "Whether to create an ECDH-ES P-256 encryption key provider for this realm."
+  type        = bool
+  default     = false
+}

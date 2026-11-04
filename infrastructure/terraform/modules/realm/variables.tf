@@ -148,6 +148,11 @@ variable "oid4vci_omit_encryption_metadata" {
   default     = true
 }
 
+variable "oid4vci_patch_credential_requests" {
+  description = "Enable the German-wallet credential request compatibility patch"
+  type        = bool
+}
+
 variable "oid4vci_presentation_during_issuance" {
   description = "Enable the OID4VCI presentation-during-issuance capability for this realm"
   type        = bool
