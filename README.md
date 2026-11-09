@@ -1,7 +1,7 @@
 ## Keycloak OpenID4VCI Deployment Wrapper
 
 This repository is a **deployment and infrastructure wrapper** around the upstream [Keycloak OAuth SIG](https://github.com/keycloak/keycloak-oauth-sig/tree/main/oid4vci-deployment).
-The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` submodule. SSI-owned configuration and startup scripts layer the Keycloak 26.8.0 and OID4VP plugin deployment on top of it.
+The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` submodule. SSI-owned configuration and startup scripts layer the Keycloak 26.8.2 and OID4VP plugin deployment on top of it.
 
 ---
 
@@ -11,7 +11,7 @@ The upstream OpenID4VCI toolkit remains unchanged in the `keycloak-oauth-sig` su
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `keycloak-oauth-sig/`                    | Read-only Git submodule pinned to an upstream `keycloak/keycloak-oauth-sig` commit from `main`.                                  |
 | `keycloak-oauth-sig/oid4vci-deployment/` | Contains the upstream OpenID4VCI deployment toolkit.                                                                             |
-| `deployment/keycloak/`                   | SSI-owned Keycloak 26.8.0 configuration and Docker Compose overrides.                                                           |
+| `deployment/keycloak/`                   | SSI-owned Keycloak 26.8.2 configuration and Docker Compose overrides.                                                           |
 | `Dockerfile.oid4vc-dev`                  | Dev-only Dockerfile for building a Keycloak image from a specific branch of `adorsys/keycloak-oid4vc`.                           |
 | `infrastructure/keycloak-chart/`         | Helm chart for deploying the OpenID4VCI-enabled Keycloak instance.                                                               |
 | `infrastructure/terraform/`              | Terraform modules and examples for managing realms, clients, keys, scopes, users, and status list support.                       |
@@ -55,7 +55,7 @@ From the repository root, run in order:
 
 `setup` uses the SSI-owned deployment layer to:
 
-- install Keycloak 26.8.0 and the OID4VP plugin 1.4.2;
+- install Keycloak 26.8.2 and the OID4VP plugin 1.4.2;
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
@@ -85,7 +85,7 @@ Terraform `oid4vc_keystore_path` to the resulting file path. Realms may use
 copies of the same keystore when they intentionally share the same issuer key.
 Keep the keystore and its password out of Git.
 
-Keycloak documents this layout in the [26.8 Upgrading Guide, “Files for the Java Keystore provider should be placed inside a fixed realm directory”](https://www.keycloak.org/docs/26.8.0/upgrading/#_files_for_the_java_keystore_provider_should_be_placed_inside_a_fixed_realm_directory). The keystores root and realm-specific file path are covered in the [26.8 Server Administration Guide, “Loading keys from a Java Keystore”](https://www.keycloak.org/docs/26.8.0/server_admin/#loading-keys-from-a-java-keystore): the startup option sets the root, and the realm's `java-keystore` provider `keystore` field points to the file under `<root>/<realm-name>/`. The environment-variable spelling for that startup option, `KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH`, is listed under [`keys` → `java-keystore` in the All Provider Configuration](https://www.keycloak.org/server/all-provider-config#_java_keystore) (the provider configuration reference is not versioned).
+Keycloak documents this layout in the [26.8 Upgrading Guide, “Files for the Java Keystore provider should be placed inside a fixed realm directory”](https://www.keycloak.org/docs/26.8.2/upgrading/#_files_for_the_java_keystore_provider_should_be_placed_inside_a_fixed_realm_directory). The keystores root and realm-specific file path are covered in the [26.8 Server Administration Guide, “Loading keys from a Java Keystore”](https://www.keycloak.org/docs/26.8.2/server_admin/#loading-keys-from-a-java-keystore): the startup option sets the root, and the realm's `java-keystore` provider `keystore` field points to the file under `<root>/<realm-name>/`. The environment-variable spelling for that startup option, `KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH`, is listed under [`keys` → `java-keystore` in the All Provider Configuration](https://www.keycloak.org/server/all-provider-config#_java_keystore) (the provider configuration reference is not versioned).
 
 #### Local issuance testing vs. German-wallet testing
 

@@ -5,12 +5,12 @@
 # wrapper merges that ignored file over these defaults before starting Keycloak.
 
 keycloak:
-  version: "26.8.0"
+  version: "26.8.2"
   enable_preauth_code: true
   enable_rest_credential_offer: true
 
 keycloak_image:
-  tag: "26.8.0"
+  tag: "26.8.2"
 
 oid4vp_auth:
   managed_realms: "oid4vc-vci,oid4vc-v-playground,oid4vc-payslip"
