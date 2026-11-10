@@ -68,6 +68,7 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vci_allow_proof_iss_mismatch` | Temporary workaround accepting German-wallet OID4VCI JWT proofs whose `iss` equals the Credential Issuer identifier; set per realm | `false` |
 | `oid4vci_omit_encryption_metadata` | Omits OID4VCI encryption metadata; leave disabled when wallets need those parameters | `false` |
 | `oid4vci_patch_credential_requests` | Enables the OID4VP plugin workaround for German-wallet credential requests using `credential_configuration_id` | `false` |
+| `oid4vci_patch_metadata_x5c_to_leaf_cert_only` | Enables the OID4VP plugin workaround that publishes only the leaf certificate in signed issuer metadata `x5c` | `false` |
 
 `oid4vci_allow_proof_iss_mismatch` defaults to `false` because it relaxes proof
 validation. Set it to `true` only for realms where testing confirms the German
@@ -81,6 +82,14 @@ realms that do not need this behavior.
 Issuer Metadata when `true`; German-wallet test realms should set it to `false`
 so Keycloak publishes the supported encryption metadata. Both plugin workarounds
 are temporary compatibility settings. The default is now `false`.
+
+With [OID4VP plugin 1.4.4](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.4), German-wallet test realms that reject an intermediate
+certificate in signed Credential Issuer Metadata should set
+`oid4vci_patch_metadata_x5c_to_leaf_cert_only = true`. This sets the realm
+attribute `oid4vci.patch_metadata_x5c_to_leaf_cert_only`; it limits the signed
+metadata `x5c` header to the leaf certificate while Keycloak continues to load
+the configured keystore and its chain. The setting defaults to `false` and
+tracks the compatibility issue in [Keycloak #54890](https://github.com/keycloak/keycloak/issues/54890).
 
 Additional tuning options (for example optional client scopes, sd-jwt VCTs, initial passwords, and module-specific
 settings like the login theme) can be seen in the various `variables.tf` files and adjusted as needed.

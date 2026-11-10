@@ -153,3 +153,9 @@ variable "oid4vci_patch_credential_requests" {
   type        = bool
   default     = false
 }
+
+variable "oid4vci_patch_metadata_x5c_to_leaf_cert_only" {
+  description = "Enable the OID4VP plugin patch to include only the leaf certificate in signed issuer metadata x5c"
+  type        = bool
+  default     = false
+}

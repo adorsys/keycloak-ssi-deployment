@@ -264,6 +264,12 @@ variable "oid4vci_patch_credential_requests" {
   default     = false
 }
 
+variable "oid4vci_patch_metadata_x5c_to_leaf_cert_only" {
+  description = "Enable the OID4VP plugin patch to include only the leaf certificate in signed issuer metadata x5c"
+  type        = bool
+  default     = false
+}
+
 variable "optional_client_scope_client_ids" {
   description = "Client IDs that should receive optional OID4VC client scopes. Empty list applies scopes to all configured clients."
   type        = list(string)
