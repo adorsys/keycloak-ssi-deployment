@@ -55,7 +55,7 @@ From the repository root, run in order:
 
 `setup` uses the SSI-owned deployment layer to:
 
-- install Keycloak 26.8.2 and the OID4VP plugin 1.4.2;
+- install Keycloak 26.8.2 and the OID4VP plugin 1.4.4;
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
@@ -131,6 +131,8 @@ be useful for isolated local testing, but it is not trusted by the German
 wallet sandbox.
 
 The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
+
+The [OID4VP plugin 1.4.4 release](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.4) adds the `oid4vci.patch_metadata_x5c_to_leaf_cert_only` realm attribute. Set it to `true` for German-wallet compatibility when the wallet rejects an intermediate certificate in the signed Credential Issuer Metadata `x5c` header ([Keycloak issue #54890](https://github.com/keycloak/keycloak/issues/54890)). Terraform exposes this as `oid4vci_patch_metadata_x5c_to_leaf_cert_only`; it defaults to `false`.
 
 For Docker Compose commands, the merged YAML configuration remains the source of truth. The wrapper generates a temporary `.env` adapter, passes it explicitly to Compose, and removes it after the command completes. The SSI Compose file only mounts providers and maps those generated values into the Keycloak container.
 
