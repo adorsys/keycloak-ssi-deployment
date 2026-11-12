@@ -121,6 +121,41 @@ resource "keycloak_authentication_execution_config" "config" {
     } : {},
     trimspace(var.oid4vp_verifier_info) != "" ? {
       verifierInfo = var.oid4vp_verifier_info
+    } : {},
+    var.oid4vp_import_unknown_users ? {
+      importUnknownUsers          = "true"
+      importIdentityProviderAlias = var.oid4vp_import_identity_provider_alias
     } : {}
   )
+}
+
+resource "null_resource" "oid4vp_import_identity_provider" {
+  count = var.oid4vp_import_unknown_users ? 1 : 0
+
+  triggers = {
+    realm_id              = keycloak_realm.oid4vc_vci.id
+    alias                 = var.oid4vp_import_identity_provider_alias
+    provider              = "oid4vp-plugin-import"
+    mapper_config_version = "claim-paths-and-email-profile-v3"
+    email_required        = tostring(var.oid4vp_user_provisioning_test_email_required)
+    mappers = jsonencode([
+      { name = "Given name", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.given_name", attribute = "firstName" },
+      { name = "Family name", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.family_name", attribute = "lastName" },
+      { name = "Birth date", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.birth_date", attribute = "birthdate" }
+    ])
+  }
+
+  provisioner "local-exec" {
+    command = "bash ${path.module}/../../scripts/configure-oid4vp-import-provider.sh"
+
+    environment = {
+      KEYCLOAK_BASE_URL            = var.keycloak_url
+      KEYCLOAK_REALM               = var.realm
+      KEYCLOAK_ADMIN_NAME          = "admin"
+      KEYCLOAK_ADMIN_SECRET        = var.oid4vp_import_admin_password
+      OID4VP_IMPORT_ALIAS          = var.oid4vp_import_identity_provider_alias
+      OID4VP_IMPORT_MAPPERS        = self.triggers.mappers
+      OID4VP_IMPORT_EMAIL_REQUIRED = self.triggers.email_required
+    }
+  }
 }

@@ -19,6 +19,12 @@ variable "admin_password" {
   sensitive   = true
 }
 
+variable "oid4vp_import_admin_password" {
+  description = "Unencoded Keycloak admin password for the local import-provider setup script."
+  type        = string
+  sensitive   = true
+}
+
 variable "keycloak_url" {
   description = "Keycloak URL"
   type        = string
@@ -27,6 +33,24 @@ variable "keycloak_url" {
 variable "oid4vp_authentication_profiles" {
   description = "Optional JSON array of OID4VP authentication profiles. Empty uses the legacy single-credential configuration."
   type        = string
+}
+
+variable "oid4vp_import_unknown_users" {
+  description = "Allow the OID4VP authenticator to provision unknown external users."
+  type        = bool
+  default     = false
+}
+
+variable "oid4vp_import_identity_provider_alias" {
+  description = "Alias for the hidden plugin import identity provider."
+  type        = string
+  default     = "oid4vp-import"
+}
+
+variable "oid4vp_user_provisioning_test_email_required" {
+  description = "Require email on user accounts in this realm. Set false for German PID imports, which do not provide email; this affects all users in the realm."
+  type        = bool
+  default     = false
 }
 
 variable "oid4vp_credential_types" {

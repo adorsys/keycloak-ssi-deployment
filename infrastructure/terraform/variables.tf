@@ -93,6 +93,48 @@ variable "oid4vp_authentication_profiles" {
   default     = ""
 }
 
+variable "oid4vp_user_provisioning_test_enabled" {
+  description = "Enable the local two-profile OID4VP user-provisioning test setup."
+  type        = bool
+  default     = false
+}
+
+variable "oid4vp_user_provisioning_test_trust_list_url" {
+  description = "German EUDI Wallet sandbox PID-provider trust-list JWT URL used by the local test profile."
+  type        = string
+  default     = "https://bmi.usercontent.opencode.de/eudi-wallet/test-trust-lists/pid-provider.jwt"
+}
+
+variable "oid4vp_user_provisioning_test_trust_list_signing_certificate_file" {
+  description = "Local file containing the German sandbox trust-list signing certificate as single-line base64 DER."
+  type        = string
+  default     = ".local-user-provisioning/german-pid-test-list-signing-certificate.b64"
+}
+
+variable "oid4vp_user_provisioning_test_pid_subject_claim" {
+  description = "Test-only German PID mDoc claim used as the federated identity subject. German PID has no unique subject claim; family_name is only suitable for this single-wallet test."
+  type        = string
+  default     = "eu.europa.ec.eudi.pid.1/family_name"
+}
+
+variable "oid4vp_user_provisioning_test_pid_issuer" {
+  description = "PID provider identifier from the German sandbox trust list for the test mDoc profile."
+  type        = string
+  default     = "Bundesdruckerei GmbH DEMO PID-Provider"
+}
+
+variable "oid4vp_import_identity_provider_alias" {
+  description = "Alias for the hidden OID4VP Plugin Import identity-provider instance."
+  type        = string
+  default     = "oid4vp-import"
+}
+
+variable "oid4vp_user_provisioning_test_email_required" {
+  description = "Require email on user accounts in the realm. Set false for German PID imports, which do not provide email; this affects all users in the realm."
+  type        = bool
+  default     = false
+}
+
 variable "oid4vp_require_nbf_claim" {
   description = "Require the nbf time claim in presented SD-JWT credentials."
   type        = string

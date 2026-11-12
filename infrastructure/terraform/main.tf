@@ -50,6 +50,58 @@ locals {
   configured_scope_names = sort(distinct(compact([for record in local.selected_scope_records : record.name])))
   configured_scope_vcts  = sort(distinct(compact([for record in local.selected_scope_records : record.vct])))
 
+  user_provisioning_test_signing_certificate = fileexists(var.oid4vp_user_provisioning_test_trust_list_signing_certificate_file) ? trimspace(file(var.oid4vp_user_provisioning_test_trust_list_signing_certificate_file)) : ""
+
+  user_provisioning_test_profiles = jsonencode([
+    {
+      id          = "keycloak-issued"
+      description = "Authenticate with a credential issued by this Keycloak realm."
+      displayCta  = { en = "Keycloak credential" }
+      credentials = [
+        {
+          id              = "identity"
+          role            = "primary"
+          format          = "dc+sd-jwt"
+          credentialTypes = [try(local.configured_scope_vcts[0], "organization_vct")]
+          subjectClaim    = "sub"
+          claims          = ["sub"]
+          trust           = [{ type = "self" }]
+        }
+      ]
+    },
+    {
+      id          = "german-pid-import"
+      description = "Authenticate and import an unknown user from a German PID."
+      displayCta  = { en = "German PID" }
+      credentials = [
+        {
+          id              = "pid"
+          role            = "primary"
+          format          = "mso_mdoc"
+          credentialTypes = ["eu.europa.ec.eudi.pid.1"]
+          subjectClaim    = var.oid4vp_user_provisioning_test_pid_subject_claim
+          claims = distinct([
+            var.oid4vp_user_provisioning_test_pid_subject_claim,
+            "eu.europa.ec.eudi.pid.1/given_name",
+            "eu.europa.ec.eudi.pid.1/family_name",
+            "eu.europa.ec.eudi.pid.1/birth_date"
+          ])
+          trust = [
+            {
+              type                        = "eudi_pid_trust_list"
+              trustListUrl                = var.oid4vp_user_provisioning_test_trust_list_url
+              trustListSigningCertificate = local.user_provisioning_test_signing_certificate
+              serviceType                 = "http://uri.etsi.org/19602/SvcType/PID/Issuance"
+              issuer                      = var.oid4vp_user_provisioning_test_pid_issuer
+            }
+          ]
+        }
+      ]
+    }
+  ])
+
+  oid4vp_effective_authentication_profiles = var.oid4vp_user_provisioning_test_enabled ? local.user_provisioning_test_profiles : var.oid4vp_authentication_profiles
+
 }
 
 module "realm" {
@@ -62,6 +114,7 @@ module "realm" {
   pre_authorized_code_lifespanS                  = var.pre_authorized_code_lifespanS
   status_list_server_url                         = var.status_list_server_url
   admin_password                                 = urlencode(var.admin_password)
+  oid4vp_import_admin_password                   = var.admin_password
   keycloak_url                                   = var.keycloak_url
   status_list_enabled                            = var.status_list_enabled
   oid4vci_display                                = var.oid4vci_display
@@ -70,7 +123,10 @@ module "realm" {
   oid4vci_omit_encryption_metadata               = var.oid4vci_omit_encryption_metadata
   oid4vci_patch_credential_requests              = var.oid4vci_patch_credential_requests
   oid4vci_patch_metadata_x5c_to_leaf_cert_only   = var.oid4vci_patch_metadata_x5c_to_leaf_cert_only
-  oid4vp_authentication_profiles                 = var.oid4vp_authentication_profiles
+  oid4vp_authentication_profiles                 = local.oid4vp_effective_authentication_profiles
+  oid4vp_import_unknown_users                    = var.oid4vp_user_provisioning_test_enabled
+  oid4vp_import_identity_provider_alias          = var.oid4vp_import_identity_provider_alias
+  oid4vp_user_provisioning_test_email_required   = var.oid4vp_user_provisioning_test_email_required
   oid4vp_credential_types                        = join(",", local.configured_scope_vcts)
   oid4vp_client_identifier_prefix                = var.oid4vp_client_identifier_prefix
   oid4vp_response_mode                           = var.oid4vp_response_mode

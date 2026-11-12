@@ -139,6 +139,24 @@ For Docker Compose commands, the merged YAML configuration remains the source of
 Then run a credential test, for example:
 `./keycloak-ssi.sh test preauth IdentityCredential`
 
+#### Local OID4VP user-provisioning test
+
+The `user-provisioning-test` branch includes a local Terraform setup with two selectable OID4VP profiles: a self-trusted SD-JWT credential issued by the local Keycloak realm, and a German PID mDoc profile using the German EUDI Wallet sandbox PID trust list. The test enables unknown external-user import and creates the hidden `oid4vp-import` provider with name and birth-date mappers.
+
+Build the OID4VP plugin from its `feat/167-user-import-stacked` branch and copy the resulting JAR into the deployment repository's root `providers/` directory, replacing the older OID4VP plugin JAR. Then run:
+
+```bash
+./scripts/user-provisioning-test.sh up
+```
+
+The script creates the ignored `secrets-user-provisioning-test.tfvars` from your existing `secrets-local.tfvars` on first use and enables the test profiles in that copy.
+
+The script starts local Keycloak, downloads the German sandbox trust-list signing certificate from the official developer-guide endpoint, and applies the local Terraform configuration. Keep the HTTPS tunnel named by `keycloak_url` in the test tfvars running so the phone wallet can reach the OID4VP request and response URLs. The script uses the local Terraform state file so it manages the same realm as the existing local setup.
+
+Use `./scripts/user-provisioning-test.sh links` to print request URLs. Select a profile using `profile_id=keycloak-issued` or `profile_id=german-pid-import`. The Keycloak-issued profile uses the first VCT from the scopes enabled in the local tfvars.
+
+The German profile uses mDoc (`docType` `eu.europa.ec.eudi.pid.1`) and requests claims from the PID namespace, including `given_name`, `family_name`, and `birth_date`. German PID has no unique person identifier claim, so this one-wallet test uses `family_name` as the federated subject. This is only safe for a single test holder in an isolated realm: people can share a family name and would otherwise resolve to the same federated identity. Do not use this subject choice for a multi-user or production realm. The Keycloak-issued profile explicitly uses `sub`. German Wallet Sandbox access and verifier access/registration certificates remain prerequisites.
+
 ---
 
 #### Adding custom client scopes

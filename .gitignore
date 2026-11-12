@@ -20,6 +20,8 @@ terraform.tfstate.backup
 .terraform/
 infrastructure/terraform/.terraform-local/
 infrastructure/terraform/.local-state/
+infrastructure/terraform/.terraform-user-provisioning-test/
+infrastructure/terraform/.local-user-provisioning/
 infrastructure/terraform/backend_override.tf
 **/*.hcl
 config-override.yaml
