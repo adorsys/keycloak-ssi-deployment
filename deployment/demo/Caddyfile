@@ -1,0 +1,15 @@
+http://{$KEYCLOAK_HOST} {
+	reverse_proxy keycloak:8080 {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 443
+		header_up X-Forwarded-Host {host}
+	}
+}
+
+http://{$MOCK_FE_HOST} {
+	reverse_proxy mock-fe:{$MOCK_FE_PORT} {
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 443
+		header_up X-Forwarded-Host {host}
+	}
+}
