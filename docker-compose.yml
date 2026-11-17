@@ -35,7 +35,10 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env.demo}
       KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env.demo}
       KC_HOSTNAME_STRICT: "true"
-      KC_HTTP_ENABLED: "true"
+      KC_HTTP_ENABLED: "false"
+      KC_HTTPS_PORT: "8443"
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/target/keycloak-server.crt.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/target/keycloak-server.key.pem
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
       KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
@@ -46,12 +49,13 @@ services:
       KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH: /opt/keycloak/data/keystores
     volumes:
       - ./providers:/opt/keycloak/providers:ro
+      - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/opt/keycloak/target:ro
       - ${KEYCLOAK_KEYSTORE_HOST_ROOT:?Set KEYCLOAK_KEYSTORE_HOST_ROOT in .env.demo}:/opt/keycloak/data/keystores:ro
     depends_on:
       postgres:
         condition: service_healthy
     expose:
-      - "8080"
+      - "8443"
       - "9000"
 
   mock-fe:
@@ -77,6 +81,7 @@ services:
       - "${CADDY_HOST_PORT:-8081}:80"
     volumes:
       - ./deployment/demo/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/etc/caddy/keycloak-tls:ro
     depends_on:
       - keycloak
       - mock-fe

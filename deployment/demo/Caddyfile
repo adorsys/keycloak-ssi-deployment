@@ -1,5 +1,9 @@
 http://{$KEYCLOAK_HOST} {
-	reverse_proxy keycloak:8080 {
+	reverse_proxy https://keycloak:8443 {
+		transport http {
+			tls_trust_pool file /etc/caddy/keycloak-tls/keycloak-server.crt.pem
+			tls_server_name app
+		}
 		header_up X-Forwarded-Proto https
 		header_up X-Forwarded-Port 443
 		header_up X-Forwarded-Host {host}

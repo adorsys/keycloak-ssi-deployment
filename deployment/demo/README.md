@@ -15,7 +15,9 @@ cp deployment/demo/.env.demo.example .env.demo
 Set strong database/admin passwords, the actual subdomain names, the mock-FE
 image and its listening port, and `KEYCLOAK_KEYSTORE_HOST_ROOT`. That host path
 must contain realm-named directories with the configured PKCS#12 files inside;
-it is mounted read-only at `/opt/keycloak/data/keystores`.
+it is mounted read-only at `/opt/keycloak/data/keystores`. Set
+`KEYCLOAK_TLS_HOST_DIR` to the existing SSI wrapper's `target` directory, which
+must contain `keycloak-server.crt.pem` and `keycloak-server.key.pem`.
 
 The mock-FE image must accept the `VITE_KEYCLOAK_*` and `VITE_OID4VC_*`
 environment variables. The Keycloak client must allow the mock frontend's HTTPS
@@ -30,12 +32,19 @@ into `/opt/keycloak/providers`. Compose uses the normal `start` command, not
 This follows Keycloak's [container guidance](https://www.keycloak.org/server/containers)
 for starting a standard image when provider JARs are supplied at runtime.
 
+Keycloak itself serves HTTPS on container port 8443 using the existing
+`target/keycloak-server.crt.pem` and `target/keycloak-server.key.pem` files.
+Caddy proxies to that HTTPS endpoint and trusts the mounted certificate; the
+generated certificate has the `app` SAN used by Caddy for upstream validation.
+Public HTTPS still terminates at the AWS ALB.
+
 The Keycloak feature list and OID4VP managed-realm settings mirror the relevant
 values from `deployment/keycloak/config.override.yaml`. The existing
 `start_command` there is for the host-based Keycloak process: it enables HTTPS
 inside Keycloak and references host certificate files. This Compose stack
-terminates public HTTPS at the AWS ALB, so Keycloak instead uses HTTP behind
-Caddy with a fixed public HTTPS hostname and forwarded-header handling.
+terminates public HTTPS at the AWS ALB and re-encrypts the Caddy-to-Keycloak
+hop. Keycloak uses its HTTPS listener, fixed public HTTPS hostname, and
+forwarded-header handling.
 
 ## Configure and start
 
