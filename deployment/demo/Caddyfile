@@ -1,5 +1,10 @@
-http://{$KEYCLOAK_HOST} {
-	reverse_proxy https://keycloak:8443 {
+:80 {
+	# The ALB health check does not send a service hostname.
+	@health path /health
+	respond @health "ok" 200
+
+	@keycloak host {$KEYCLOAK_HOST}
+	reverse_proxy @keycloak https://keycloak:8443 {
 		transport http {
 			tls_trust_pool file /etc/caddy/keycloak-tls/keycloak-server.crt.pem
 			tls_server_name app
@@ -8,10 +13,9 @@ http://{$KEYCLOAK_HOST} {
 		header_up X-Forwarded-Port 443
 		header_up X-Forwarded-Host {host}
 	}
-}
 
-http://{$MOCK_FE_HOST} {
-	reverse_proxy mock-fe:{$MOCK_FE_PORT} {
+	@mock_fe host {$MOCK_FE_HOST}
+	reverse_proxy @mock_fe mock-fe:{$MOCK_FE_PORT} {
 		header_up X-Forwarded-Proto https
 		header_up X-Forwarded-Port 443
 		header_up X-Forwarded-Host {host}

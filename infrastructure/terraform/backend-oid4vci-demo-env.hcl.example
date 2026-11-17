@@ -1,0 +1,7 @@
+# Copy to ignored `backend-oid4vci-demo-env.hcl` after creating the S3 bucket.
+# The state key is dedicated to the standalone Compose Keycloak environment.
+bucket       = "<OID4VCI_DEMO_ENV_STATE_BUCKET>"
+key          = "terraform/keycloak-ssi/oid4vci-demo-env/terraform.tfstate"
+region       = "eu-central-1"
+use_lockfile = true
+encrypt      = true

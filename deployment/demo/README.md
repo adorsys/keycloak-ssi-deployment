@@ -13,7 +13,14 @@ cp deployment/demo/.env.demo.example .env.demo
 ```
 
 Set strong database/admin passwords, the actual subdomain names, the mock-FE
-image and its listening port, and `KEYCLOAK_KEYSTORE_HOST_ROOT`. That host path
+image and its listening port, and `KEYCLOAK_KEYSTORE_HOST_ROOT`. The defaults
+are `https://keycloak-demo-env.solutions.adorsys.com` and
+`https://issuer-mock-fe.solutions.adorsys.com`; keep the hostnames in the root
+`.env.demo` aligned with the AWS routing setup below. The mock frontend image is
+published as `ghcr.io/adorsys-gis/keycloak-oid4vc-mock-fe:0.1.0`; its five
+`VITE_*` runtime variables below are supported by the image. `MOCK_FE_PORT`
+sets the container port used by Compose and Caddy, not a frontend runtime
+setting. That host path
 must contain realm-named directories with the configured PKCS#12 files inside;
 it is mounted read-only at `/opt/keycloak/data/keystores`. Set
 `KEYCLOAK_TLS_HOST_DIR` to the existing SSI wrapper's `target` directory, which
@@ -64,12 +71,32 @@ uses a named volume so restarting the stack preserves realm data. Do not use
 ## HTTPS and AWS routing
 
 Caddy listens for the configured hostnames over HTTP. Public TLS is terminated
-by the existing AWS Application Load Balancer using its ACM certificate; the
-ALB forwards to the EC2 host on `CADDY_HOST_PORT`. Create Route 53 aliases for
-the Keycloak and frontend hostnames to that ALB and add ALB host rules pointing
-both hostnames at a target group for the EC2 Caddy port. Restrict the EC2
-security-group rule for that port to the ALB security group. This stack does not
-route through the EC2 host's Nginx.
+by the existing AWS Application Load Balancer using its ACM certificate. The
+script `configure-demo-alb.sh` creates Route 53 aliases for both hostnames,
+creates one target group for the EC2 Caddy port, adds HTTPS listener host rules,
+and allows that port only from the ALB security group. It discovers the EC2
+instance from the existing `keycloak-demo-targets` target group and leaves the
+ALB's default action unchanged. This stack does not route through the EC2
+host's Nginx.
+
+Preview the account, ALB, EC2 instance, and planned resources first:
+
+```bash
+./deployment/demo/configure-demo-alb.sh
+```
+
+Apply the Route 53, listener, target-group, and security-group changes only
+after the preview is correct:
+
+```bash
+./deployment/demo/configure-demo-alb.sh --apply
+```
+
+The script defaults to AWS account `982081049921` in `eu-central-1`; set
+`AWS_PROFILE` if you use a named profile. It requires AWS CLI and `jq`. The
+Compose Caddy port (`CADDY_HOST_PORT`, default `8081`) must match the script's
+`CADDY_PORT` (default `8081`). After routing is created, start the Compose stack
+on the EC2 instance; the target health check uses Caddy's `/health` endpoint.
 
 Keycloak is configured with its public HTTPS URL and `xforwarded` proxy headers,
 while Caddy sets the public HTTPS scheme and port for its upstream requests. The
