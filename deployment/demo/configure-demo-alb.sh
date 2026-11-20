@@ -14,6 +14,10 @@ CADDY_TARGET_GROUP_NAME="${CADDY_TARGET_GROUP_NAME:-keycloak-demo-caddy}"
 CADDY_PORT="${CADDY_PORT:-8081}"
 KEYCLOAK_HOST="${KEYCLOAK_HOST:-keycloak-demo-env.solutions.adorsys.com}"
 MOCK_FE_HOST="${MOCK_FE_HOST:-issuer-mock-fe.solutions.adorsys.com}"
+# Route 53 stores DNS record names in lowercase. Normalize overrides once so
+# validation and all later ALB/Route 53 comparisons use the same canonical form.
+KEYCLOAK_HOST="${KEYCLOAK_HOST,,}"
+MOCK_FE_HOST="${MOCK_FE_HOST,,}"
 APPLY=false
 
 usage() {
@@ -172,7 +176,7 @@ check_dns_record() {
     0) echo missing ;;
     1)
       [[ "$(jq -r '.[0].Type' <<<"$records")" == A ]] || fail "A non-A Route 53 record already exists for $host."
-      alias_dns="$(jq -r '.[0].AliasTarget.DNSName // empty' <<<"$records" | sed -E 's/^dualstack\./ /; s/[.]$//' | xargs)"
+      alias_dns="$(jq -r '.[0].AliasTarget.DNSName // empty' <<<"$records" | sed -E 's/^dualstack\.//; s/[.]$//')"
       alias_zone="$(jq -r '.[0].AliasTarget.HostedZoneId // empty' <<<"$records")"
       [[ "$alias_dns" == "$ALB_DNS" && "$alias_zone" == "$ALB_ZONE_ID" ]] || \
         fail "An A record already exists for $host but does not alias to $ALB_NAME; refusing to overwrite it."

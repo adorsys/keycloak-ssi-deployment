@@ -54,6 +54,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c '{ printf "HEAD /health/ready HTTP/1.0\r\n\r\n" >&0;
+          grep "HTTP/1.0 200"; } 0<>/dev/tcp/localhost/9000'
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
     expose:
       - "8443"
       - "9000"
@@ -63,7 +73,7 @@ services:
     restart: unless-stopped
     environment:
       VITE_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env.demo}
-      VITE_KEYCLOAK_REALM: ${MOCK_FE_REALM:-oid4vc-vci}
+      VITE_KEYCLOAK_REALM: ${MOCK_FE_REALM:-oid4vci-demo-env}
       VITE_KEYCLOAK_CLIENT_ID: ${MOCK_FE_CLIENT_ID:-oid4vc-demo-public}
       VITE_OID4VC_DEFAULT_CREDENTIAL_CONFIGURATION_ID: ${MOCK_FE_CREDENTIAL_CONFIGURATION_ID:-DatevCompanyCredential}
       VITE_OID4VC_PRE_AUTHORIZED: ${MOCK_FE_PRE_AUTHORIZED:-true}
@@ -83,8 +93,10 @@ services:
       - ./deployment/demo/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/etc/caddy/keycloak-tls:ro
     depends_on:
-      - keycloak
-      - mock-fe
+      keycloak:
+        condition: service_healthy
+      mock-fe:
+        condition: service_started
 
 volumes:
   demo_env_postgres_data:

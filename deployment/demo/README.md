@@ -79,6 +79,14 @@ instance from the existing `keycloak-demo-targets` target group and leaves the
 ALB's default action unchanged. This stack does not route through the EC2
 host's Nginx.
 
+The ALB and Caddy have separate routing roles. The ALB handles public TLS and
+forwards only the two demo hostnames to Caddy over HTTP; its existing default
+action continues handling other hostnames. Caddy uses the incoming hostname to
+route requests to either the mock frontend or Keycloak. The Caddy-to-Keycloak
+connection uses HTTPS, and Caddy explicitly trusts the mounted Keycloak
+certificate. This keeps Keycloak's self-signed certificate on the private
+Compose network, where it is validated by Caddy rather than by the ALB.
+
 Preview the account, ALB, EC2 instance, and planned resources first:
 
 ```bash
