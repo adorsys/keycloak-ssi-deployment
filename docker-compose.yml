@@ -36,6 +36,7 @@ services:
       KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env.demo}
       KC_HOSTNAME_STRICT: "true"
       KC_HTTP_ENABLED: "false"
+      KC_HTTP_MANAGEMENT_SCHEME: http
       KC_HTTPS_PORT: "8443"
       KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/target/keycloak-server.crt.pem
       KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/target/keycloak-server.key.pem

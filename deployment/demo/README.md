@@ -51,7 +51,9 @@ values from `deployment/keycloak/config.override.yaml`. The existing
 inside Keycloak and references host certificate files. This Compose stack
 terminates public HTTPS at the AWS ALB and re-encrypts the Caddy-to-Keycloak
 hop. Keycloak uses its HTTPS listener, fixed public HTTPS hostname, and
-forwarded-header handling.
+forwarded-header handling. Its separate management interface uses HTTP on the
+private Compose network so the container healthcheck can probe `/health/ready`;
+port 9000 is exposed to Compose services but is not published on the EC2 host.
 
 ## Configure and start
 
