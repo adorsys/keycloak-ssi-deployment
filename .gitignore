@@ -23,6 +23,7 @@ infrastructure/terraform/.local-state/
 infrastructure/terraform/backend_override.tf
 **/*.hcl
 config-override.yaml
+.env.demo
 infrastructure/terraform/*.tfvars
 
 # Client scopes

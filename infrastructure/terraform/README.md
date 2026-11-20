@@ -391,3 +391,36 @@ For production environments:
 3. **Network Security**: Restrict access to Keycloak admin interface
 4. **Monitoring**: Implement proper logging and monitoring
 5. **Backup**: Regular backups of Keycloak data and Terraform state
+
+# Standalone demo Keycloak backend
+
+The Compose-based `keycloak-demo-env` instance has its own Terraform state,
+separate from the existing EC2-hosted realms. The ignored backend file
+`backend-oid4vci-demo-env.hcl` points to a dedicated S3 bucket and state key.
+The tracked `.example` file documents the configuration without exposing
+environment-specific values.
+
+The backend uses S3 native locking with `use_lockfile = true`; it does not need
+a DynamoDB lock table. Enable S3 bucket versioning to allow state recovery.
+
+Copy the tracked examples when preparing another checkout:
+
+```bash
+cp -n infrastructure/terraform/backend-oid4vci-demo-env.hcl.example \
+  infrastructure/terraform/backend-oid4vci-demo-env.hcl
+cp -n infrastructure/terraform/secrets-oid4vci-demo-env.tfvars.example \
+  infrastructure/terraform/secrets-oid4vci-demo-env.tfvars
+```
+
+Then initialize and apply this environment with:
+
+```bash
+terraform -chdir=infrastructure/terraform init -reconfigure \
+  -backend-config=backend-oid4vci-demo-env.hcl
+
+terraform -chdir=infrastructure/terraform plan \
+  -var-file=secrets-oid4vci-demo-env.tfvars
+
+terraform -chdir=infrastructure/terraform apply \
+  -var-file=secrets-oid4vci-demo-env.tfvars
+```
