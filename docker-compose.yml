@@ -1,0 +1,103 @@
+# Standalone SSI stack: Keycloak, its PostgreSQL database, a supplied mock-FE
+# image, and Caddy. It does not use the upstream submodule Compose file or
+# route traffic through the EC2 host's Nginx. The AWS ALB terminates public
+# HTTPS; only Caddy publishes a host port, while service ports remain private.
+
+name: keycloak-demo-env
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env.demo}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.demo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.demo}
+    volumes:
+      - demo_env_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  keycloak:
+    image: ${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak:26.8.2}
+    restart: unless-stopped
+    command: ["start"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: ${POSTGRES_DB:?Set POSTGRES_DB in .env.demo}
+      KC_DB_USERNAME: ${POSTGRES_USER:?Set POSTGRES_USER in .env.demo}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.demo}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME in .env.demo}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env.demo}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env.demo}
+      KC_HOSTNAME_STRICT: "true"
+      KC_HTTP_ENABLED: "false"
+      KC_HTTP_MANAGEMENT_SCHEME: http
+      KC_HTTPS_PORT: "8443"
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/target/keycloak-server.crt.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/target/keycloak-server.key.pem
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
+      KC_FEATURES: ${KEYCLOAK_FEATURES:-oid4vc-vci,oid4vc-vci-preauth-code,oid4vc-vci-rest-credential-offer}
+      KC_SPI_CONNECTIONS_JPA_QUARKUS_MIGRATION_STRATEGY: ${DATABASE_MIGRATION_STRATEGY:-update}
+      KC_SPI_REALM_RESTAPI_EXTENSION_OID4VP_AUTH_MANAGED_REALMS: ${OID4VP_AUTH_MANAGED_REALMS:?Set OID4VP_AUTH_MANAGED_REALMS in .env.demo}
+      KC_SPI_REALM_RESTAPI_EXTENSION_OID4VP_AUTH_VERBOSE_ERRORS: ${OID4VP_AUTH_VERBOSE_ERRORS:-false}
+      KC_SPI_KEYS__JAVA_KEYSTORE__KEYSTORES_PATH: /opt/keycloak/data/keystores
+    volumes:
+      - ./providers:/opt/keycloak/providers:ro
+      - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/opt/keycloak/target:ro
+      - ${KEYCLOAK_KEYSTORE_HOST_ROOT:?Set KEYCLOAK_KEYSTORE_HOST_ROOT in .env.demo}:/opt/keycloak/data/keystores:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c '{ printf "HEAD /health/ready HTTP/1.0\r\n\r\n" >&0;
+          grep "HTTP/1.0 200"; } 0<>/dev/tcp/localhost/9000'
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    expose:
+      - "8443"
+      - "9000"
+
+  mock-fe:
+    image: ${MOCK_FE_IMAGE:?Set MOCK_FE_IMAGE in .env.demo}
+    restart: unless-stopped
+    environment:
+      VITE_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env.demo}
+      VITE_KEYCLOAK_REALM: ${MOCK_FE_REALM:-oid4vci-demo-env}
+      VITE_KEYCLOAK_CLIENT_ID: ${MOCK_FE_CLIENT_ID:-oid4vc-demo-public}
+      VITE_OID4VC_DEFAULT_CREDENTIAL_CONFIGURATION_ID: ${MOCK_FE_CREDENTIAL_CONFIGURATION_ID:-DatevCompanyCredential}
+      VITE_OID4VC_PRE_AUTHORIZED: ${MOCK_FE_PRE_AUTHORIZED:-true}
+    expose:
+      - "${MOCK_FE_PORT:-8080}"
+
+  caddy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_HOST: ${KEYCLOAK_HOST:?Set KEYCLOAK_HOST in .env.demo}
+      MOCK_FE_HOST: ${MOCK_FE_HOST:?Set MOCK_FE_HOST in .env.demo}
+      MOCK_FE_PORT: ${MOCK_FE_PORT:-8080}
+    ports:
+      - "${CADDY_HOST_PORT:-8081}:80"
+    volumes:
+      - ./deployment/demo/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/etc/caddy/keycloak-tls:ro
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      mock-fe:
+        condition: service_started
+
+volumes:
+  demo_env_postgres_data:
