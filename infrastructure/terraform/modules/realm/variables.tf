@@ -35,8 +35,8 @@ variable "oid4vp_authentication_profiles" {
   type        = string
 }
 
-variable "oid4vp_import_unknown_users" {
-  description = "Allow the OID4VP authenticator to provision unknown external users."
+variable "oid4vp_import_provider_setup_enabled" {
+  description = "Create or refresh the hidden OID4VP import provider and its mappers. User-import permission is configured per authentication profile."
   type        = bool
   default     = false
 }

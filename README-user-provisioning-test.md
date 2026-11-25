@@ -59,7 +59,7 @@ The `up` command performs these steps:
 3. Checks that the ngrok URL in the test tfvars can reach Keycloak. Terraform admin API calls use `https://localhost:8443`; the public ngrok URL remains configured for wallet-facing requests and links.
 4. Downloads the German PID sandbox trust-list signing certificate, checks that it is a valid X.509 certificate, and caches it locally in the format the profile expects.
 5. Ensures `infrastructure/terraform/backend_override.tf` exists, using `backend_override.tf.example` if needed. Terraform then uses the local backend at `infrastructure/terraform/.local-state/terraform.tfstate`; its plugin working directory is isolated under `.terraform-user-provisioning-test/`.
-6. Runs `terraform init` and applies the test tfvars to the local Keycloak realm. This configures the two profiles, enables unknown-user import, creates or updates the hidden `oid4vp-import` identity provider, and configures the PID name and birth-date mappers.
+6. Runs `terraform init` and applies the test tfvars to the local Keycloak realm. The `german-pid-import` profile enables unknown-user import and selects the `oid4vp-import` alias; `keycloak-issued` leaves import disabled. Terraform separately creates or updates the hidden `oid4vp-import` identity provider and configures the PID name and birth-date mappers.
 7. Prints a request link for each profile.
 
 The script does not provision AWS resources. The Terraform configuration applies to the local Keycloak instance using the local state backend.
@@ -75,7 +75,7 @@ The `up` command also prints direct request links for troubleshooting or testing
 
 If the wallet buttons do not appear, check that the realm login theme is `keycloak.v2+oid4vp`, the frontend uses the same `VITE_KEYCLOAK_URL` as the test tfvars, and its redirect URL is allowed on the `oid4vc-demo-public` client. Also check Keycloak logs for profile validation errors.
 
-The German PID profile pins its trust policy to the sandbox provider `Bundesdruckerei GmbH DEMO PID-Provider`. German PID does not provide a unique person identifier claim. This isolated, single-wallet test uses `family_name` as its federated subject, so two holders with the same family name could resolve to the same imported identity. Do not use this identity choice for multiple holders or production.
+The German PID profile uses the current EUDI Hub sandbox PID-provider trust list and pins trust to D-Trust's sandbox PID issuance service (`VATDE-202620438`). The setup script downloads the matching trust-list signing certificate before Terraform plans or applies. German PID does not provide a unique person identifier claim. This isolated, single-wallet test uses `family_name` as its federated subject, so two holders with the same family name could resolve to the same imported identity. Do not use this identity choice for multiple holders or production.
 
 ## Other script commands
 

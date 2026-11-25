@@ -121,16 +121,12 @@ resource "keycloak_authentication_execution_config" "config" {
     } : {},
     trimspace(var.oid4vp_verifier_info) != "" ? {
       verifierInfo = var.oid4vp_verifier_info
-    } : {},
-    var.oid4vp_import_unknown_users ? {
-      importUnknownUsers          = "true"
-      importIdentityProviderAlias = var.oid4vp_import_identity_provider_alias
     } : {}
   )
 }
 
 resource "null_resource" "oid4vp_import_identity_provider" {
-  count = var.oid4vp_import_unknown_users ? 1 : 0
+  count = var.oid4vp_import_provider_setup_enabled ? 1 : 0
 
   triggers = {
     realm_id              = keycloak_realm.oid4vc_vci.id
@@ -140,8 +136,7 @@ resource "null_resource" "oid4vp_import_identity_provider" {
     email_required        = tostring(var.oid4vp_user_provisioning_test_email_required)
     mappers = jsonencode([
       { name = "Given name", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.given_name", attribute = "firstName" },
-      { name = "Family name", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.family_name", attribute = "lastName" },
-      { name = "Birth date", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.birth_date", attribute = "birthdate" }
+      { name = "Family name", claim = "eu\\.europa\\.ec\\.eudi\\.pid\\.1.family_name", attribute = "lastName" }
     ])
   }
 

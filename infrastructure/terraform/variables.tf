@@ -100,9 +100,9 @@ variable "oid4vp_user_provisioning_test_enabled" {
 }
 
 variable "oid4vp_user_provisioning_test_trust_list_url" {
-  description = "German EUDI Wallet sandbox PID-provider trust-list JWT URL used by the local test profile."
+  description = "Current German EUDI Wallet sandbox PID-provider trust-list JWT URL used by the local test profile."
   type        = string
-  default     = "https://bmi.usercontent.opencode.de/eudi-wallet/test-trust-lists/pid-provider.jwt"
+  default     = "https://trustlists-sandbox.eudihub.de/pid-provider.jwt"
 }
 
 variable "oid4vp_user_provisioning_test_trust_list_signing_certificate_file" {
@@ -118,9 +118,9 @@ variable "oid4vp_user_provisioning_test_pid_subject_claim" {
 }
 
 variable "oid4vp_user_provisioning_test_pid_issuer" {
-  description = "PID provider identifier from the German sandbox trust list for the test mDoc profile."
+  description = "TETradeName identifier of the German sandbox PID provider used by the test mDoc profile."
   type        = string
-  default     = "Bundesdruckerei GmbH DEMO PID-Provider"
+  default     = "VATDE-202620438"
 }
 
 variable "oid4vp_import_identity_provider_alias" {

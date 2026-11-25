@@ -141,7 +141,7 @@ Then run a credential test, for example:
 
 #### Local OID4VP user-provisioning test
 
-The `user-provisioning-test` branch includes a local Terraform setup with two selectable OID4VP profiles: a self-trusted SD-JWT credential issued by the local Keycloak realm, and a German PID mDoc profile using the German EUDI Wallet sandbox PID trust list. The test enables unknown external-user import and creates the hidden `oid4vp-import` provider with name and birth-date mappers.
+The `user-provisioning-test` branch includes a local Terraform setup with two selectable OID4VP profiles: a self-trusted SD-JWT credential issued by the local Keycloak realm, and a German PID mDoc profile using the German EUDI Wallet sandbox PID trust list. Unknown-user import is enabled only on the `german-pid-import` profile; the `keycloak-issued` profile explicitly keeps it disabled. Terraform separately creates the hidden `oid4vp-import` provider with name and birth-date mappers.
 
 Build the OID4VP plugin from its `feat/167-user-import-stacked` branch and copy the resulting JAR into the deployment repository's root `providers/` directory, replacing the older OID4VP plugin JAR. Then run:
 

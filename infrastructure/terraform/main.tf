@@ -54,9 +54,10 @@ locals {
 
   user_provisioning_test_profiles = jsonencode([
     {
-      id          = "keycloak-issued"
-      description = "Authenticate with a credential issued by this Keycloak realm."
-      displayCta  = { en = "Keycloak credential" }
+      id                 = "keycloak-issued"
+      description        = "Authenticate with a credential issued by this Keycloak realm."
+      displayCta         = { en = "Keycloak credential" }
+      importUnknownUsers = false
       credentials = [
         {
           id              = "identity"
@@ -70,9 +71,11 @@ locals {
       ]
     },
     {
-      id          = "german-pid-import"
-      description = "Authenticate and import an unknown user from a German PID."
-      displayCta  = { en = "German PID" }
+      id                          = "german-pid-import"
+      description                 = "Authenticate and import an unknown user from a German PID."
+      displayCta                  = { en = "German PID" }
+      importUnknownUsers          = true
+      importIdentityProviderAlias = var.oid4vp_import_identity_provider_alias
       credentials = [
         {
           id              = "pid"
@@ -83,8 +86,7 @@ locals {
           claims = distinct([
             var.oid4vp_user_provisioning_test_pid_subject_claim,
             "eu.europa.ec.eudi.pid.1/given_name",
-            "eu.europa.ec.eudi.pid.1/family_name",
-            "eu.europa.ec.eudi.pid.1/birth_date"
+            "eu.europa.ec.eudi.pid.1/family_name"
           ])
           trust = [
             {
@@ -124,7 +126,7 @@ module "realm" {
   oid4vci_patch_credential_requests              = var.oid4vci_patch_credential_requests
   oid4vci_patch_metadata_x5c_to_leaf_cert_only   = var.oid4vci_patch_metadata_x5c_to_leaf_cert_only
   oid4vp_authentication_profiles                 = local.oid4vp_effective_authentication_profiles
-  oid4vp_import_unknown_users                    = var.oid4vp_user_provisioning_test_enabled
+  oid4vp_import_provider_setup_enabled           = var.oid4vp_user_provisioning_test_enabled
   oid4vp_import_identity_provider_alias          = var.oid4vp_import_identity_provider_alias
   oid4vp_user_provisioning_test_email_required   = var.oid4vp_user_provisioning_test_email_required
   oid4vp_credential_types                        = join(",", local.configured_scope_vcts)

@@ -7,7 +7,7 @@ TFVARS="$TF_DIR/secrets-user-provisioning-test.tfvars"
 TF_DATA_DIR="$TF_DIR/.terraform-user-provisioning-test"
 LOCAL_KEYCLOAK_ADMIN_URL="https://localhost:8443"
 IMPORT_PROVIDER_RESOURCE='module.realm.null_resource.oid4vp_import_identity_provider[0]'
-TRUST_CERT_URL="https://bmi.usercontent.opencode.de/eudi-wallet/test-trust-lists/certificate.pem"
+TRUST_CERT_URL="https://trustlists-sandbox.eudihub.de/certificate.pem"
 TRUST_CERT_B64="$TF_DIR/.local-user-provisioning/german-pid-test-list-signing-certificate.b64"
 
 usage() {
