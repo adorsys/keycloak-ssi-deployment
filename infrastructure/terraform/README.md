@@ -59,7 +59,9 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `enabled_scope_names`    | Optional allowlist of client scope names to apply     | `[]` (apply all scopes)  |
 | `optional_client_scope_client_ids` | Optional list of client IDs that receive optional scopes | `[]` (all configured clients) |
 | `status_list_server_url` | Base URL of the status list server                    | `https://statuslist.eudi-adorsys.com` |
-| `status_list_enabled`    | Turns status list support on or off for the realm     | `false`                  |
+| `status_list_enabled`    | Turns status list issuance on or off for the realm     | `false`                  |
+| `status_list_mandatory` | Fail issuance if publishing a credential status fails | `false`                  |
+| `status_list_token_issuer_prefix` | Stable prefix for the status-list issuer ID; keep it unchanged after registration | generated UUID |
 | `oid4vc_keystore_path`   | Absolute keystore path on Keycloak host filesystem    | required                 |
 | `oid4vc_keystore_password` | Password for OID4VC keystore                        | required                 |
 | `oid4vc_keystore_type`   | Keystore type for OID4VC key provider                 | `PKCS12`                 |
@@ -69,6 +71,14 @@ The main variables are defined in the root `variables.tf` and module-specific `v
 | `oid4vci_omit_encryption_metadata` | Omits OID4VCI encryption metadata; leave disabled when wallets need those parameters | `false` |
 | `oid4vci_patch_credential_requests` | Enables the OID4VP plugin workaround for German-wallet credential requests using `credential_configuration_id` | `false` |
 | `oid4vci_patch_metadata_x5c_to_leaf_cert_only` | Enables the OID4VP plugin workaround that publishes only the leaf certificate in signed issuer metadata `x5c` | `false` |
+| `oid4vci_presentation_during_issuance` | Enables the realm capability for OID4VCI presentation-during-issuance | `false` |
+| `pdi_credential_scope_name` | Credential scope to gate on presentation during issuance | `IdentityCredential` |
+| `pdi_authentication_profile_id` | OID4VP profile referenced by the gated scope | `identity-pid-presentation` |
+| `pdi_test_user_enabled` | Create the PID-matching `erika_mustermann` demo user | `false` |
+| `pdi_wallet_client_enabled` | Register the German wallet's OID4VCI public client | `false` |
+| `oid4vp_enforce_revocation_status` | Reject credentials with invalid or missing status when enabled | `false` |
+| `oid4vp_allow_missing_status_claim` | Allow credentials without a status claim during revocation checks; keep `false` for fail-closed verification | `false` |
+| `oid4vp_status_list_trust_material_idps` | Optional comma-separated trust-material IdP aliases for Status List JWT `x5c` validation; empty uses Keycloak's global truststore | empty |
 
 `oid4vci_allow_proof_iss_mismatch` defaults to `false` because it relaxes proof
 validation. Set it to `true` only for realms where testing confirms the German
@@ -83,7 +93,7 @@ Issuer Metadata when `true`; German-wallet test realms should set it to `false`
 so Keycloak publishes the supported encryption metadata. Both plugin workarounds
 are temporary compatibility settings. The default is now `false`.
 
-With [OID4VP plugin 1.4.4](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.4), German-wallet test realms that reject an intermediate
+With [OID4VP plugin 1.4.5](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.5), German-wallet test realms that reject an intermediate
 certificate in signed Credential Issuer Metadata should set
 `oid4vci_patch_metadata_x5c_to_leaf_cert_only = true`. This sets the realm
 attribute `oid4vci.patch_metadata_x5c_to_leaf_cert_only`; it limits the signed
@@ -134,8 +144,48 @@ Recommended:
 - Keep the keystore in durable storage (for example S3 + restore-to-host flow, EBS, or Vault-backed sync).
 - Keep keystore password out of Git and provide via local secret tfvars / environment variables.
 
-If you set `status_list_enabled` to `true`, Keycloak adds status information to issued credentials using
-`status_list_server_url`. This lets wallets and verifiers check whether a credential is still valid, revoked, or suspended.
+#### Token Status List issuance and verification
+
+For an issuer realm, set `status_list_enabled = true` and configure `status_list_server_url`. The status-list
+plugin registers the realm with that server. With the mapper below attached, it publishes a status reference
+in each newly issued credential.
+Set `status_list_mandatory = true` when the demo must fail issuance if publication fails. Keep
+`status_list_token_issuer_prefix` stable after registration: it forms the server-side issuer identity together
+with the realm name, and changing it creates a different issuer identity.
+
+Add the `oid4vc-status-list-claim-mapper` protocol mapper to each credential's client scope and include `status`
+in that SD-JWT scope's `vc.credential_build_config.sd_jwt.visible_claims`. Both are needed for the issued
+credential to carry its status reference. The shared `DatevCompanyCredential` and `IdentityCredential` scope
+definitions include this mapper and claim. The standalone PDI demo selects only `IdentityCredential` and
+gates it on PID presentation; the DATEV definition remains available for other realms.
+
+For the German PID presentation-during-issuance flow, use the demo realm example with
+`oid4vci_presentation_during_issuance = true`, `pdi_credential_scope_name = "IdentityCredential"`,
+and an OID4VP profile whose ID matches `pdi_authentication_profile_id`. Terraform adds the gate only to
+that realm's selected client scope, so other realms that reuse `IdentityCredential` are not gated. The profile
+uses PID `given_name`/`family_name` claims to bind the authorization-code offer's target user to Keycloak's
+`firstName`/`lastName`; Terraform can create `erika_mustermann` for the demo. Use an authorization-code offer,
+not a pre-authorized offer, for the gated credential.
+
+For the OID4VP authentication execution, set `oid4vp_enforce_revocation_status = "true"` to reject revoked,
+suspended, or otherwise invalid credentials. Keep `oid4vp_allow_missing_status_claim = "false"` so a credential
+without a status reference is rejected too. This is fail-closed and is appropriate for testing the complete
+revocation flow.
+
+Configure the final ES256 signing key before enabling status-list registration. On a new realm, first apply with
+`status_list_enabled = false`, confirm the configured `java-keystore` signing provider is active, then apply the
+normal tfvars with `status_list_enabled = true`. The plugin registers newly created or newly enabled realms in
+the background; its successful-registration log is the confirmation that the status server accepted the realm.
+
+Status List JWT signer trust is separate from TLS trust for `status_list_server_url`. With
+`oid4vp_status_list_trust_material_idps` empty, OID4VP validates the fetched status-list JWT's `x5c` chain using
+Keycloak's global truststore. Add the CA that issued the Status List JWT signing certificate to that truststore,
+or configure a trust-material IdP alias and set the variable to that alias. Do not assume the issuer access-certificate
+CA or the PID trust-list signer is the Status List JWT trust anchor. See the OID4VP plugin's
+[status-list trust configuration](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/blob/v1.4.5/docs/modules/ROOT/pages/oid4vp-deployment-configuration.adoc#global-truststore).
+
+The Token Status List plugin settings and mapper are documented in the
+[Token Status plugin technical reference](https://github.com/ADORSYS-GIS/token-status-link/blob/v0.5.3/docs/technical-reference.md).
 
 ### SAML Identity Provider Configuration
 

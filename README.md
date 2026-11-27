@@ -57,7 +57,7 @@ From the repository root, run in order:
 
 `setup` uses the SSI-owned deployment layer to:
 
-- install Keycloak 26.8.2 and the OID4VP plugin 1.4.4;
+- install Keycloak 26.8.2, [OID4VP plugin 1.4.5](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.5), and [Token Status plugin 0.5.3](https://github.com/ADORSYS-GIS/token-status-link/releases/tag/v0.5.3);
 - enable the Keycloak credential-offer REST feature;
 - configure the plugin-managed realms;
 - migrate a preserved Keycloak database with the `update` strategy; and
@@ -140,9 +140,14 @@ reachable by the wallet over HTTPS. A self-signed or development-CA chain may
 be useful for isolated local testing, but it is not trusted by the German
 wallet sandbox.
 
-The wrapper discovers provider JARs from `providers/` without hard-coding a plugin version. Keep exactly one `keycloak-oid4vp-plugin-*.jar` in that directory. To upgrade the plugin, replace the existing JAR with the new version; no wrapper-script change is required.
+The wrapper discovers provider JARs from `providers/` without hard-coding plugin versions. Keep exactly one
+`keycloak-oid4vp-plugin-*.jar` and one `keycloak-token-status-plugin-*.jar` in that directory. To upgrade either
+plugin, replace its existing JAR with the new version; no wrapper-script change is required.
 
-The [OID4VP plugin 1.4.4 release](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/releases/tag/v1.4.4) adds the `oid4vci.patch_metadata_x5c_to_leaf_cert_only` realm attribute. Set it to `true` for German-wallet compatibility when the wallet rejects an intermediate certificate in the signed Credential Issuer Metadata `x5c` header ([Keycloak issue #54890](https://github.com/keycloak/keycloak/issues/54890)). Terraform exposes this as `oid4vci_patch_metadata_x5c_to_leaf_cert_only`; it defaults to `false`.
+With OID4VP plugin 1.4.5, set `oid4vci.patch_metadata_x5c_to_leaf_cert_only` to `true` for German-wallet compatibility when the wallet rejects an intermediate certificate in the signed Credential Issuer Metadata `x5c` header ([Keycloak issue #54890](https://github.com/keycloak/keycloak/issues/54890)). Terraform exposes this as `oid4vci_patch_metadata_x5c_to_leaf_cert_only`; it defaults to `false`.
+
+For Token Status List issuance and OID4VP revocation checks, see the Terraform guide's
+[Token Status List configuration](infrastructure/terraform/README.md#token-status-list-issuance-and-verification).
 
 For Docker Compose commands, the merged YAML configuration remains the source of truth. The wrapper generates a temporary `.env` adapter, passes it explicitly to Compose, and removes it after the command completes. The SSI Compose file only mounts providers and maps those generated values into the Keycloak container.
 

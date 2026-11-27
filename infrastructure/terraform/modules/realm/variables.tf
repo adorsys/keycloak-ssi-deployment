@@ -13,6 +13,16 @@ variable "status_list_server_url" {
   type        = string
 }
 
+variable "status_list_mandatory" {
+  description = "Fail credential issuance when publishing its status to the Status List server fails"
+  type        = bool
+}
+
+variable "status_list_token_issuer_prefix" {
+  description = "Stable prefix for the Token Status List issuer identifier; empty lets the plugin generate and persist one"
+  type        = string
+}
+
 variable "admin_password" {
   description = "Keycloak admin password"
   type        = string
@@ -27,6 +37,12 @@ variable "keycloak_url" {
 variable "oid4vp_authentication_profiles" {
   description = "Optional JSON array of OID4VP authentication profiles. Empty uses the legacy single-credential configuration."
   type        = string
+}
+
+variable "oid4vci_presentation_during_issuance" {
+  description = "Enable the OID4VCI presentation-during-issuance capability for this realm."
+  type        = bool
+  default     = false
 }
 
 variable "oid4vp_credential_types" {
@@ -51,6 +67,16 @@ variable "oid4vp_holder_binding_proof_max_age" {
 
 variable "oid4vp_enforce_revocation_status" {
   description = "Reject credentials marked invalid by the Token Status List mechanism"
+  type        = string
+}
+
+variable "oid4vp_allow_missing_status_claim" {
+  description = "Allow credentials without a status claim when revocation enforcement is enabled"
+  type        = string
+}
+
+variable "oid4vp_status_list_trust_material_idps" {
+  description = "Optional comma-separated trust-material identity-provider aliases for Status List JWT x5c validation"
   type        = string
 }
 

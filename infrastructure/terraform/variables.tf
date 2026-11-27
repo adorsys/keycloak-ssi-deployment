@@ -93,6 +93,49 @@ variable "oid4vp_authentication_profiles" {
   default     = ""
 }
 
+variable "oid4vci_presentation_during_issuance" {
+  description = "Enable OID4VCI presentation-during-issuance for this realm."
+  type        = bool
+  default     = false
+}
+
+variable "pdi_credential_scope_name" {
+  description = "Credential scope gated by presentation during issuance when enabled."
+  type        = string
+  default     = "IdentityCredential"
+}
+
+variable "pdi_authentication_profile_id" {
+  description = "OID4VP profile required by the gated credential scope."
+  type        = string
+  default     = "identity-pid-presentation"
+}
+
+variable "pdi_test_user_enabled" {
+  description = "Create the PID-matching Erika Mustermann test user."
+  type        = bool
+  default     = false
+}
+
+variable "pdi_test_user_initial_password" {
+  description = "Initial password for the PDI test user."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "pdi_wallet_client_enabled" {
+  description = "Create the German wallet OID4VCI client used for authorization-code issuance."
+  type        = bool
+  default     = false
+}
+
+variable "pdi_wallet_client_valid_redirect_uris" {
+  description = "Redirect URI registered for the German sandbox wallet client."
+  type        = list(string)
+  default     = ["org.sprind.wallet.sandbox:/authorization"]
+}
+
 variable "oid4vp_require_nbf_claim" {
   description = "Require the nbf time claim in presented SD-JWT credentials."
   type        = string
@@ -115,6 +158,18 @@ variable "oid4vp_enforce_revocation_status" {
   description = "Reject credentials marked invalid by the Token Status List mechanism."
   type        = string
   default     = "false"
+}
+
+variable "oid4vp_allow_missing_status_claim" {
+  description = "Allow presented credentials without a status claim when revocation enforcement is enabled. Keep false for fail-closed validation."
+  type        = string
+  default     = "false"
+}
+
+variable "oid4vp_status_list_trust_material_idps" {
+  description = "Optional comma-separated Keycloak trust-material identity-provider aliases for validating Status List JWT x5c chains. Empty uses the global truststore."
+  type        = string
+  default     = ""
 }
 
 variable "oid4vp_response_mode" {
@@ -203,6 +258,18 @@ variable "status_list_enabled" {
   description = "Enable or disable the status list for the realm"
   type        = bool
   default     = false
+}
+
+variable "status_list_mandatory" {
+  description = "Fail credential issuance when publishing its status to the Status List server fails."
+  type        = bool
+  default     = false
+}
+
+variable "status_list_token_issuer_prefix" {
+  description = "Stable prefix for the Token Status List issuer identifier; empty lets the plugin generate and persist one."
+  type        = string
+  default     = ""
 }
 
 variable "enable_rsa_keys" {

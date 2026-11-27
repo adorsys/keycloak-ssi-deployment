@@ -89,3 +89,16 @@ variable "max_mustermann_initial_password" {
   type        = string
   sensitive   = true
 }
+
+variable "pdi_test_user_enabled" {
+  description = "Create the PID-matching Erika Mustermann test user."
+  type        = bool
+  default     = false
+}
+
+variable "pdi_test_user_initial_password" {
+  description = "Initial password for the PDI test user."
+  type        = string
+  sensitive   = true
+  default     = ""
+}

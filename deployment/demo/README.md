@@ -116,3 +116,29 @@ port on the EC2 host.
 The Keycloak client must allow the mock frontend's HTTPS origin and redirect
 URIs. Configure those realm/client settings after the stack is reachable; DNS
 and ALB routing alone do not configure Keycloak client origins.
+
+## Test presentation during issuance
+
+This standalone demo is focused on the German PID presentation-during-issuance
+flow. Its Terraform configuration selects only `IdentityCredential` and gates
+issuance on PID presentation. The separate existing Keycloak instance continues
+to handle DATEV issuance. Apply `secrets-oid4vci-demo-env.tfvars` with the current
+OID4VP access and registration certificates, PID trust-list signer certificate,
+and `pdi_test_user_initial_password` set. Terraform creates the
+`erika_mustermann` account with first and last names that match the PID claims,
+grants the configured credential scopes, and registers the German wallet's
+OID4VCI client.
+
+For this flow, set the mock frontend's `.env.demo` values to
+`MOCK_FE_CREDENTIAL_CONFIGURATION_ID=IdentityCredential` and
+`MOCK_FE_PRE_AUTHORIZED=false`, then recreate the frontend container. Sign in
+to the mock frontend as `erika_mustermann` so its authorization-code offer is
+targeted to that Keycloak user. The wallet presents the PID, Keycloak compares
+`given_name` and `family_name` to the user's `firstName` and `lastName`, and
+only then allows IdentityCredential issuance. Pre-authorized offers cannot
+satisfy this gate.
+
+The checked-in `.env.demo.example` selects `IdentityCredential` and
+authorization-code mode. This frontend has no credential picker and this demo
+realm does not apply the DATEV scope or profile. The shared DATEV scope
+definition remains available to the separate DATEV instance.

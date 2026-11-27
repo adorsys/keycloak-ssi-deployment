@@ -17,8 +17,12 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
   depends_on = [var.realm_id]
 
   triggers = {
-    # Trigger a re-run if the file content changes
-    client_scope_hash = filemd5("${path.root}/jsons/scopes/${each.value}")
+    # Reapply if the base file or PDI overlay for the selected scope changes.
+    client_scope_hash = sha256(join("|", [
+      filemd5("${path.root}/jsons/scopes/${each.value}"),
+      try(jsondecode(file("${path.root}/jsons/scopes/${each.value}")).name, "") == var.pdi_scope_name ? tostring(var.pdi_enabled) : "not-pdi-scope",
+      try(jsondecode(file("${path.root}/jsons/scopes/${each.value}")).name, "") == var.pdi_scope_name ? var.pdi_profile_id : ""
+    ]))
     # If the realm was recreated/reset, ensure we re-import missing scopes.
     realm_id   = var.realm_id
     realm_name = var.realm_name
@@ -46,6 +50,9 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
 
       SCOPE_FILE="${path.root}/jsons/scopes/${each.value}"
       SCOPE_NAME=$(jq -r '.name' "$SCOPE_FILE")
+      PDI_ENABLED="${var.pdi_enabled}"
+      PDI_SCOPE_NAME="${var.pdi_scope_name}"
+      PDI_PROFILE_ID="${var.pdi_profile_id}"
 
       if [ -z "$SCOPE_NAME" ] || [ "$SCOPE_NAME" = "null" ]; then
         echo "Missing 'name' in $SCOPE_FILE" >&2
@@ -54,11 +61,22 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
 
       echo "Applying OID4VC client scope '$SCOPE_NAME' from ${each.value} via curl..."
 
+      # Apply the realm-specific gate as an overlay. The shared scope JSON stays
+      # reusable by realms that do not enable presentation during issuance.
+      SCOPE_PAYLOAD=$(jq \
+        --arg scope "$PDI_SCOPE_NAME" \
+        --arg profile "$PDI_PROFILE_ID" \
+        --argjson enabled "$PDI_ENABLED" \
+        'if $enabled and .name == $scope then
+           .attributes["vc.requires_presentation"] = "nested_oid4vp_flow" |
+           .attributes["vc.presentation_profile_id"] = $profile
+         else . end' "$SCOPE_FILE")
+
       # Import the client scope
       HTTP_CODE=$(curl -k -s -o /dev/null -w "%%{http_code}" -X POST "$KC_URL/admin/realms/${var.realm_name}/client-scopes" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
-        --data-binary @"$SCOPE_FILE")
+        --data-binary "$SCOPE_PAYLOAD")
 
       if [ "$HTTP_CODE" -eq 409 ]; then
         echo "Client scope '$SCOPE_NAME' already exists (HTTP 409). Updating it..."
@@ -72,7 +90,7 @@ resource "null_resource" "apply_custom_oid4vc_client_scopes" {
           exit 1
         fi
 
-        UPDATE_PAYLOAD=$(jq --arg id "$EXISTING_SCOPE_ID" '.id = $id' "$SCOPE_FILE")
+        UPDATE_PAYLOAD=$(echo "$SCOPE_PAYLOAD" | jq --arg id "$EXISTING_SCOPE_ID" '.id = $id')
 
         UPDATE_HTTP_CODE=$(echo "$UPDATE_PAYLOAD" | curl -k -s -o /dev/null -w "%%{http_code}" -X PUT "$KC_URL/admin/realms/${var.realm_name}/client-scopes/$EXISTING_SCOPE_ID" \
           -H "Authorization: Bearer $TOKEN" \

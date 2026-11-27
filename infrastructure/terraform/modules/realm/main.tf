@@ -16,13 +16,18 @@ resource "keycloak_realm" "oid4vc_vci" {
       preAuthorizedCodeLifespanS                     = var.pre_authorized_code_lifespanS
       status-list-server-url                         = var.status_list_server_url
       status-list-enabled                            = var.status_list_enabled
+      "status-list-mandatory"                        = tostring(var.status_list_mandatory)
       "oid4vci.allow_proof_iss_mismatch"             = tostring(var.oid4vci_allow_proof_iss_mismatch)
       "oid4vci.omit_encryption_metadata"             = tostring(var.oid4vci_omit_encryption_metadata)
       "oid4vci.patch_credential_requests"            = tostring(var.oid4vci_patch_credential_requests)
       "oid4vci.patch_metadata_x5c_to_leaf_cert_only" = tostring(var.oid4vci_patch_metadata_x5c_to_leaf_cert_only)
+      "oid4vci.presentation_during_issuance"         = tostring(var.oid4vci_presentation_during_issuance)
     },
     trimspace(var.oid4vci_display) != "" ? {
       "oid4vci.display" = var.oid4vci_display
+    } : {},
+    trimspace(var.status_list_token_issuer_prefix) != "" ? {
+      "status-list-token-issuer-prefix" = var.status_list_token_issuer_prefix
     } : {},
     trimspace(var.oid4vci_signed_metadata_alg) != "" ? {
       "oid4vci.signed_metadata.alg" = var.oid4vci_signed_metadata_alg
@@ -106,7 +111,11 @@ resource "keycloak_authentication_execution_config" "config" {
       verifyIssuerClaim                  = var.oid4vp_verify_issuer_claim
       fallbackToIsoSpecSessionTranscript = var.oid4vp_fallback_to_iso_spec_session_transcript
       enforceRevocationStatus            = var.oid4vp_enforce_revocation_status
+      allowMissingStatusClaim            = var.oid4vp_allow_missing_status_claim
     },
+    trimspace(var.oid4vp_status_list_trust_material_idps) != "" ? {
+      statusListTrustMaterialIdps = var.oid4vp_status_list_trust_material_idps
+    } : {},
     trimspace(var.oid4vp_authentication_profiles) != "" ? {
       profiles = var.oid4vp_authentication_profiles
     } : {},
