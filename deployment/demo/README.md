@@ -25,6 +25,11 @@ must contain realm-named directories with the configured PKCS#12 files inside;
 it is mounted read-only at `/opt/keycloak/data/keystores`. Set
 `KEYCLOAK_TLS_HOST_DIR` to the existing SSI wrapper's `target` directory, which
 must contain `keycloak-server.crt.pem` and `keycloak-server.key.pem`.
+Set `PID_STATUS_LIST_TRUST_ANCHOR_FILE` to a PEM file containing the PID Status
+List signing trust anchor for the environment being tested. For Sandbox, use
+the PID Provider's Status List signer test CA. This is distinct from the PID
+issuance CA and the PID-provider-list JWT signing certificate. Compose mounts
+the PEM read-only and passes it to Keycloak through `KC_TRUSTSTORE_PATHS`.
 
 The mock-FE image must accept the `VITE_KEYCLOAK_*` and `VITE_OID4VC_*`
 environment variables. The Keycloak client must allow the mock frontend's HTTPS
@@ -142,3 +147,21 @@ The checked-in `.env.demo.example` selects `IdentityCredential` and
 authorization-code mode. This frontend has no credential picker and this demo
 realm does not apply the DATEV scope or profile. The shared DATEV scope
 definition remains available to the separate DATEV instance.
+
+The PDI verifier also checks the presented PID's revocation status. The status
+token's signer chain must terminate at the PID provider's **revocation-service**
+trust anchor, separate from the PID issuance-service anchor and the certificate
+that signs the PID provider list. The PID Provider release notes publish the
+Sandbox Status List signer test CA; configure that CA in
+`PID_STATUS_LIST_TRUST_ANCHOR_FILE`. The demo realm leaves
+`oid4vp_status_list_trust_material_idps` empty, so OID4VP uses Keycloak's global
+truststore. Recreate Keycloak after changing this file or its path so the
+updated truststore is loaded.
+
+The official German PID verifier guidance describes mdoc status references as
+Token Status List CWTs (`application/statuslist+cwt`) with `x5chain`, anchored
+at the PID provider list's revocation service. The current OID4VP plugin fetcher
+requests Status List JWTs (`application/statuslist+jwt`). The current failure
+occurs after Keycloak received and parsed a JWT, so trust-anchor configuration
+addresses this chain error first; if the Sandbox endpoint returns only CWT for
+this PID reference, the plugin will also need CWT support.

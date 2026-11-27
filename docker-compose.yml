@@ -40,6 +40,8 @@ services:
       KC_HTTPS_PORT: "8443"
       KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/target/keycloak-server.crt.pem
       KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/target/keycloak-server.key.pem
+      # Trust the German PID Status List signer CA when validating JWT x5c chains.
+      KC_TRUSTSTORE_PATHS: /opt/keycloak/truststore/pid-status-list-ca.pem
       KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
       KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
@@ -52,6 +54,7 @@ services:
       - ./providers:/opt/keycloak/providers:ro
       - ${KEYCLOAK_TLS_HOST_DIR:?Set KEYCLOAK_TLS_HOST_DIR in .env.demo}:/opt/keycloak/target:ro
       - ${KEYCLOAK_KEYSTORE_HOST_ROOT:?Set KEYCLOAK_KEYSTORE_HOST_ROOT in .env.demo}:/opt/keycloak/data/keystores:ro
+      - ${PID_STATUS_LIST_TRUST_ANCHOR_FILE:?Set PID_STATUS_LIST_TRUST_ANCHOR_FILE in .env.demo}:/opt/keycloak/truststore/pid-status-list-ca.pem:ro
     depends_on:
       postgres:
         condition: service_healthy

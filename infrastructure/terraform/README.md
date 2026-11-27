@@ -183,6 +183,12 @@ Keycloak's global truststore. Add the CA that issued the Status List JWT signing
 or configure a trust-material IdP alias and set the variable to that alias. Do not assume the issuer access-certificate
 CA or the PID trust-list signer is the Status List JWT trust anchor. See the OID4VP plugin's
 [status-list trust configuration](https://github.com/ADORSYS-GIS/keycloak-oid4vp-plugin/blob/v1.4.5/docs/modules/ROOT/pages/oid4vp-deployment-configuration.adoc#global-truststore).
+For the standalone Compose demo's German PID Sandbox flow, set
+`PID_STATUS_LIST_TRUST_ANCHOR_FILE` in `.env.demo` to the Sandbox PID Status List
+signer test CA. Compose loads it through Keycloak's `KC_TRUSTSTORE_PATHS`. It is
+the revocation-service trust anchor, not the PID issuance CA or the PID-provider-
+list signing certificate. See the [PID Provider release notes](https://demo.pid-provider.bundesdruckerei.de/releases)
+and the [German PID verifier validation guidelines](https://bmi.usercontent.opencode.de/eudi-wallet/developer-guide/rp/policies/pid_verifier_guidelines/).
 
 The Token Status List plugin settings and mapper are documented in the
 [Token Status plugin technical reference](https://github.com/ADORSYS-GIS/token-status-link/blob/v0.5.3/docs/technical-reference.md).
